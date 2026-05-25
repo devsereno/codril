@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pulmão AE - Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3125/3125828.png">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      content: ["./**/*.{html,js}"]
+    }
+  </script>
+  <style>
+    .tech-bg { background: linear-gradient(135deg, #0f172a 0%, #1e2937 100%); }
+  </style>
+</head>
+<body class="tech-bg min-h-screen text-white flex items-center justify-center p-4 transition-all">
+  <div class="max-w-md w-full">
+    <!-- Header -->
+    <div class="text-center mb-10">
+      <div class="inline-flex items-center gap-3 mb-4">
+        <span class="text-5xl">📦</span>
+        <h1 class="text-4xl font-bold tracking-tighter">PULMÃO AE</h1>
+      </div>
+      <p class="text-slate-400">Sistema de Armazenamento Inteligente</p>
+    </div>
+
+    <div class="bg-slate-900/70 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-slate-700">
+      <div id="firstRun" class="hidden">
+        <h2 class="text-2xl font-semibold mb-6 text-center">Primeira Configuração</h2>
+        <input id="masterNome" placeholder="Seu nome completo" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-3 focus:outline-none focus:border-blue-500">
+        <input id="masterEmail" type="email" placeholder="E-mail Master" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-3 focus:outline-none focus:border-blue-500">
+        <input id="masterSenha" type="password" placeholder="Senha forte (mín. 8 caracteres)" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-6 focus:outline-none focus:border-blue-500">
+        <button onclick="criarMaster()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-semibold text-lg">Criar Usuário Master</button>
+      </div>
+
+      <div id="loginForm">
+        <input id="email" type="email" placeholder="E-mail" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-3 focus:outline-none focus:border-blue-500">
+        <input id="senha" type="password" placeholder="Senha" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-6 focus:outline-none focus:border-blue-500">
+        <button onclick="fazerLogin()" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-semibold text-lg">Entrar</button>
+      </div>
+
+      <p id="mensagem" class="text-center mt-6 text-red-400 min-h-[24px]"></p>
+    </div>
+
+    <!-- Dark/Light Toggle -->
+    <div class="text-center mt-8">
+      <button onclick="toggleTheme()" class="text-slate-400 hover:text-white transition-colors">
+        Alternar Tema
+      </button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { isFirstRun, criarPrimeiroMaster } from './js/storage.js';
+    import { fazerLogin as loginAPI } from './js/auth.js';
+
+    async function init() {
+      if (await isFirstRun()) {
+        document.getElementById('firstRun').classList.remove('hidden');
+        document.getElementById('loginForm').classList.add('hidden');
+      }
+    }
+
+    window.criarMaster = async () => { /* ... mesmo código anterior */ };
+    window.fazerLogin = async () => { /* ... mesmo código anterior */ };
+    window.toggleTheme = () => document.documentElement.classList.toggle('dark');
+
+    init();
+  </script>
+</body>
+  </html>
