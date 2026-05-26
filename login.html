@@ -1,84 +1,53 @@
 <!DOCTYPE html>
-<html lang="pt" class="dark">
+<html lang="pt">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pulmão AE - Login</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="manifest" href="manifest.json">
 </head>
 <body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4">
   <div class="max-w-md w-full">
 
     <div class="text-center mb-10">
-      <div class="flex justify-center mb-4">
-        <span class="text-6xl">📦</span>
-      </div>
-      <h1 class="text-4xl font-bold">PULMÃO AE</h1>
-      <p class="text-slate-400 mt-1">Sistema de Armazenamento Inteligente</p>
+      <span class="text-6xl">📦</span>
+      <h1 class="text-4xl font-bold mt-4">PULMÃO AE</h1>
+      <p class="text-slate-400">Sistema de Armazenamento Inteligente</p>
     </div>
 
     <!-- Tela de Primeiro Cadastro -->
-    <div id="firstRunScreen" class="bg-slate-900 rounded-3xl p-8 border border-slate-700">
+    <div class="bg-slate-900 rounded-3xl p-8 border border-slate-700">
       <h2 class="text-2xl font-semibold text-center mb-6 text-emerald-400">Primeira Configuração</h2>
-      <input id="masterNome" placeholder="Seu nome completo" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-3">
-      <input id="masterEmail" type="email" placeholder="E-mail Master" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-3">
-      <input id="masterSenha" type="password" placeholder="Senha forte" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-6">
-      <button onclick="criarMaster()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-semibold">Criar Usuário Master</button>
+      
+      <input id="masterNome" placeholder="Seu nome" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-3">
+      <input id="masterEmail" type="email" placeholder="E-mail" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-3" value="ricardogoncalves21@gmail.com">
+      <input id="masterSenha" type="password" placeholder="Senha" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-6" value="8486">
+
+      <button onclick="criarMaster()" 
+              class="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-semibold text-lg">
+        Criar Usuário Master
+      </button>
     </div>
 
-    <!-- Tela de Login -->
-    <div id="loginScreen" class="hidden bg-slate-900 rounded-3xl p-8 border border-slate-700">
-      <input id="email" type="email" placeholder="E-mail" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-3">
-      <input id="senha" type="password" placeholder="Senha" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-6">
-      <button onclick="fazerLogin()" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-semibold text-lg">Entrar</button>
-    </div>
-
-    <p id="mensagem" class="text-center mt-6 text-red-400 min-h-[28px]"></p>
+    <p id="mensagem" class="text-center mt-6 text-red-400"></p>
   </div>
 
   <script>
-    async function criarMaster() {
+    function criarMaster() {
       const nome = document.getElementById('masterNome').value.trim();
       const email = document.getElementById('masterEmail').value.trim();
       const senha = document.getElementById('masterSenha').value.trim();
 
       if (!nome || !email || !senha) {
-        alert("Preencha todos os campos");
+        alert("Preencha todos os campos!");
         return;
       }
 
-      alert(`✅ Usuário Master criado com sucesso!\n\nEmail: ${email}\n\nGuarde sua senha: ${senha}`);
+      alert(`✅ Usuário Master criado com sucesso!\n\nEmail: ${email}\nSenha: ${senha}\n\nAgora faça login com esses dados.`);
       
-      // Esconde tela de cadastro e mostra login
-      document.getElementById('firstRunScreen').classList.add('hidden');
-      document.getElementById('loginScreen').classList.remove('hidden');
+      // Redireciona para a tela de login
+      window.location.href = 'login.html';
     }
-
-    async function fazerLogin() {
-      const email = document.getElementById('email').value.trim();
-      const senha = document.getElementById('senha').value.trim();
-      const msg = document.getElementById('mensagem');
-
-      if (!email || !senha) {
-        msg.textContent = "Preencha email e senha";
-        return;
-      }
-
-      msg.textContent = "Conectando...";
-
-      try {
-        const res = await fetch('https://codril.xo.je/api/login.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, senha })
-        });
-
-        const data = await res.json();
-
-        if (data.success) {
-          msg.style.color = 'lime';
-          msg.textContent = `Bem-vindo, ${data.user.nome}!`;
-          localStorage.setItem('currentUser', JSON.stringify(data.user));
-          setTimeout(() => window.location.href = 'index.html', 1200);
-        } else {
+  </script>
+</body>
+</html>
