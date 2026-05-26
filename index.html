@@ -1,22 +1,20 @@
 <!DOCTYPE html>
-<html lang="pt" class="dark">
+<html lang="pt">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pulmão AE - Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="manifest" href="manifest.json">
 </head>
 <body class="bg-slate-950 text-white min-h-screen">
   <div class="max-w-4xl mx-auto p-4">
 
-    <!-- Header -->
     <div class="flex justify-between items-center mb-8 border-b border-slate-700 pb-4">
       <div class="flex items-center gap-3">
         <span class="text-4xl">📦</span>
         <div>
           <h1 class="text-3xl font-bold">PULMÃO AE</h1>
-          <p id="userName" class="text-slate-400 text-sm">Carregando usuário...</p>
+          <p id="userName" class="text-slate-400">Carregando...</p>
         </div>
       </div>
       <button onclick="logout()" class="px-6 py-2 bg-red-500/20 text-red-400 rounded-2xl hover:bg-red-500/30">
@@ -24,48 +22,38 @@
       </button>
     </div>
 
-    <!-- Formulário de Cadastro -->
     <div class="bg-slate-900 rounded-3xl p-6 mb-8 border border-slate-700">
       <h2 class="text-xl font-semibold mb-5">Novo Cadastro</h2>
       
       <div class="grid grid-cols-1 gap-4">
         <select id="tipo" class="bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4">
-          <option value="pulmao">Pulmão AE (Aéreo)</option>
+          <option value="pulmao">Pulmão AE</option>
           <option value="picking">Picking</option>
         </select>
         <input id="endereco" placeholder="Endereço (ex: 101-2)" class="bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4">
         <input id="codigo" placeholder="Código do Produto" class="bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4">
         <input id="lote" placeholder="Lote" class="bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4">
-        <input id="descricao" placeholder="Descrição (opcional)" class="bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4">
+        <input id="descricao" placeholder="Descrição" class="bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4">
       </div>
 
-      <button onclick="cadastrarProduto()" 
-              class="mt-6 w-full bg-blue-600 hover:bg-blue-500 py-5 rounded-2xl font-semibold text-lg">
+      <button onclick="cadastrarProduto()" class="mt-6 w-full bg-blue-600 hover:bg-blue-500 py-5 rounded-2xl font-semibold">
         💾 Salvar no Sistema
       </button>
     </div>
 
-    <!-- Lista -->
     <div class="bg-slate-900 rounded-3xl p-6 border border-slate-700">
       <h2 class="text-xl font-semibold mb-5">Itens Cadastrados</h2>
-      <div id="listaItens" class="space-y-3 text-slate-300">
-        <!-- Itens carregados aqui -->
-      </div>
+      <div id="listaItens" class="space-y-3"></div>
     </div>
   </div>
 
   <script type="module">
-    import { cadastrarProduto, listarProdutos } from './js/armazem.js';
+    import { cadastrarProduto as salvarNoSistema, listarProdutos } from './js/armazem.js';
 
-    // Verifica login
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser) {
-      window.location.href = 'login.html';
-    } else {
-      document.getElementById('userName').textContent = `Olá, ${currentUser.nome}`;
-    }
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) window.location.href = 'login.html';
+    document.getElementById('userName').textContent = `Olá, ${user.nome}`;
 
-    // Função de cadastro
     window.cadastrarProduto = async () => {
       const dados = {
         tipo: document.getElementById('tipo').value,
@@ -76,13 +64,13 @@
       };
 
       if (!dados.endereco || !dados.codigo_produto || !dados.lote) {
-        alert("⚠️ Preencha Endereço, Código e Lote");
+        alert("Preencha Endereço, Código e Lote");
         return;
       }
 
       try {
-        await cadastrarProduto(dados);
-        alert("✅ Produto cadastrado com sucesso!");
+        await salvarNoSistema(dados);
+        alert("✅ Salvo com sucesso!");
         limparFormulario();
         carregarLista();
       } catch (e) {
@@ -100,21 +88,15 @@
     async function carregarLista() {
       const itens = await listarProdutos();
       const container = document.getElementById('listaItens');
-      container.innerHTML = '';
+      container.innerHTML = itens.length ? '' : '<p class="text-slate-500 text-center py-10">Nenhum item cadastrado.</p>';
+    }
 
-      if (itens.length === 0) {
-        container.innerHTML = `<p class="text-slate-500 text-center py-10">Nenhum item cadastrado ainda.</p>`;
-        return;
-      }
+    window.logout = () => {
+      localStorage.clear();
+      location.href = 'login.html';
+    };
 
-      itens.forEach(item => {
-        const div = document.createElement('div');
-        div.className = "bg-slate-800 rounded-2xl p-5 border border-slate-700";
-        div.innerHTML = `
-          <div class="flex justify-between items-start">
-            <div>
-              <span class="px-3 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400">${item.tipo.toUpperCase()}</span>
-              <span class="ml-3 font-mono text-lg">${item.endereco}</span>
-            </div>
-            <div class="text-right">
-              <p class="font-semibold">${item.codigo
+    carregarLista();
+  </script>
+</body>
+</html>
