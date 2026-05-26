@@ -24,7 +24,6 @@
 
     <div class="bg-slate-900 rounded-3xl p-6 mb-8 border border-slate-700">
       <h2 class="text-xl font-semibold mb-5">Novo Cadastro</h2>
-      
       <div class="grid grid-cols-1 gap-4">
         <select id="tipo" class="bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4">
           <option value="pulmao">Pulmão AE</option>
@@ -48,7 +47,7 @@
   </div>
 
   <script type="module">
-    import { cadastrarProduto as salvarNoSistema, listarProdutos } from './js/armazem.js';
+    import { cadastrarProduto, listarProdutos } from './js/armazem.js';
 
     const user = JSON.parse(localStorage.getItem('currentUser'));
     if (!user) window.location.href = 'login.html';
@@ -64,12 +63,12 @@
       };
 
       if (!dados.endereco || !dados.codigo_produto || !dados.lote) {
-        alert("Preencha Endereço, Código e Lote");
+        alert("Preencha os campos obrigatórios");
         return;
       }
 
       try {
-        await salvarNoSistema(dados);
+        await cadastrarProduto(dados);
         alert("✅ Salvo com sucesso!");
         limparFormulario();
         carregarLista();
@@ -78,17 +77,17 @@
       }
     };
 
+    async function carregarLista() {
+      const itens = await listarProdutos();
+      const container = document.getElementById('listaItens');
+      container.innerHTML = itens.length ? '' : '<p class="text-slate-500 text-center py-10">Nenhum item cadastrado.</p>';
+    }
+
     function limparFormulario() {
       document.getElementById('endereco').value = '';
       document.getElementById('codigo').value = '';
       document.getElementById('lote').value = '';
       document.getElementById('descricao').value = '';
-    }
-
-    async function carregarLista() {
-      const itens = await listarProdutos();
-      const container = document.getElementById('listaItens');
-      container.innerHTML = itens.length ? '' : '<p class="text-slate-500 text-center py-10">Nenhum item cadastrado.</p>';
     }
 
     window.logout = () => {
