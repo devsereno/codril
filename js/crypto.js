@@ -1,31 +1,59 @@
-// js/crypto.js - Criptografia no navegador
+// js/crypto.js
 let encryptionKey = null;
 
 export function setEncryptionKey(seed) {
-    encryptionKey = seed;
-    console.log("🔑 Chave de criptografia configurada");
+  encryptionKey = seed;
+  console.log("🔑 Chave configurada");
 }
 
 export async function encryptData(data) {
-    if (!encryptionKey) throw new Error("Chave de criptografia não definida");
-    
-    const encoder = new TextEncoder();
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    
-    const encodedData = encoder.encode(JSON.stringify(data));
-    
-    const keyMaterial = await crypto.subtle.importKey(
-        "raw", 
-        encoder.encode(encryptionKey),
-        { name: "PBKDF2" },
-        false,
-        ["deriveBits", "deriveKey"]
-    );
+  if (!encryptionKey) throw new Error("Chave não configurada");
 
-    const key = await crypto.subtle.deriveKey(
-        { name: "PBKDF2", salt: encoder.encode("pulmao-salt"), iterations: 100000, hash: "SHA-256" },
-        keyMaterial,
-        { name: "AES-GCM", length: 256 },
-        false, );
+  const encoder = new TextEncoder();
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encoded = encoder.encode(JSON.stringify(data));
 
-    const encrypted = await
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw", encoder.encode(encryptionKey), "PBKDF2", false, ["deriveKey"]
+  );
+
+  const key = await crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt: encoder.encode("pulmao-salt"), iterations: 100000, hash: "SHA-256" },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+
+  const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encoded);
+
+  return {
+    iv: Array.from(iv),
+    data: Array.from(new Uint8Array(encrypted))
+  };
+}
+
+export async function decryptData(encryptedObj) {
+  if (!encryptionKey) throw new Error("Chave não configurada");
+
+  const encoder = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw", encoder.encode(encryptionKey), "PBKDF2", false, ["deriveKey"]
+  );
+
+  const key = await crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt: encoder.encode("pulmao-salt"), iterations: 100000, hash: "SHA-256" },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+
+  const decrypted = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: new Uint8Array(encryptedObj.iv) },
+    key,
+    new Uint8Array(encryptedObj.data)
+  );
+
+  return JSON.parse(new TextDecoder().decode(decrypted));
+}
