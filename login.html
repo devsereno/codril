@@ -15,38 +15,66 @@
       <p class="text-slate-400">Sistema de Armazenamento Inteligente</p>
     </div>
 
-    <!-- Tela de Primeiro Cadastro -->
     <div class="bg-slate-900 rounded-3xl p-8 border border-slate-700">
-      <h2 class="text-2xl font-semibold text-center mb-6 text-emerald-400">Primeira Configuração</h2>
+      <h2 class="text-xl font-semibold mb-6 text-center">Fazer Login</h2>
       
-      <input id="masterNome" placeholder="Seu nome" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-3">
-      <input id="masterEmail" type="email" placeholder="E-mail" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-3" value="ricardogoncalves21@gmail.com">
-      <input id="masterSenha" type="password" placeholder="Senha" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-6" value="8486">
+      <input id="email" type="email" placeholder="E-mail" value="ricardomaster@gmail.com"
+             class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-4">
+      
+      <input id="senha" type="password" placeholder="Senha" value="8486"
+             class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-6">
 
-      <button onclick="criarMaster()" 
-              class="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-semibold text-lg">
-        Criar Usuário Master
+      <button onclick="fazerLogin()" 
+              class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-semibold text-lg">
+        Entrar
       </button>
     </div>
 
-    <p id="mensagem" class="text-center mt-6 text-red-400"></p>
+    <p id="mensagem" class="text-center mt-6 text-red-400 min-h-[28px]"></p>
   </div>
 
   <script>
-    function criarMaster() {
-      const nome = document.getElementById('masterNome').value.trim();
-      const email = document.getElementById('masterEmail').value.trim();
-      const senha = document.getElementById('masterSenha').value.trim();
+    async function fazerLogin() {
+      const email = document.getElementById('email').value.trim();
+      const senha = document.getElementById('senha').value.trim();
+      const msg = document.getElementById('mensagem');
 
-      if (!nome || !email || !senha) {
-        alert("Preencha todos os campos!");
+      if (!email || !senha) {
+        msg.textContent = "Preencha email e senha";
         return;
       }
 
-      alert(`✅ Usuário Master criado com sucesso!\n\nEmail: ${email}\nSenha: ${senha}\n\nAgora faça login com esses dados.`);
-      
-      // Redireciona para a tela de login
-      window.location.href = 'login.html';
+      msg.textContent = "Conectando...";
+      msg.style.color = "white";
+
+      try {
+        const response = await fetch('https://codril.xo.je/api/login.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, senha })
+        });
+
+        const data = await response.json();
+        console.log("Resposta:", data);
+
+        if (data.success) {
+          msg.style.color = "lime";
+          msg.textContent = `✅ Bem-vindo, ${data.user.nome}!`;
+          
+          localStorage.setItem('currentUser', JSON.stringify(data.user));
+          
+          setTimeout(() => {
+            window.location.href = "index.html";
+          }, 1500);
+        } else {
+          msg.style.color = "red";
+          msg.textContent = data.message || "Login inválido";
+        }
+      } catch (error) {
+        console.error(error);
+        msg.style.color = "red";
+        msg.textContent = "❌ Erro de conexão com servidor";
+      }
     }
   </script>
 </body>
