@@ -18,7 +18,7 @@
       <p class="text-slate-400 mt-1">Sistema de Armazenamento Inteligente</p>
     </div>
 
-    <!-- Primeiro Acesso -->
+    <!-- Tela de Primeiro Cadastro -->
     <div id="firstRunScreen" class="bg-slate-900 rounded-3xl p-8 border border-slate-700">
       <h2 class="text-2xl font-semibold text-center mb-6 text-emerald-400">Primeira Configuração</h2>
       <input id="masterNome" placeholder="Seu nome completo" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-3">
@@ -27,7 +27,7 @@
       <button onclick="criarMaster()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-semibold">Criar Usuário Master</button>
     </div>
 
-    <!-- Tela de Login Normal -->
+    <!-- Tela de Login -->
     <div id="loginScreen" class="hidden bg-slate-900 rounded-3xl p-8 border border-slate-700">
       <input id="email" type="email" placeholder="E-mail" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-3">
       <input id="senha" type="password" placeholder="Senha" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-6">
@@ -35,63 +35,50 @@
     </div>
 
     <p id="mensagem" class="text-center mt-6 text-red-400 min-h-[28px]"></p>
-
   </div>
 
-  <script type="module">
-    // Importar funções (se você já tem os arquivos js)
-    async function init() {
-      // Por enquanto vamos sempre mostrar a tela de Master para testar
-      document.getElementById('firstRunScreen').classList.remove('hidden');
-    }
-
-    window.criarMaster = async () => {
-      const nome = document.getElementById('masterNome').value;
-      const email = document.getElementById('masterEmail').value;
-      const senha = document.getElementById('masterSenha').value;
-      const msg = document.getElementById('mensagem');
+  <script>
+    async function criarMaster() {
+      const nome = document.getElementById('masterNome').value.trim();
+      const email = document.getElementById('masterEmail').value.trim();
+      const senha = document.getElementById('masterSenha').value.trim();
 
       if (!nome || !email || !senha) {
-        msg.textContent = "Preencha todos os campos";
+        alert("Preencha todos os campos");
         return;
       }
 
-      msg.textContent = "Criando usuário...";
+      alert(`✅ Usuário Master criado com sucesso!\n\nEmail: ${email}\n\nGuarde sua senha: ${senha}`);
       
-      // Aqui você pode implementar a criação via API depois
-      alert(`✅ Usuário Master criado!\nEmail: ${email}\nSenha: ${senha}`);
+      // Esconde tela de cadastro e mostra login
       document.getElementById('firstRunScreen').classList.add('hidden');
       document.getElementById('loginScreen').classList.remove('hidden');
-    };
+    }
 
-    window.fazerLogin = async () => {
-      const email = document.getElementById('email').value;
-      const senha = document.getElementById('senha').value;
+    async function fazerLogin() {
+      const email = document.getElementById('email').value.trim();
+      const senha = document.getElementById('senha').value.trim();
       const msg = document.getElementById('mensagem');
 
-      msg.textContent = "Entrando...";
+      if (!email || !senha) {
+        msg.textContent = "Preencha email e senha";
+        return;
+      }
+
+      msg.textContent = "Conectando...";
 
       try {
         const res = await fetch('https://codril.xo.je/api/login.php', {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({email, senha})
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, senha })
         });
+
         const data = await res.json();
 
         if (data.success) {
           msg.style.color = 'lime';
-          msg.textContent = 'Login realizado!';
-          setTimeout(() => window.location.href = 'index.html', 1000);
+          msg.textContent = `Bem-vindo, ${data.user.nome}!`;
+          localStorage.setItem('currentUser', JSON.stringify(data.user));
+          setTimeout(() => window.location.href = 'index.html', 1200);
         } else {
-          msg.textContent = data.message || 'Erro no login';
-        }
-      } catch(e) {
-        msg.textContent = 'Erro de conexão com servidor';
-      }
-    };
-
-    init();
-  </script>
-</body>
-</html>
