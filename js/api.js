@@ -1,6 +1,7 @@
 
 // js/api.js - Comunicação com o servidor PHP
-const API_BASE = 'https://codril.xo.je/api/';   // ← Mude se seu domínio mudar
+// js/api.js
+const API_BASE = 'https://codril.whhf.bz/api/';   // ← Mude se seu domínio mudar
 
 export async function apiRequest(endpoint, method = 'GET', body = null) {
   const options = {
