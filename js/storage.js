@@ -1,43 +1,48 @@
-// js/storage.js - IndexedDB + Sincronização
+// js/storage.js - Banco Local + Sincronização
 
-let db;
+let dbInstance;
 
-export function initDB() {
+async function initDB() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open('PulmaoDB', 1);
 
-    request.onupgradeneeded = (event) => {
-      db = event.target.result;
-      if (!db.objectStoreNames.contains('enderecos')) {
-        db.createObjectStore('enderecos', { keyPath: 'id', autoIncrement: true });
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('itens')) {
+        db.createObjectStore('itens', { keyPath: 'id', autoIncrement: true });
       }
       if (!db.objectStoreNames.contains('syncQueue')) {
         db.createObjectStore('syncQueue', { keyPath: 'id', autoIncrement: true });
       }
     };
 
-    request.onsuccess = (event) => {
-      db = event.target.result;
-      resolve(db);
+    request.onsuccess = (e) => {
+      dbInstance = e.target.result;
+      resolve(dbInstance);
     };
-
-    request.onerror = (event) => reject(event.target.error);
+    request.onerror = (e) => reject(e.target.error);
   });
 }
 
-// Salva localmente e adiciona na fila de sincronização
+// Salvar localmente (funciona offline)
 export async function salvarLocal(dados) {
   await initDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(['enderecos', 'syncQueue'], 'readwrite');
-    const store = transaction.objectStore('enderecos');
-    const queue = transaction.objectStore('syncQueue');
+    const tx = dbInstance.transaction(['itens', 'syncQueue'], 'readwrite');
+    tx.objectStore('itens').add(dados);
+    tx.objectStore('syncQueue').add({ ...dados, status: 'pending' });
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = () => reject(tx.error);
+  });
+}
 
-    const request = store.add(dados);
-    request.onsuccess = () => {
-      queue.add({ ...dados, syncStatus: 'pending', createdAt: new Date() });
-      resolve(true);
-    };
-    request.onerror = () => reject(request.error);
+// Listar itens locais
+export async function listarLocais() {
+  await initDB();
+  return new Promise((resolve) => {
+    const tx = dbInstance.transaction('itens', 'readonly');
+    const store = tx.objectStore('itens');
+    const request = store.getAll();
+    request.onsuccess = () => resolve(request.result);
   });
 }
