@@ -22,6 +22,7 @@
       </button>
     </div>
 
+    <!-- Novo Cadastro -->
     <div class="bg-slate-900 rounded-3xl p-6 mb-8 border border-slate-700">
       <h2 class="text-xl font-semibold mb-5">Novo Cadastro</h2>
       <div class="grid grid-cols-1 gap-4">
@@ -43,6 +44,7 @@
       </button>
     </div>
 
+    <!-- Lista -->
     <div class="bg-slate-900 rounded-3xl p-6 border border-slate-700">
       <h2 class="text-xl font-semibold mb-5">Itens Cadastrados</h2>
       <div id="listaItens" class="space-y-3"></div>
@@ -51,10 +53,6 @@
 
   <script>
     async function cadastrarProduto() {
-      const btn = event.target;
-      btn.innerHTML = 'Salvando...';
-      btn.disabled = true;
-
       const dados = {
         tipo: document.getElementById('tipo').value,
         endereco: document.getElementById('endereco').value.trim(),
@@ -65,13 +63,10 @@
 
       if (!dados.endereco || !dados.codigo_produto || !dados.lote) {
         alert("Preencha Endereço, Código e Lote");
-        btn.innerHTML = '💾 Salvar no Sistema';
-        btn.disabled = false;
         return;
       }
 
       try {
-        console.log("Enviando dados:", dados);
         const res = await fetch('https://codril.onrender.com/api/salvar-produto.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -79,22 +74,16 @@
         });
 
         const data = await res.json();
-        console.log("Resposta do servidor:", data);
-
         if (data.success) {
           alert("✅ Salvo com sucesso!");
           limparFormulario();
-          carregarLista();
+          carregarLista();        // ← Atualiza a lista após salvar
         } else {
-          alert("⚠️ " + (data.message || "Erro ao salvar"));
+          alert(data.message || "Erro ao salvar");
         }
       } catch (e) {
-        console.error(e);
-        alert("❌ Erro de conexão com o servidor");
+        alert("❌ Erro de conexão");
       }
-
-      btn.innerHTML = '💾 Salvar no Sistema';
-      btn.disabled = false;
     }
 
     function limparFormulario() {
@@ -106,7 +95,18 @@
 
     async function carregarLista() {
       const container = document.getElementById('listaItens');
-      container.innerHTML = '<p class="text-slate-500 text-center py-10">Nenhum item cadastrado ainda.</p>';
+      container.innerHTML = '<p class="text-slate-500 text-center py-6">Carregando itens...</p>';
+
+      try {
+        // Por enquanto vamos mostrar uma mensagem (melhoraremos depois)
+        container.innerHTML = `
+          <div class="text-center py-10 text-slate-400">
+            ✅ Cadastro funcionando!<br>
+            <span class="text-sm">Os itens salvos aparecerão aqui em breve.</span>
+          </div>`;
+      } catch (e) {
+        container.innerHTML = '<p class="text-red-400 text-center py-10">Erro ao carregar lista</p>';
+      }
     }
 
     function logout() {
