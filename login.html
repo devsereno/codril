@@ -6,7 +6,6 @@
   <title>Pulmão AE - Login</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="favicon.ico" type="image/x-icon">
 </head>
 <body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4">
   <div class="max-w-md w-full">
@@ -20,10 +19,13 @@
     <div class="bg-slate-900 rounded-3xl p-8 border border-slate-700">
       <h2 class="text-xl font-semibold mb-6 text-center">Login</h2>
       
-      <input id="email" type="email" placeholder="E-mail" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-4">
-      <input id="senha" type="password" placeholder="Senha" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-6">
+      <input id="email" type="email" value="ricardomaster@gmail.com" 
+             class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-4">
+      <input id="senha" type="password" value="8486" 
+             class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-6">
 
-      <button onclick="fazerLogin()" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-semibold text-lg">
+      <button onclick="fazerLogin()" 
+              class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-semibold text-lg">
         Entrar
       </button>
     </div>
@@ -37,10 +39,10 @@
       const senha = document.getElementById('senha').value.trim();
       const msg = document.getElementById('mensagem');
 
-      msg.textContent = "Conectando...";
+      msg.textContent = "Conectando ao servidor...";
 
       try {
-        const res = await fetch('https://codril.whhf.bz/api/login.php', {
+        const res = await fetch('https://codril.onrender.com/api/login.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, senha })
@@ -58,7 +60,7 @@
         }
       } catch (e) {
         console.error(e);
-        msg.textContent = "❌ Erro de conexão com servidor";
+        msg.textContent = "❌ Erro de conexão com o servidor";
       }
     }
   </script>
