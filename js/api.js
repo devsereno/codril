@@ -1,41 +1,23 @@
-
-// js/api.js - Comunicação com o servidor PHP
 // js/api.js
-const API_BASE = 'https://codril.whhf.bz/api/';   // ← Mude se seu domínio mudar
+const API_BASE = 'https://codril.onrender.com/api/';
 
-export async function apiRequest(endpoint, method = 'GET', body = null) {
-  const options = {
-    method: method,
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    }
-  };
-
-  if (body) {
-    options.body = JSON.stringify(body);
-  }
-
+export async function apiRequest(endpoint, method = 'POST', body = null) {
   try {
-    const response = await fetch(API_BASE + endpoint, options);
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Erro ${response.status}`);
+    const options = {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    };
+
+    if (body) {
+      options.body = JSON.stringify(body);
     }
 
+    const response = await fetch(API_BASE + endpoint, options);
     return await response.json();
   } catch (error) {
-    console.error('API Error:', error);
-    throw error;
+    console.error('Erro na API:', error);
+    throw new Error('Erro de conexão com o servidor');
   }
 }
-
-// Funções específicas
-export const AuthAPI = {
-  login: (email, senha) => apiRequest('login.php', 'POST', { email, senha }),
-};
-
-export const PulmaoAPI = {
-  salvar: (dados) => apiRequest('salvar-produto.php', 'POST', dados),
-};
