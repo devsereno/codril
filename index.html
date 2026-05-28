@@ -22,7 +22,7 @@
       </button>
     </div>
 
-    <!-- Formulário -->
+    <!-- Novo Cadastro -->
     <div class="bg-slate-900 rounded-3xl p-6 mb-8 border border-slate-700">
       <h2 class="text-xl font-semibold mb-5">Novo Cadastro</h2>
       <div class="grid grid-cols-1 gap-4">
@@ -41,11 +41,13 @@
       </button>
     </div>
 
-    <!-- Lista -->
-    <div class="bg-slate-900 rounded-3xl p-6 border border-slate-700">
-      <h2 class="text-xl font-semibold mb-5">Itens Cadastrados</h2>
-      <div id="listaItens" class="space-y-3"></div>
+    <!-- Botão para Lista -->
+    <div class="flex gap-4">
+      <a href="lista.html" class="flex-1 bg-slate-700 hover:bg-slate-600 py-5 rounded-2xl text-center font-semibold">
+        📋 Ver Todos os Itens
+      </a>
     </div>
+
   </div>
 
   <script>
@@ -71,11 +73,9 @@
         });
 
         const data = await res.json();
-
         if (data.success) {
           alert("✅ Salvo com sucesso!");
           limparFormulario();
-          carregarLista();   // Atualiza a lista imediatamente
         } else {
           alert(data.message || "Erro ao salvar");
         }
@@ -91,37 +91,6 @@
       document.getElementById('descricao').value = '';
     }
 
-    async function carregarLista() {
-      const container = document.getElementById('listaItens');
-      container.innerHTML = '<p class="text-slate-500 text-center py-10">Carregando...</p>';
-
-      try {
-        const res = await fetch('https://codril.onrender.com/api/salvar-produto.php');
-        const data = await res.json();
-
-        if (data.itens && data.itens.length > 0) {
-          let html = '';
-          data.itens.forEach(item => {
-            html += `
-              <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700">
-                <div class="flex justify-between">
-                  <span class="text-blue-400">${item.tipo.toUpperCase()}</span>
-                  <span class="text-xs text-slate-500">${item.data_cadastro ? item.data_cadastro.substring(0,10) : ''}</span>
-                </div>
-                <p class="text-2xl font-mono mt-2">${item.endereco}</p>
-                <p class="text-lg">${item.codigo_produto} • ${item.lote}</p>
-                \( {item.descricao ? `<p class="text-slate-400 text-sm mt-1"> \){item.descricao}</p>` : ''}
-              </div>`;
-          });
-          container.innerHTML = html;
-        } else {
-          container.innerHTML = '<p class="text-slate-500 text-center py-10">Nenhum item cadastrado ainda.</p>';
-        }
-      } catch (e) {
-        container.innerHTML = '<p class="text-red-400 text-center py-10">Erro ao carregar lista</p>';
-      }
-    }
-
     function logout() {
       localStorage.clear();
       location.href = 'login.html';
@@ -131,7 +100,6 @@
       const user = JSON.parse(localStorage.getItem('currentUser'));
       if (!user) return location.href = 'login.html';
       document.getElementById('userName').textContent = `Olá, ${user.nome}`;
-      carregarLista();
     };
   </script>
 </body>
