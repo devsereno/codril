@@ -8,39 +8,39 @@
 </head>
 <body class="bg-slate-950 text-white min-h-screen">
   <div class="max-w-4xl mx-auto p-4">
-    <div class="flex justify-between mb-6">
+
+    <div class="flex justify-between items-center mb-8">
       <h1 class="text-3xl font-bold">Itens Cadastrados</h1>
-      <a href="index.html" class="px-5 py-2 bg-blue-600 rounded-2xl">Novo Cadastro</a>
+      <a href="index.html" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-2xl">+ Novo Cadastro</a>
     </div>
 
-    <input id="busca" placeholder="🔍 Buscar..." 
-           class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-6"
-           onkeyup="filtrar()">
+    <input id="busca" placeholder="🔍 Buscar lote, código ou endereço..." 
+           class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-6" onkeyup="filtrar()">
 
-    <div id="listaItens" class="space-y-3"></div>
+    <div id="listaItens" class="space-y-4"></div>
   </div>
 
   <script>
     async function carregarItens() {
       const container = document.getElementById('listaItens');
-      container.innerHTML = '<p class="text-center py-10 text-slate-500">Carregando...</p>';
+      container.innerHTML = '<p class="text-center py-10 text-slate-400">Carregando...</p>';
 
       try {
         const res = await fetch('https://codril.onrender.com/api/salvar-produto.php');
         const data = await res.json();
 
-        if (data.success && data.itens.length > 0) {
+        if (data.success && data.itens && data.itens.length > 0) {
           let html = '';
           data.itens.forEach(item => {
             html += `
               <div class="bg-slate-900 p-5 rounded-3xl border border-slate-700">
-                <div class="flex justify-between">
-                  <span class="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">${item.tipo.toUpperCase()}</span>
-                  <span class="text-slate-400 text-sm">${item.data_cadastro ? item.data_cadastro.substring(0,10) : ''}</span>
+                <div class="flex justify-between mb-2">
+                  <span class="px-4 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">${item.tipo.toUpperCase()}</span>
+                  <span class="text-xs text-slate-500">${item.data_cadastro ? item.data_cadastro.substring(0,10) : ''}</span>
                 </div>
-                <p class="text-2xl font-mono mt-3">${item.endereco}</p>
-                <p class="text-lg">${item.codigo_produto} • ${item.lote}</p>
-                \( {item.descricao ? `<p class="text-slate-400 mt-2"> \){item.descricao}</p>` : ''}
+                <p class="text-2xl font-mono">${item.endereco}</p>
+                <p class="text-lg mt-1">${item.codigo_produto} • ${item.lote}</p>
+                \( {item.descricao ? `<p class="text-slate-400 text-sm mt-2"> \){item.descricao}</p>` : ''}
               </div>`;
           });
           container.innerHTML = html;
@@ -48,12 +48,12 @@
           container.innerHTML = `<p class="text-center py-10 text-slate-400">Nenhum item cadastrado ainda.</p>`;
         }
       } catch (e) {
-        container.innerHTML = `<p class="text-red-400 text-center py-10">Erro ao carregar lista</p>`;
+        container.innerHTML = `<p class="text-red-400 text-center py-10">Erro ao carregar</p>`;
       }
     }
 
     function filtrar() {
-      carregarItens(); // Podemos melhorar a busca depois
+      carregarItens();
     }
 
     window.onload = carregarItens;
