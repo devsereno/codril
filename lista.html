@@ -22,9 +22,7 @@
     <input id="busca" placeholder="🔍 Buscar por lote, código ou endereço..." 
            class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-6" onkeyup="filtrarItens()">
 
-    <div id="listaItens" class="space-y-4">
-      <!-- Itens carregados aqui -->
-    </div>
+    <div id="listaItens" class="space-y-4"></div>
   </div>
 
   <script>
@@ -66,7 +64,7 @@
       } catch (e) {
         container.innerHTML = `
           <div class="text-center py-12 text-red-400">
-            ❌ Erro ao carregar a lista<br>
+            ❌ Erro ao carregar lista<br>
             <button onclick="carregarItens()" class="mt-4 px-6 py-2 bg-red-500/20 rounded-2xl">Tentar novamente</button>
           </div>`;
       }
@@ -76,7 +74,7 @@
       carregarItens();
     }
 
-    // Carrega automaticamente ao abrir a página
+    // Carrega ao abrir a página
     window.onload = carregarItens;
   </script>
 </body>
