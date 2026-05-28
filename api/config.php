@@ -1,11 +1,11 @@
 <?php
-// api/config.php - PostgreSQL no Render
+// api/config.php
 
-define('DB_HOST', 'SEU_HOST_AQUI');           // ← Vou te passar depois
+define('DB_HOST', 'dpg-d8brkk9o3t8c73aokdr0-a.virginia-postgres.render.com');
 define('DB_PORT', '5432');
 define('DB_NAME', 'pulmao_db');
 define('DB_USER', 'pulmao_user');
-define('DB_PASS', 'SUA_SENHA_AQUI');          // ← Vou te passar depois
+define('DB_PASS', 'OjXMXgHy2SDFDdwpstxEbixPvuqskgCd');
 
 try {
     $pdo = new PDO(
