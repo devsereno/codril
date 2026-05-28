@@ -1,60 +1,29 @@
-// js/armazem.js - Lógica principal do Pulmão
+// js/armazem.js
 
-import { salvarLocal, listarTodos, adicionarNaFilaSync } from './storage.js';
-import { PulmaoAPI } from './api.js';
-import { sincronizarPendentes } from './sync.js';
-
+// Função principal de cadastro
 export async function cadastrarProduto(dados) {
-  const { tipo, endereco, codigo_produto, lote, descricao } = dados;
+  try {
+    const res = await fetch('https://codril.onrender.com/api/salvar-produto.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dados)
+    });
 
-  if (!tipo || !endereco || !codigo_produto || !lote) {
-    throw new Error("Tipo, Endereço, Código e Lote são obrigatórios");
+    const resultado = await res.json();
+    return resultado;
+  } catch (error) {
+    console.error("Erro ao salvar:", error);
+    throw new Error("Erro de conexão com o servidor");
   }
-
-  const registro = {
-    id: `\( {tipo}- \){endereco}-\( {codigo_produto}- \){lote}`,
-    tipo,
-    endereco,
-    codigo_produto,
-    lote,
-    descricao: descricao || "",
-    data: new Date().toISOString(),
-    user: JSON.parse(localStorage.getItem('currentUser'))?.email
-  };
-
-  // 1. Sempre salva local primeiro (funciona offline)
-  await salvarLocal(registro);
-
-  // 2. Tenta enviar para o servidor
-  if (navigator.onLine) {
-    try {
-      const response = await PulmaoAPI.salvar(registro);
-      if (response.success) {
-        console.log("✅ Salvo no servidor");
-      } else {
-        console.warn("Servidor rejeitou:", response.message);
-      }
-    } catch (e) {
-      console.warn("Falha ao salvar no servidor, ficará na fila");
-      await adicionarNaFilaSync(registro);
-    }
-  } else {
-    await adicionarNaFilaSync(registro);
-    console.log("📴 Salvo localmente (offline)");
-  }
-
-  // Inicia sincronização em background
-  setTimeout(sincronizarPendentes, 1000);
-
-  return registro;
 }
 
-// Função para listar todos os itens
+// Função para listar (por enquanto local)
 export async function listarProdutos() {
-  return await listarTodos();
+  // Podemos melhorar depois com IndexedDB + sincronização
+  return [];
 }
 
-// Logout
+// Função de logout
 export function logout() {
   localStorage.clear();
   window.location.href = 'login.html';
