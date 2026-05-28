@@ -30,11 +30,22 @@
           <option value="pulmao">Pulmão AE</option>
           <option value="picking">Picking</option>
         </select>
-        <input id="endereco" placeholder="Endereço (ex: 101-2)" class="bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4">
-        <input id="codigo" placeholder="Código do Produto" class="bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4">
+        
+        <!-- Só números -->
+        <input id="endereco" placeholder="Endereço (ex: 101-2)" 
+               oninput="this.value = this.value.replace(/[^0-9]/g, '')" 
+               class="bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4">
+        
+        <!-- Só números -->
+        <input id="codigo" placeholder="Código do Produto" 
+               oninput="this.value = this.value.replace(/[^0-9]/g, '')" 
+               class="bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4">
+        
+        <!-- Lote em maiúsculo -->
         <input id="lote" placeholder="Lote" maxlength="20" 
                oninput="this.value = this.value.toUpperCase()" 
                class="bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 uppercase">
+        
         <input id="descricao" placeholder="Descrição" class="bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4">
       </div>
 
@@ -43,14 +54,9 @@
       </button>
     </div>
 
-    <!-- Busca e Lista -->
+    <!-- Lista -->
     <div class="bg-slate-900 rounded-3xl p-6 border border-slate-700">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-semibold">Itens Cadastrados</h2>
-        <input id="busca" placeholder="🔍 Buscar lote ou código..." 
-               onkeyup="filtrarLista()" 
-               class="bg-slate-800 border border-slate-600 rounded-2xl px-4 py-2 w-64">
-      </div>
+      <h2 class="text-xl font-semibold mb-5">Itens Cadastrados</h2>
       <div id="listaItens" class="space-y-3"></div>
     </div>
   </div>
@@ -74,62 +80,4 @@
         const res = await fetch('https://codril.onrender.com/api/salvar-produto.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(dados)
-        });
-
-        const data = await res.json();
-        if (data.success) {
-          alert("✅ Salvo com sucesso!");
-          limparFormulario();
-          carregarLista();
-        } else {
-          alert(data.message || "Erro ao salvar");
-        }
-      } catch (e) {
-        alert("❌ Erro de conexão");
-      }
-    }
-
-    function limparFormulario() {
-      document.getElementById('endereco').value = '';
-      document.getElementById('codigo').value = '';
-      document.getElementById('lote').value = '';
-      document.getElementById('descricao').value = '';
-    }
-
-    async function carregarLista(filtro = '') {
-      const container = document.getElementById('listaItens');
-      container.innerHTML = '<p class="text-slate-500 text-center py-10">Carregando...</p>';
-
-      try {
-        const res = await fetch('https://codril.onrender.com/api/salvar-produto.php'); // Podemos melhorar depois
-        // Por enquanto vamos mostrar mensagem
-        container.innerHTML = `
-          <p class="text-slate-400 text-center py-10">
-            ✅ Sistema funcionando!<br>
-            Cadastre produtos acima para ver a lista.
-          </p>`;
-      } catch (e) {
-        container.innerHTML = '<p class="text-red-400 text-center py-10">Erro ao carregar lista</p>';
-      }
-    }
-
-    function filtrarLista() {
-      // Será implementado quando tivermos listagem real
-      carregarLista(document.getElementById('busca').value);
-    }
-
-    function logout() {
-      localStorage.clear();
-      location.href = 'login.html';
-    }
-
-    window.onload = function() {
-      const user = JSON.parse(localStorage.getItem('currentUser'));
-      if (!user) return location.href = 'login.html';
-      document.getElementById('userName').textContent = `Olá, ${user.nome}`;
-      carregarLista();
-    };
-  </script>
-</body>
-</html>
+          body: JSON
