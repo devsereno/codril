@@ -22,7 +22,7 @@
       </button>
     </div>
 
-    <!-- Novo Cadastro -->
+    <!-- Formulário -->
     <div class="bg-slate-900 rounded-3xl p-6 mb-8 border border-slate-700">
       <h2 class="text-xl font-semibold mb-5">Novo Cadastro</h2>
       <div class="grid grid-cols-1 gap-4">
@@ -30,12 +30,9 @@
           <option value="pulmao">Pulmão AE</option>
           <option value="picking">Picking</option>
         </select>
-        <input id="endereco" placeholder="Endereço (ex: 101)" 
-               oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4">
-        <input id="codigo" placeholder="Código do Produto" 
-               oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4">
-        <input id="lote" placeholder="Lote" maxlength="20" 
-               oninput="this.value = this.value.toUpperCase()" class="bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 uppercase">
+        <input id="endereco" placeholder="Endereço (ex: 101)" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4">
+        <input id="codigo" placeholder="Código do Produto" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4">
+        <input id="lote" placeholder="Lote" maxlength="20" oninput="this.value = this.value.toUpperCase()" class="bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 uppercase">
         <input id="descricao" placeholder="Descrição" class="bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4">
       </div>
 
@@ -74,10 +71,11 @@
         });
 
         const data = await res.json();
+
         if (data.success) {
           alert("✅ Salvo com sucesso!");
           limparFormulario();
-          carregarLista();        // ← Atualiza a lista após salvar
+          carregarLista();   // Atualiza a lista imediatamente
         } else {
           alert(data.message || "Erro ao salvar");
         }
@@ -95,15 +93,30 @@
 
     async function carregarLista() {
       const container = document.getElementById('listaItens');
-      container.innerHTML = '<p class="text-slate-500 text-center py-6">Carregando itens...</p>';
+      container.innerHTML = '<p class="text-slate-500 text-center py-10">Carregando...</p>';
 
       try {
-        // Por enquanto vamos mostrar uma mensagem (melhoraremos depois)
-        container.innerHTML = `
-          <div class="text-center py-10 text-slate-400">
-            ✅ Cadastro funcionando!<br>
-            <span class="text-sm">Os itens salvos aparecerão aqui em breve.</span>
-          </div>`;
+        const res = await fetch('https://codril.onrender.com/api/salvar-produto.php');
+        const data = await res.json();
+
+        if (data.itens && data.itens.length > 0) {
+          let html = '';
+          data.itens.forEach(item => {
+            html += `
+              <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700">
+                <div class="flex justify-between">
+                  <span class="text-blue-400">${item.tipo.toUpperCase()}</span>
+                  <span class="text-xs text-slate-500">${item.data_cadastro ? item.data_cadastro.substring(0,10) : ''}</span>
+                </div>
+                <p class="text-2xl font-mono mt-2">${item.endereco}</p>
+                <p class="text-lg">${item.codigo_produto} • ${item.lote}</p>
+                \( {item.descricao ? `<p class="text-slate-400 text-sm mt-1"> \){item.descricao}</p>` : ''}
+              </div>`;
+          });
+          container.innerHTML = html;
+        } else {
+          container.innerHTML = '<p class="text-slate-500 text-center py-10">Nenhum item cadastrado ainda.</p>';
+        }
       } catch (e) {
         container.innerHTML = '<p class="text-red-400 text-center py-10">Erro ao carregar lista</p>';
       }
