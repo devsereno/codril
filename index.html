@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Pulmão AE</title>
+  <title>PULMÃO AE - Cadastro</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-950 text-white min-h-screen font-sans">
+<body class="bg-slate-950 text-white min-h-screen relative font-sans">
 
+  <!-- NOTIFICAÇÃO PERSONALIZADA (TOAST) EM HTML -->
   <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 transform transition-all duration-300 opacity-0 pointer-events-none scale-90">
     <div id="toastBg" class="flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-sm">
       <span id="toastIcon" class="text-xl"></span>
@@ -15,107 +16,81 @@
     </div>
   </div>
 
-  <div class="max-w-4xl mx-auto px-4 py-8">
-    
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 border-b border-slate-900 pb-6">
+  <div class="max-w-4xl mx-auto p-4">
+
+    <!-- CABEÇALHO COM LOGIN ADAPTATIVO -->
+    <div class="flex justify-between items-center mb-8 border-b border-slate-900 pb-4">
       <div class="flex items-center gap-3">
-        <span class="text-4xl">⚙️</span>
+        <span class="text-5xl">📦</span>
         <div>
-          <h1 class="text-3xl font-extrabold text-slate-100 tracking-tight">Painel Administrativo</h1>
-          <p id="boasVindas" class="text-blue-400 text-sm font-medium">Olá, Carregando...</p>
+          <h1 class="text-3xl font-extrabold tracking-tight">PULMÃO AE</h1>
+          <p id="userName" class="text-slate-400 text-sm">Carregando utilizador...</p>
         </div>
       </div>
-      <button onclick="efetuarLogout()" class="bg-slate-900 hover:bg-red-950/40 hover:text-red-400 hover:border-red-900/50 px-5 py-2.5 rounded-2xl text-xs font-bold transition-all border border-slate-800">
-        🚪 Sair da Sessão
+      
+      <div class="flex items-center gap-2">
+        <!-- Botão ADM: Fica invisível por padrão e aparece apenas para Master e Super -->
+        <a id="admLink" href="adm.html" class="hidden px-4 py-2.5 bg-amber-600/20 text-amber-400 border border-amber-500/30 hover:bg-amber-600/30 rounded-2xl text-xs font-bold transition-all">
+          ⚙️ Painel ADM
+        </a>
+        <button onclick="logout()" class="px-4 py-2.5 bg-red-600/10 text-red-400 border border-red-500/20 hover:bg-red-600/20 rounded-2xl text-xs font-bold transition-all">
+          Sair
+        </button>
+      </div>
+    </div>
+
+    <!-- FORMULÁRIO DE NOVO CADASTRO (RESTAURADO) -->
+    <div class="bg-slate-900 rounded-3xl p-6 mb-8 border border-slate-800 shadow-2xl">
+      <h2 class="text-xl font-bold mb-5 flex items-center gap-2 text-slate-200">
+        <span>📝</span> Novo Cadastro de Posição
+      </h2>
+      
+      <div class="grid grid-cols-1 gap-4">
+        <label class="block">
+          <span class="text-xs text-slate-400 font-semibold mb-1.5 block">Tipo de Armazenagem</span>
+          <select id="tipo" class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 text-white text-sm">
+            <option value="pulmao">Pulmão AE</option>
+            <option value="picking">Picking</option>
+          </select>
+        </label>
+
+        <label class="block">
+          <span class="text-xs text-slate-400 font-semibold mb-1.5 block">Endereço (Apenas números)</span>
+          <input id="endereco" placeholder="Ex: 101" type="text" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 text-white text-sm">
+        </label>
+
+        <label class="block">
+          <span class="text-xs text-slate-400 font-semibold mb-1.5 block">Código do Produto / SKU (Apenas números)</span>
+          <input id="codigo" placeholder="Digite o SKU" type="text" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 text-white text-sm">
+        </label>
+
+        <label class="block">
+          <span class="text-xs text-slate-400 font-semibold mb-1.5 block">Lote</span>
+          <input id="lote" placeholder="Digite o lote" maxlength="20" type="text" oninput="this.value = this.value.toUpperCase()" class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 uppercase focus:outline-none focus:border-blue-500 text-white text-sm">
+        </label>
+
+        <label class="block">
+          <span class="text-xs text-slate-400 font-semibold mb-1.5 block">Descrição (Opcional)</span>
+          <input id="descricao" placeholder="Observações do produto..." type="text" class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 text-white text-sm">
+        </label>
+      </div>
+
+      <button id="btnSalvar" onclick="cadastrarProduto()" class="mt-6 w-full bg-blue-600 hover:bg-blue-500 py-5 rounded-2xl font-bold transition-all active:scale-[0.99] flex justify-center items-center gap-2 shadow-lg shadow-blue-600/20 text-sm">
+        <span>💾 Salvar no Sistema</span>
       </button>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      
-      <div id="cardAdminUsuarios" class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col justify-between hidden">
-        <div>
-          <div class="flex items-center gap-3 mb-3">
-            <span class="text-2xl">👥</span>
-            <h2 class="text-lg font-bold text-slate-200">Gerenciar Usuários</h2>
-          </div>
-          <p class="text-xs text-slate-400 leading-relaxed mb-6">Cadastre novos operadores, altere níveis de acesso ou remova permissões do sistema.</p>
-        </div>
-        <a href="adm.html" class="w-full bg-blue-600 hover:bg-blue-500 py-3.5 rounded-xl text-xs font-bold transition-all active:scale-95 text-center text-white block">
-          Abrir Usuários
-        </a>
-      </div>
-
-      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col justify-between">
-        <div>
-          <div class="flex items-center gap-3 mb-3">
-            <span class="text-2xl">📊</span>
-            <h2 class="text-lg font-bold text-slate-200">Relatórios de Movimentação</h2>
-          </div>
-          <p class="text-xs text-slate-400 leading-relaxed mb-6">Veja o histórico completo de entradas, auditoria de posições e exportação de dados.</p>
-        </div>
-        <button onclick="mostrarAviso('Módulo de Relatórios em desenvolvimento.', 'alerta')" class="w-full bg-slate-850 hover:bg-slate-800 border border-slate-700/60 py-3.5 rounded-xl text-xs font-bold transition-all active:scale-95 text-center text-slate-300 block">
-          Visualizar Logs
-        </button>
-      </div>
-
-      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col justify-between md:col-span-2">
-        <div>
-          <div class="flex items-center gap-3 mb-3">
-            <span class="text-2xl">📦</span>
-            <h2 class="text-lg font-bold text-slate-200">Área Operacional e Logística</h2>
-          </div>
-          <p class="text-xs text-slate-400 leading-relaxed mb-4">Acesso rápido para conferência de posições físicas, entrada de mercadorias no pulmão e atualização de lotes ativos.</p>
-        </div>
-        <button onclick="mostrarAviso('Redirecionando para área operacional...', 'sucesso')" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3.5 rounded-xl text-xs font-bold transition-all active:scale-95 text-center text-white block">
-          Iniciar Operação Física
-        </button>
-      </div>
-
+    <!-- BOTÕES DE NAVEGAÇÃO -->
+    <div class="flex gap-4">
+      <a href="lista.html" class="flex-1 bg-slate-900 hover:bg-slate-850 border border-slate-800 py-5 rounded-2xl text-center font-bold transition-all flex justify-center items-center gap-2 text-sm">
+        <span>📋</span> Ver Todos os Itens
+      </a>
     </div>
 
   </div>
 
   <script>
-    // Executa assim que a página carrega completamente
-    document.addEventListener("DOMContentLoaded", () => {
-      verificarSegurancaSessao();
-    });
-
-    function verificarSegurancaSessao() {
-      // Puxa os dados guardados no sessionStorage durante o login
-      const dadosSessao = sessionStorage.getItem('usuarioLogado');
-
-      // 1. TRAVA MÁXIMA: Se não houver dados, chuta de volta para a tela de login
-      if (!dadosSessao) {
-        window.location.href = 'login.html';
-        return;
-      }
-
-      const usuario = JSON.parse(dadosSessao);
-
-      // 2. EXIBIÇÃO CUSTOMIZADA: Atualiza o texto de boas-vindas com o cargo
-      const cargoFormatado = usuario.role.toUpperCase();
-      document.getElementById('boasVindas').textContent = `Administrador: ${usuario.nome} (${cargoFormatado})`;
-
-      // 3. CONTROLE DE VISIBILIDADE DOS MENUS:
-      // Se for 'master' ou 'super', exibe o card de gerenciar usuários
-      if (usuario.role === 'master' || usuario.role === 'super') {
-        document.getElementById('cardAdminUsuarios').classList.remove('hidden');
-      }
-      
-      // Se for um operador comum ('user'), o card de usuários permanece oculto ('hidden')
-    }
-
-    // Função para limpar a sessão e sair com segurança
-    function efetuarLogout() {
-      sessionStorage.removeItem('usuarioLogado');
-      mostrarAviso("Sessão encerrada. Até logo!", "sucesso");
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 1000);
-    }
-
-    // Toast de Alerta Customizado (Sem usar o alert do navegador)
+    // FUNÇÃO QUE GERENCIA AS NOTIFICAÇÕES TOAST
     function mostrarAviso(mensagem, tipo = 'sucesso') {
       const toast = document.getElementById('toast');
       const toastBg = document.getElementById('toastBg');
@@ -134,6 +109,7 @@
       }
 
       toastMessage.textContent = mensagem;
+
       toast.classList.remove('opacity-0', 'pointer-events-none', 'scale-90', 'top-5');
       toast.classList.add('opacity-100', 'scale-100', 'top-8');
 
@@ -142,6 +118,98 @@
         toast.classList.add('opacity-0', 'pointer-events-none', 'scale-90', 'top-5');
       }, 3000);
     }
+
+    // ENVIO DOS DADOS PARA A API DO RENDER
+    async function cadastrarProduto() {
+      const btn = document.getElementById('btnSalvar');
+      
+      const dados = {
+        tipo: document.getElementById('tipo').value,
+        endereco: document.getElementById('endereco').value.trim(),
+        codigo_produto: document.getElementById('codigo').value.trim(),
+        lote: document.getElementById('lote').value.trim().toUpperCase(),
+        descricao: document.getElementById('descricao').value.trim()
+      };
+
+      if (!dados.endereco || !dados.codigo_produto || !dados.lote) {
+        mostrarAviso("Preencha os campos obrigatórios: Endereço, Código e Lote.", "alerta");
+        return;
+      }
+
+      try {
+        btn.disabled = true;
+        btn.innerHTML = `<span>⏳ Gravando dados...</span>`;
+        btn.classList.replace('bg-blue-600', 'bg-slate-700');
+
+        const res = await fetch('https://codril.onrender.com/api/salvar-produto.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(dados)
+        });
+
+        if (!res.ok) throw new Error(`Erro no servidor: ${res.status}`);
+
+        const data = await res.json();
+        
+        if (data.success) {
+          mostrarAviso("Salvo com sucesso!", "sucesso");
+          limparFormulario();
+        } else {
+          mostrarAviso(data.message || "Erro ao salvar o produto.", "erro");
+        }
+      } catch (e) {
+        console.error("Erro no cadastro:", e);
+        mostrarAviso("Erro de conexão com o servidor.", "erro");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>💾 Salvar no Sistema</span>`;
+        btn.classList.replace('bg-slate-700', 'bg-blue-600');
+      }
+    }
+
+    function limparFormulario() {
+      document.getElementById('endereco').value = '';
+      document.getElementById('codigo').value = '';
+      document.getElementById('lote').value = '';
+      document.getElementById('descricao').value = '';
+    }
+
+    function logout() {
+      sessionStorage.removeItem('usuarioLogado');
+      localStorage.removeItem('currentUser');
+      location.href = 'login.html';
+    }
+
+    // CONTROLE DE ACESSO E SESSÃO SEGURO
+    window.onload = function() {
+      try {
+        // Aceita tanto a sessão estruturada nova quanto os logins antigos
+        const userRaw = sessionStorage.getItem('usuarioLogado') || localStorage.getItem('currentUser');
+        const admContainer = document.getElementById('admLink');
+        
+        if (!userRaw) {
+          location.href = 'login.html';
+          return;
+        }
+
+        const user = JSON.parse(userRaw);
+        document.getElementById('userName').textContent = `Olá, ${user.nome || 'Operador'}`;
+
+        // Libera ou oculta o painel ADM baseado no nível salvo
+        const role = (user.role || user.nivel || '').toLowerCase().trim();
+        const nome = (user.nome || '').toLowerCase();
+        
+        if (role === 'super' || role === 'master' || nome.includes('master')) {
+          if (admContainer) admContainer.classList.remove('hidden');
+        } else {
+          if (admContainer) admContainer.classList.add('hidden');
+        }
+
+      } catch (err) {
+        console.error("Erro no carregamento inicial:", err);
+        location.href = 'login.html';
+      }
+    };
   </script>
 </body>
 </html>
