@@ -1,145 +1,333 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-PT">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pulmão AE - Lista</title>
+  <title>PULMÃO AE - Consulta de Stock</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-950 text-white min-h-screen">
-  <div class="max-w-4xl mx-auto p-4">
+<body class="bg-slate-950 text-white min-h-screen relative font-sans">
 
-    <div class="flex justify-between items-center mb-8 border-b border-slate-700 pb-4">
-      <div>
-        <h1 class="text-3xl font-bold">Itens Cadastrados</h1>
-        <p id="totalItens" class="text-slate-400 text-sm">Total: 0</p>
+  <!-- NOTIFICAÇÃO PERSONALIZADA (TOAST) EM HTML -->
+  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 transform transition-all duration-300 opacity-0 pointer-events-none scale-90">
+    <div id="toastBg" class="flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-sm">
+      <span id="toastIcon" class="text-xl"></span>
+      <span id="toastMessage" class="font-medium text-sm"></span>
+    </div>
+  </div>
+
+  <!-- MODAL DE CONFIRMAÇÃO DE APAGAR (DESIGN PREMIUM) -->
+  <div id="deleteModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 transition-all duration-300 opacity-0 pointer-events-none">
+    <div id="modalBox" class="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl scale-95 transform transition-all duration-300">
+      <div class="text-center">
+        <span class="text-5xl block mb-3">⚠️</span>
+        <h3 class="text-lg font-bold text-slate-100 mb-2">Eliminar este item?</h3>
+        <p class="text-xs text-slate-400 leading-relaxed mb-6">Esta operação é definitiva e removerá o lote e a posição física do banco de dados.</p>
       </div>
       <div class="flex gap-3">
-        <button onclick="carregarItens()" 
-                class="px-6 py-3 bg-red-600 hover:bg-red-500 rounded-2xl text-sm font-medium flex items-center gap-2 transition-all active:scale-95">
-          🔄 Atualizar Lista
+        <button onclick="fecharModalDelete()" class="flex-1 bg-slate-800 hover:bg-slate-750 py-3 rounded-xl font-bold text-xs transition-all">
+          Cancelar
         </button>
-        <a href="index.html" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-2xl text-sm font-medium">
-          + Novo Cadastro
-        </a>
+        <button id="btnConfirmarExclusao" class="flex-1 bg-red-600 hover:bg-red-500 py-3 rounded-xl font-bold text-xs text-white transition-all shadow-lg shadow-red-600/20">
+          Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-4xl mx-auto p-4">
+
+    <!-- CABEÇALHO DA LISTAGEM -->
+    <div class="flex justify-between items-center mb-6 border-b border-slate-900 pb-4">
+      <div class="flex items-center gap-3">
+        <span class="text-4xl">📋</span>
+        <div>
+          <h1 class="text-2xl font-extrabold tracking-tight">Estoque Ativo</h1>
+          <p id="contadorItens" class="text-slate-400 text-xs">Carregando posições...</p>
+        </div>
+      </div>
+      <a href="index.html" class="px-5 py-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-2xl text-xs font-bold transition-all flex items-center gap-1">
+        ⬅️ Novo Registro
+      </a>
+    </div>
+
+    <!-- PESQUISA GERAL INTELIGENTE -->
+    <div class="relative mb-4">
+      <input id="filtro" oninput="filtrarCards()" placeholder="🔍 Pesquisar por Endereço, SKU ou Lote..." type="text" class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 text-white text-sm placeholder-slate-500">
+    </div>
+
+    <!-- SELETOR DE ABAS RÁPIDAS (FILTRAGEM DE TIPO) -->
+    <div class="flex gap-2 mb-6 overflow-x-auto pb-1">
+      <button onclick="filtrarTipo('todos')" id="aba-todos" class="px-5 py-2.5 bg-blue-600 text-xs font-bold rounded-full transition-colors whitespace-nowrap">Todos</button>
+      <button onclick="filtrarTipo('pulmao')" id="aba-pulmao" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-xs text-slate-400 hover:text-white font-bold rounded-full transition-colors whitespace-nowrap">Pulmão AE</button>
+      <button onclick="filtrarTipo('picking')" id="aba-picking" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-xs text-slate-400 hover:text-white font-bold rounded-full transition-colors whitespace-nowrap">Picking</button>
+    </div>
+
+    <!-- GRID DE CARDS MODERNOS -->
+    <div id="gridCards" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <!-- Cards de produto são renderizados de forma dinâmica por JavaScript -->
+      <div class="sm:col-span-2 text-center py-16 text-slate-500">
+        <span class="text-3xl block mb-2">🔄</span>
+        Buscando registros ativos no Render...
       </div>
     </div>
 
-    <input id="busca" placeholder="🔍 Buscar por lote, código ou endereço..." 
-           class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-6 focus:outline-none focus:border-blue-500" 
-           oninput="filtrarItens()">
-
-    <div id="listaItens" class="space-y-4"></div>
   </div>
 
   <script>
-    let todosOsItens = [];
+    let itensEstoque = [];
+    let tipoAtivo = 'todos';
+    let itemIdParaApagar = null;
+    let nivelDeAcesso = 'user'; // Por padrão, segurança máxima
 
-    async function carregarItens() {
-      const container = document.getElementById('listaItens');
-      container.innerHTML = `<p class="text-center py-12 text-slate-400">Carregando itens...</p>`;
+    // Roda ao carregar a página para segurança e carregamento
+    window.onload = function() {
+      verificarSessao();
+      carregarDadosDoServidor();
+    };
 
+    function verificarSessao() {
+      const userRaw = sessionStorage.getItem('usuarioLogado') || localStorage.getItem('currentUser');
+      if (!userRaw) {
+        location.href = 'login.html';
+        return;
+      }
+      
+      const user = JSON.parse(userRaw);
+      // Salva nível de acesso para ocultar ou exibir botões
+      nivelDeAcesso = (user.role || user.nivel || 'user').toLowerCase().trim();
+    }
+
+    // BUSCA OS DADOS NA API REAL
+    async function carregarDadosDoServidor() {
       try {
-        const res = await fetch('https://codril.onrender.com/api/salvar-produto.php');
+        // Faz a chamada para a sua listagem de produtos
+        const res = await fetch('https://codril.onrender.com/api/listar-produtos.php');
+        if (!res.ok) throw new Error('Erro na requisição');
+        
         const data = await res.json();
-
-        if (data.success && data.itens) {
-          todosOsItens = data.itens;
-          document.getElementById('totalItens').textContent = `Total: ${data.itens.length}`;
-          renderizarItens(todosOsItens);
+        
+        if (data.success) {
+          // Garante compatibilidade caso retorne "dados" ou "itens"
+          itensEstoque = data.dados || data.itens || [];
+          filtrarCards();
         } else {
-          exibirMensagemVazia();
+          mostrarAviso("Não foi possível carregar dados do banco de dados.", "erro");
         }
-      } catch (e) {
-        console.error(e);
-        container.innerHTML = `<p class="text-red-400 text-center py-12">Erro ao carregar lista</p>`;
+      } catch (err) {
+        console.error(err);
+        document.getElementById('gridCards').innerHTML = `
+          <div class="sm:col-span-2 bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center text-red-400">
+            ❌ Falha ao comunicar com o servidor Render. Verifique a internet ou API.
+          </div>
+        `;
       }
     }
 
-    function renderizarItens(itens) {
-      const container = document.getElementById('listaItens');
+    // RENDERIZAÇÃO EM LAYOUT DE CARDS PREMIUM
+    function renderizarCards(itens) {
+      const container = document.getElementById('gridCards');
+      document.getElementById('contadorItens').textContent = `${itens.length} posições de estoque ativas`;
+
       if (itens.length === 0) {
-        exibirMensagemVazia();
+        container.innerHTML = `
+          <div class="sm:col-span-2 bg-slate-900 border border-slate-800 rounded-3xl p-12 text-center text-slate-500">
+            <span class="text-5xl block mb-2">📦</span>
+            Nenhum registro encontrado correspondente ao filtro.
+          </div>
+        `;
         return;
       }
 
       let html = '';
       itens.forEach(item => {
-        // Correção das barras e parênteses que quebravam a string literal
-        const descricaoHtml = item.descricao && item.descricao.trim() !== '' 
-          ? `<p class="text-slate-400 text-sm mt-2">${item.descricao}</p>` 
+        const ehPulmao = (item.tipo || '').toLowerCase() === 'pulmao';
+        const tagTexto = ehPulmao ? '🚨 PULMÃO AE' : '📦 PICKING';
+        const tagClasse = ehPulmao 
+          ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' 
+          : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20';
+
+        const qtd = item.quantidade !== undefined && item.quantidade !== null ? item.quantidade : 1;
+        const descricaoText = item.descricao && item.descricao.trim() !== '' 
+          ? `<p class="text-xs text-slate-400 border-t border-slate-800/80 pt-3 mt-3 italic">${item.descricao}</p>` 
           : '';
 
-        // Formatação visual da data para o padrão PT-BR
-        let dataExibicao = '';
-        if (item.data_cadastro) {
-          const partes = item.data_cadastro.substring(0,10).split('-');
-          dataExibicao = partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : item.data_cadastro.substring(0,10);
-        }
+        // SEURANÇA ATIVA: Só mostra o botão de apagar para Master e Super
+        const podeApagar = (nivelDeAcesso === 'master' || nivelDeAcesso === 'super');
+        const botaoApagar = podeApagar 
+          ? `<button onclick="abrirConfirmarDelete(${item.id})" class="w-full bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 py-2.5 rounded-xl text-red-400 font-bold transition-all text-xs">Apagar Registro</button>`
+          : '';
 
         html += `
-          <div class="bg-slate-900 p-5 rounded-3xl border border-slate-700">
-            <div class="flex justify-between mb-3">
-              <span class="px-4 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm font-semibold">${(item.tipo || 'N/A').toUpperCase()}</span>
-              <span class="text-xs text-slate-500 font-mono">${dataExibicao}</span>
+          <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl flex flex-col justify-between hover:border-slate-750 transition-all">
+            <div>
+              <div class="flex justify-between items-center mb-4">
+                <span class="px-2.5 py-1 ${tagClasse} border rounded-full text-[10px] font-extrabold tracking-wider">${tagTexto}</span>
+                <span class="text-[10px] text-slate-500 font-mono">ID: #${item.id}</span>
+              </div>
+
+              <div class="space-y-1 mb-4">
+                <span class="text-[10px] uppercase font-bold tracking-widest text-slate-500 block">Endereço</span>
+                <span class="text-3xl font-black font-mono text-emerald-400 tracking-wide">${item.endereco}</span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 p-3 bg-slate-950/40 border border-slate-800/80 rounded-2xl mb-4 text-xs">
+                <div>
+                  <span class="text-[9px] text-slate-500 font-bold uppercase block mb-0.5">SKU / Código</span>
+                  <span class="font-bold text-blue-400 font-mono">${item.codigo_produto}</span>
+                </div>
+                <div>
+                  <span class="text-[9px] text-slate-500 font-bold uppercase block mb-0.5">Lote</span>
+                  <span class="font-bold text-orange-400 font-mono">${item.lote}</span>
+                </div>
+              </div>
+
+              <!-- QUANTIDADE EM DESTAQUE -->
+              <div class="flex justify-between items-center p-3 bg-slate-950/20 border border-slate-850 rounded-2xl mb-4 text-xs font-semibold">
+                <span class="text-slate-400">Quantidade de Unidades:</span>
+                <span class="text-sm font-black font-mono text-slate-100 bg-slate-800 px-3 py-1 rounded-lg">${qtd}</span>
+              </div>
+
+              ${descricaoText}
             </div>
-            
-            <p class="text-2xl font-mono text-emerald-400 font-bold">${item.endereco || 'Sem endereço'}</p>
-            
-            <p class="text-lg mt-1 text-slate-300">
-              Código: 
-              <span onclick="filtrarPorCodigo('${item.codigo_produto}')" 
-                    class="text-blue-400 underline cursor-pointer hover:text-blue-300 font-mono font-medium">
-                ${item.codigo_produto || 'N/A'}
-              </span> 
-              • Lote: <span class="text-orange-400 font-mono">${item.lote || 'N/A'}</span>
-            </p>
-            
-            ${descricaoHtml}
-          </div>`;
+
+            <div class="mt-4 pt-1">
+              ${botaoApagar}
+            </div>
+          </div>
+        `;
       });
+
       container.innerHTML = html;
     }
 
-    function exibirMensagemVazia() {
-      const container = document.getElementById('listaItens');
-      container.innerHTML = `
-        <div class="bg-slate-900 rounded-3xl p-12 text-center border border-slate-700">
-          <p class="text-6xl mb-4">📦</p>
-          <p class="text-xl text-slate-300">Nenhum item encontrado</p>
-        </div>`;
-    }
-
-    // Filtro inteligente pela barra de busca
-    function filtrarItens() {
-      const termo = document.getElementById('busca').value.toLowerCase().trim();
+    // FILTRO DINÂMICO DE TEXTO E ABAS
+    function filtrarCards() {
+      const query = document.getElementById('filtro').value.toLowerCase().trim();
       
-      const filtrados = todosOsItens.filter(item => {
-        return (item.endereco || '').toLowerCase().includes(termo) ||
-               (item.codigo_produto || '').toLowerCase().includes(termo) ||
-               (item.lote || '').toLowerCase().includes(termo) ||
-               (item.descricao || '').toLowerCase().includes(termo) ||
-               (item.tipo || '').toLowerCase().includes(termo);
+      const filtrados = itensEstoque.filter(item => {
+        const tipo = (item.tipo || '').toLowerCase();
+        const endereco = (item.endereco || '').toLowerCase();
+        const codigo = (item.codigo_produto || '').toLowerCase();
+        const lote = (item.lote || '').toLowerCase();
+
+        const bateAba = (tipoAtivo === 'todos' || tipo === tipoAtivo);
+        const batePesquisa = !query || 
+                             endereco.includes(query) || 
+                             codigo.includes(query) || 
+                             lote.includes(query);
+
+        return bateAba && batePesquisa;
       });
 
-      renderizarItens(filtrados);
+      renderizarCards(filtrados);
     }
 
-    // Filtro rápido ao clicar no link do Código
-    function filtrarPorCodigo(codigo) {
-      if (!codigo) return;
-      
-      const filtrados = todosOsItens.filter(item => 
-        (item.codigo_produto || '') === codigo
-      );
-      
-      renderizarItens(filtrados);
-      
-      // Insere o código na barra de busca para o operador saber o que está filtrando
-      document.getElementById('busca').value = codigo;
+    // ALTERA ENTRE AS ABAS TODOS/PULMÃO/PICKING
+    function filtrarTipo(tipo) {
+      tipoAtivo = tipo;
+
+      // Reseta cores visuais das abas
+      ['todos', 'pulmao', 'picking'].forEach(t => {
+        const btn = document.getElementById(`aba-${t}`);
+        if (t === tipo) {
+          btn.className = "px-5 py-2.5 bg-blue-600 text-xs font-bold rounded-full transition-colors whitespace-nowrap text-white";
+        } else {
+          btn.className = "px-5 py-2.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-xs text-slate-400 hover:text-white font-bold rounded-full transition-colors whitespace-nowrap";
+        }
+      });
+
+      filtrarCards();
     }
 
-    window.onload = carregarItens;
+    // SISTEMA DE CONFIRMAÇÃO DE EXCLUSÃO PREMIUM (SEM ALERT NATIVO)
+    function abrirConfirmarDelete(id) {
+      itemIdParaApagar = id;
+      const modal = document.getElementById('deleteModal');
+      const box = document.getElementById('modalBox');
+
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        box.classList.remove('scale-95');
+        box.classList.add('scale-100');
+      }, 50);
+
+      document.getElementById('btnConfirmarExclusao').onclick = executarExclusao;
+    }
+
+    function fecharModalDelete() {
+      const modal = document.getElementById('deleteModal');
+      const box = document.getElementById('modalBox');
+
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      box.classList.remove('scale-100');
+      box.classList.add('scale-95');
+
+      setTimeout(() => {
+        modal.classList.add('hidden');
+        itemIdParaApagar = null;
+      }, 300);
+    }
+
+    async function executarExclusao() {
+      if (!itemIdParaApagar) return;
+
+      const btn = document.getElementById('btnConfirmarExclusao');
+      try {
+        btn.disabled = true;
+        btn.textContent = "Apagando...";
+
+        const res = await fetch('https://codril.onrender.com/api/apagar-produto.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: itemIdParaApagar })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          mostrarAviso("Registro de posição apagado com sucesso!", "sucesso");
+          fecharModalDelete();
+          carregarDadosDoServidor(); // Recarrega os dados reais
+        } else {
+          mostrarAviso(data.message || "Erro ao apagar o registro.", "erro");
+          btn.disabled = false;
+          btn.textContent = "Confirmar";
+        }
+      } catch (err) {
+        mostrarAviso("Erro de conexão ao remover registro.", "erro");
+        btn.disabled = false;
+        btn.textContent = "Confirmar";
+      }
+    }
+
+    // TOAST NOTIFICATIONS
+    function mostrarAviso(mensagem, tipo = 'sucesso') {
+      const toast = document.getElementById('toast');
+      const toastBg = document.getElementById('toastBg');
+      const toastIcon = document.getElementById('toastIcon');
+      const toastMessage = document.getElementById('toastMessage');
+
+      if (tipo === 'sucesso') {
+        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-emerald-500/90 border-emerald-400 text-white backdrop-blur-sm";
+        toastIcon.textContent = "✅";
+      } else if (tipo === 'erro') {
+        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-red-500/90 border-red-400 text-white backdrop-blur-sm";
+        toastIcon.textContent = "❌";
+      } else {
+        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-amber-500/90 border-amber-400 text-white backdrop-blur-sm";
+        toastIcon.textContent = "⚠️";
+      }
+
+      toastMessage.textContent = mensagem;
+      toast.classList.remove('opacity-0', 'pointer-events-none', 'scale-90', 'top-5');
+      toast.classList.add('opacity-100', 'scale-100', 'top-8');
+
+      setTimeout(() => {
+        toast.classList.remove('opacity-100', 'scale-100', 'top-8');
+        toast.classList.add('opacity-0', 'pointer-events-none', 'scale-90', 'top-5');
+      }, 3000);
+    }
   </script>
 </body>
 </html>
