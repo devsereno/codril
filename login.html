@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-PT">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pulmão AE - Login</title>
+  <title>Login - Pulmão AE</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="manifest" href="manifest.json">
 </head>
-<body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4 relative">
+<body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4 font-sans">
 
+  <!-- TOAST NOTIFICATION -->
   <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 transform transition-all duration-300 opacity-0 pointer-events-none scale-90">
     <div id="toastBg" class="flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-sm">
       <span id="toastIcon" class="text-xl"></span>
@@ -16,39 +16,64 @@
     </div>
   </div>
 
-  <div class="max-w-md w-full">
-
-    <div class="text-center mb-10">
-      <span class="text-6xl">📦</span>
-      <h1 class="text-4xl font-bold mt-4">PULMÃO AE</h1>
-      <p class="text-slate-400 text-sm tracking-wide mt-1">Sistema de Armazenamento Inteligente</p>
-    </div>
-
-    <div class="bg-slate-900 rounded-3xl p-8 border border-slate-700 shadow-2xl">
-      <h2 class="text-xl font-semibold mb-6 text-center flex items-center justify-center gap-2">
-        🔒 Controle de Acesso
-      </h2>
-      
-      <div class="space-y-4">
-        <div>
-          <label class="text-xs text-slate-400 font-medium mb-1 block">E-mail de Usuário</label>
-          <input id="email" type="email" value="ricardomaster@gmail.com" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 text-white">
-        </div>
-
-        <div>
-          <label class="text-xs text-slate-400 font-medium mb-1 block">Senha Numérica</label>
-          <input id="senha" type="password" value="8486" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 font-mono text-white tracking-widest">
-        </div>
+  <!-- MODAL OBRIGATÓRIO PARA ALTERAR SENHA TEMPORÁRIA -->
+  <div id="modalTrocaSenha" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-md hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl">
+      <div class="text-center mb-6">
+        <span class="text-4xl">🔐</span>
+        <h3 class="text-xl font-extrabold text-slate-100 mt-3">Alteração de Senha Obrigatória</h3>
+        <p class="text-xs text-slate-400 mt-2">Você está usando uma senha temporária. Defina uma senha forte de sua escolha antes de continuar.</p>
       </div>
 
-      <button id="btnEntrar" onclick="fazerLogin()" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-semibold text-lg mt-8 transition-all active:scale-[0.99] shadow-lg shadow-blue-600/20 flex justify-center items-center">
-        <span>Entrar no Sistema</span>
-      </button>
+      <form id="formTrocarSenha" onsubmit="processarTrocaDeSenha(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Nova Senha Definitiva</label>
+          <input type="password" id="novaSenha1" required minlength="4" placeholder="Mínimo de 4 dígitos" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 font-mono text-center">
+        </div>
+        
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Confirme a Nova Senha</label>
+          <input type="password" id="novaSenha2" required minlength="4" placeholder="Digite exatamente igual" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 font-mono text-center">
+        </div>
+
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 py-3.5 rounded-xl text-xs font-bold transition-all active:scale-95 text-white">
+          Gravar Nova Senha & Entrar
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- CAIXA DE LOGIN PRINCIPAL -->
+  <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl">
+    <div class="text-center mb-8">
+      <div class="text-4xl mb-3">🩺</div>
+      <h1 class="text-2xl font-extrabold text-blue-400">Pulmão AE</h1>
+      <p class="text-xs text-slate-400 mt-1">Insira suas credenciais para aceder ao sistema</p>
     </div>
 
+    <form id="formLogin" onsubmit="processarLogin(event)" class="space-y-4">
+      <div>
+        <label class="block text-xs font-medium text-slate-400 mb-1">E-mail</label>
+        <input type="email" id="loginEmail" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-slate-400 mb-1">Senha</label>
+        <input type="password" id="loginSenha" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 font-mono">
+      </div>
+
+      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 py-3.5 rounded-xl text-xs font-bold transition-all active:scale-95 text-white">
+        Entrar no Painel
+      </button>
+    </form>
   </div>
 
   <script>
+    const API_LOGIN = 'https://codril.onrender.com/api/login.php';
+    const API_USUARIOS = 'https://codril.onrender.com/api/usuarios.php';
+    let emailSendoAlterado = '';
+
+    // Alertas customizados sem usar alert() nativo
     function mostrarAviso(mensagem, tipo = 'sucesso') {
       const toast = document.getElementById('toast');
       const toastBg = document.getElementById('toastBg');
@@ -76,18 +101,78 @@
       }, 3000);
     }
 
-    async function fazerLogin() {
-      const btn = document.getElementById('btnEntrar');
-      const email = document.getElementById('email').value.trim();
-      const senha = document.getElementById('senha').value.trim();
+    // Processa a tentativa de login normal
+    async function processarLogin(e) {
+      e.preventDefault();
 
-      if (!email || !senha) {
-        mostrarAviso("Por favor, preencha o e-mail e a senha.", "alerta");
-        return;
+      const email = document.getElementById('loginEmail').value.trim();
+      const senha = document.getElementById('loginSenha').value;
+
+      try {
+        const res = await fetch(API_LOGIN, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, senha })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          // Se o banco indicar que o utilizador precisa obrigatoriamente trocar de senha
+          if (data.user.requerer_troca) {
+            emailSendoAlterado = email;
+            document.getElementById('modalTrocaSenha').classList.remove('hidden');
+            mostrarAviso("Troca de senha necessária!", "alerta");
+          } else {
+            // Guarda dados do utilizador na sessão e segue para o index
+            sessionStorage.setItem('usuarioLogado', JSON.stringify(data.user));
+            mostrarAviso("Login efetuado com sucesso!");
+            
+            setTimeout(() => {
+              window.location.href = 'index.html';
+            }, 1000);
+          }
+        } else {
+          mostrarAviso(data.message, "erro");
+        }
+      } catch (err) {
+        mostrarAviso("Erro ao ligar ao servidor de login.", "erro");
+      }
+    }
+
+    // Processa a troca de senha mandatória
+    async function processarTrocaDeSenha(e) {
+      e.preventDefault();
+
+      const n1 = document.getElementById('novaSenha1').value;
+      const n2 = document.getElementById('novaSenha2').value;
+
+      if (n1 !== n2) {
+        return mostrarAviso("As senhas digitadas não coincidem!", "erro");
       }
 
       try {
-        btn.disabled = true;
-        btn.innerHTML = `<span>⏳ Autenticando...</span>`;
-        btn.classList.replace('bg-blue-600
-                              
+        const res = await fetch(API_USUARIOS, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'CHANGE_PASSWORD',
+            email: emailSendoAlterado,
+            nova_senha: n1
+          })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          mostrarAviso("Nova senha definitiva salva com sucesso! Faça login para entrar.");
+          document.getElementById('modalTrocaSenha').classList.add('hidden');
+          document.getElementById('loginSenha').value = ''; // Limpa senha temporária do campo
+        } else {
+          mostrarAviso(data.message, "erro");
+        }
+      } catch (err) {
+        mostrarAviso("Erro ao salvar senha definitiva.", "erro");
+      }
+    }
+  </script>
+</body>
+</html>
