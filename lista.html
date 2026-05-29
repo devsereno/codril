@@ -26,7 +26,8 @@
     </div>
 
     <input id="busca" placeholder="🔍 Buscar por lote, código ou endereço..." 
-           class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-6" onkeyup="filtrarItens()">
+           class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-6 focus:outline-none focus:border-blue-500" 
+           oninput="filtrarItens()">
 
     <div id="listaItens" class="space-y-4"></div>
   </div>
@@ -64,25 +65,37 @@
 
       let html = '';
       itens.forEach(item => {
+        // Correção das barras e parênteses que quebravam a string literal
+        const descricaoHtml = item.descricao && item.descricao.trim() !== '' 
+          ? `<p class="text-slate-400 text-sm mt-2">${item.descricao}</p>` 
+          : '';
+
+        // Formatação visual da data para o padrão PT-BR
+        let dataExibicao = '';
+        if (item.data_cadastro) {
+          const partes = item.data_cadastro.substring(0,10).split('-');
+          dataExibicao = partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : item.data_cadastro.substring(0,10);
+        }
+
         html += `
           <div class="bg-slate-900 p-5 rounded-3xl border border-slate-700">
             <div class="flex justify-between mb-3">
-              <span class="px-4 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">${(item.tipo || 'N/A').toUpperCase()}</span>
-              <span class="text-xs text-slate-500">${item.data_cadastro ? item.data_cadastro.substring(0,10) : ''}</span>
+              <span class="px-4 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm font-semibold">${(item.tipo || 'N/A').toUpperCase()}</span>
+              <span class="text-xs text-slate-500 font-mono">${dataExibicao}</span>
             </div>
             
-            <p class="text-2xl font-mono">${item.endereco || 'Sem endereço'}</p>
+            <p class="text-2xl font-mono text-emerald-400 font-bold">${item.endereco || 'Sem endereço'}</p>
             
-            <p class="text-lg mt-1">
+            <p class="text-lg mt-1 text-slate-300">
               Código: 
               <span onclick="filtrarPorCodigo('${item.codigo_produto}')" 
-                    class="text-blue-400 underline cursor-pointer hover:text-blue-300">
+                    class="text-blue-400 underline cursor-pointer hover:text-blue-300 font-mono font-medium">
                 ${item.codigo_produto || 'N/A'}
               </span> 
-              • Lote: ${item.lote || 'N/A'}
+              • Lote: <span class="text-orange-400 font-mono">${item.lote || 'N/A'}</span>
             </p>
             
-            \( {item.descricao ? `<p class="text-slate-400 text-sm mt-2"> \){item.descricao}</p>` : ''}
+            ${descricaoHtml}
           </div>`;
       });
       container.innerHTML = html;
@@ -97,7 +110,7 @@
         </div>`;
     }
 
-    // Filtro normal pela busca
+    // Filtro inteligente pela barra de busca
     function filtrarItens() {
       const termo = document.getElementById('busca').value.toLowerCase().trim();
       
@@ -105,13 +118,14 @@
         return (item.endereco || '').toLowerCase().includes(termo) ||
                (item.codigo_produto || '').toLowerCase().includes(termo) ||
                (item.lote || '').toLowerCase().includes(termo) ||
-               (item.descricao || '').toLowerCase().includes(termo);
+               (item.descricao || '').toLowerCase().includes(termo) ||
+               (item.tipo || '').toLowerCase().includes(termo);
       });
 
       renderizarItens(filtrados);
     }
 
-    // Novo: Filtrar clicando no código do produto
+    // Filtro rápido ao clicar no link do Código
     function filtrarPorCodigo(codigo) {
       if (!codigo) return;
       
@@ -121,8 +135,8 @@
       
       renderizarItens(filtrados);
       
-      // Limpa o campo de busca e mostra o que está filtrando
-      document.getElementById('busca').value = `Código: ${codigo}`;
+      // Insere o código na barra de busca para o operador saber o que está filtrando
+      document.getElementById('busca').value = codigo;
     }
 
     window.onload = carregarItens;
