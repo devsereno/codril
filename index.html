@@ -22,7 +22,7 @@
         <span class="text-5xl">📦</span>
         <div>
           <h1 class="text-3xl font-bold">PULMÃO AE</h1>
-          <p id="userName" class="text-slate-400">Carregando...</p>
+          <p id="userName" class="text-slate-400">Carregando usuário...</p>
         </div>
       </div>
       
@@ -44,5 +44,172 @@
         <span>📝</span> Novo Cadastro
       </h2>
       
-      <div class="grid grid-cols-1 gap
+      <div class="grid grid-cols-1 gap-4">
+        <label class="block">
+          <span class="text-xs text-slate-400 font-medium mb-1 block">Tipo de Armazenagem</span>
+          <select id="tipo" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 text-white">
+            <option value="pulmao">Pulmão AE</option>
+            <option value="picking">Picking</option>
+          </select>
+        </label>
+
+        <label class="block">
+          <span class="text-xs text-slate-400 font-medium mb-1 block">Endereço (Apenas números)</span>
+          <input id="endereco" placeholder="Ex: 101" type="text" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500">
+        </label>
+
+        <label class="block">
+          <span class="text-xs text-slate-400 font-medium mb-1 block">Código do Produto (Apenas numbers)</span>
+          <input id="codigo" placeholder="Digite o SKU" type="text" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500">
+        </label>
+
+        <label class="block">
+          <span class="text-xs text-slate-400 font-medium mb-1 block">Lote</span>
+          <input id="lote" placeholder="Digite o lote" maxlength="20" type="text" oninput="this.value = this.value.toUpperCase()" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 uppercase focus:outline-none focus:border-blue-500">
+        </label>
+
+        <label class="block">
+          <span class="text-xs text-slate-400 font-medium mb-1 block">Descrição (Opcional)</span>
+          <input id="descricao" placeholder="Observações do produto..." type="text" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500">
+        </label>
+      </div>
+
+      <button id="btnSalvar" onclick="cadastrarProduto()" class="mt-6 w-full bg-blue-600 hover:bg-blue-500 py-5 rounded-2xl font-semibold transition-all active:scale-[0.99] flex justify-center items-center gap-2 shadow-lg shadow-blue-600/20">
+        <span>💾 Salvar no Sistema</span>
+      </button>
+    </div>
+
+    <div class="flex gap-4">
+      <a href="lista.html" class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 py-5 rounded-2xl text-center font-semibold transition-colors flex justify-center items-center gap-2">
+        <span>📋</span> Ver Todos os Itens
+      </a>
+    </div>
+
+  </div>
+
+  <script>
+    // FUNÇÃO QUE GERENCIA AS NOTIFICAÇÕES TOAST
+    function mostrarAviso(mensagem, tipo = 'sucesso') {
+      const toast = document.getElementById('toast');
+      const toastBg = document.getElementById('toastBg');
+      const toastIcon = document.getElementById('toastIcon');
+      const toastMessage = document.getElementById('toastMessage');
+
+      if (tipo === 'sucesso') {
+        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-emerald-500/90 border-emerald-400 text-white backdrop-blur-sm";
+        toastIcon.textContent = "✅";
+      } else if (tipo === 'erro') {
+        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-red-500/90 border-red-400 text-white backdrop-blur-sm";
+        toastIcon.textContent = "❌";
+      } else {
+        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-amber-500/90 border-amber-400 text-white backdrop-blur-sm";
+        toastIcon.textContent = "⚠️";
+      }
+
+      toastMessage.textContent = mensagem;
+
+      toast.classList.remove('opacity-0', 'pointer-events-none', 'scale-90', 'top-5');
+      toast.classList.add('opacity-100', 'scale-100', 'top-8');
+
+      setTimeout(() => {
+        toast.classList.remove('opacity-100', 'scale-100', 'top-8');
+        toast.classList.add('opacity-0', 'pointer-events-none', 'scale-90', 'top-5');
+      }, 3000);
+    }
+
+    // ENVIO DOS DADOS PARA A API
+    async function cadastrarProduto() {
+      const btn = document.getElementById('btnSalvar');
+      
+      const dados = {
+        tipo: document.getElementById('tipo').value,
+        endereco: document.getElementById('endereco').value.trim(),
+        codigo_produto: document.getElementById('codigo').value.trim(),
+        lote: document.getElementById('lote').value.trim().toUpperCase(),
+        descricao: document.getElementById('descricao').value.trim()
+      };
+
+      if (!dados.endereco || !dados.codigo_produto || !dados.lote) {
+        mostrarAviso("Preencha os campos obrigatórios: Endereço, Código e Lote.", "alerta");
+        return;
+      }
+
+      try {
+        btn.disabled = true;
+        btn.innerHTML = `<span>⏳ Gravando dados...</span>`;
+        btn.classList.replace('bg-blue-600', 'bg-slate-700');
+
+        const res = await fetch('https://codril.onrender.com/api/salvar-produto.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(dados)
+        });
+
+        if (!res.ok) throw new Error(`Erro no servidor: ${res.status}`);
+
+        const data = await res.json();
         
+        if (data.success) {
+          mostrarAviso("Salvo com sucesso!", "sucesso");
+          limparFormulario();
+        } else {
+          mostrarAviso(data.message || "Erro ao salvar o produto.", "erro");
+        }
+      } catch (e) {
+        console.error("Erro no cadastro:", e);
+        mostrarAviso("Erro de conexão com o servidor.", "erro");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>💾 Salvar no Sistema</span>`;
+        btn.classList.replace('bg-slate-700', 'bg-blue-600');
+      }
+    }
+
+    function limparFormulario() {
+      document.getElementById('endereco').value = '';
+      document.getElementById('codigo').value = '';
+      document.getElementById('lote').value = '';
+      document.getElementById('descricao').value = '';
+    }
+
+    function logout() {
+      localStorage.clear();
+      location.href = 'login.html';
+    }
+
+    // VALIDAÇÃO ATIVA E SEGURO DE CARREGAMENTO
+    window.onload = function() {
+      try {
+        const userRaw = localStorage.getItem('currentUser');
+        const admContainer = document.getElementById('admLink');
+        
+        // SE NÃO TIVER LOGADO: Redireciona imediatamente para o login protegendo o index
+        if (!userRaw) {
+          location.href = 'login.html';
+          return;
+        }
+
+        const user = JSON.parse(userRaw);
+        
+        // Mostra o nome recuperado do login
+        document.getElementById('userName').textContent = `Olá, ${user.nome || 'Operador'}`;
+
+        // Trata o nível com total segurança contra falhas de texto
+        const nivel = (user.nivel || '').toLowerCase().trim();
+        
+        if (nivel === 'super' || nivel === 'master') {
+          if (admContainer) admContainer.classList.remove('hidden');
+        } else {
+          if (admContainer) admContainer.classList.add('hidden');
+        }
+
+      } catch (err) {
+        console.error("Erro no carregamento inicial:", err);
+        // Se der algum erro de leitura no JSON, limpa o estado corrompido e desloga
+        localStorage.clear();
+        location.href = 'login.html';
+      }
+    };
+  </script>
+</body>
+</html>
