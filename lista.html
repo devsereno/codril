@@ -12,7 +12,8 @@
     <div class="flex justify-between items-center mb-8 border-b border-slate-700 pb-4">
       <h1 class="text-3xl font-bold">Itens Cadastrados</h1>
       <div class="flex gap-3">
-        <button onclick="carregarItens()" class="px-6 py-3 bg-red-600 hover:bg-red-500 rounded-2xl text-sm font-medium">
+        <button onclick="carregarItens()" 
+                class="px-6 py-3 bg-red-600 hover:bg-red-500 rounded-2xl text-sm font-medium flex items-center gap-2 transition-all active:scale-95">
           🔄 Atualizar Lista
         </button>
         <a href="index.html" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-2xl text-sm font-medium">
@@ -21,7 +22,8 @@
       </div>
     </div>
 
-    <input id="busca" placeholder="🔍 Buscar..." class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-6" onkeyup="filtrarItens()">
+    <input id="busca" placeholder="🔍 Buscar por lote, código ou endereço..." 
+           class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-6" onkeyup="filtrarItens()">
 
     <div id="listaItens" class="space-y-4"></div>
   </div>
@@ -35,15 +37,13 @@
         const res = await fetch('https://codril.onrender.com/api/salvar-produto.php');
         const data = await res.json();
 
-        console.log("✅ Dados recebidos:", data); // Debug
-
         if (data.success && data.itens && data.itens.length > 0) {
           let html = '';
           data.itens.forEach(item => {
             html += `
               <div class="bg-slate-900 p-5 rounded-3xl border border-slate-700">
-                <div class="flex justify-between mb-2">
-                  <span class="px-4 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">${item.tipo}</span>
+                <div class="flex justify-between mb-3">
+                  <span class="px-4 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">${item.tipo.toUpperCase()}</span>
                   <span class="text-xs text-slate-500">${item.data_cadastro ? item.data_cadastro.substring(0,10) : ''}</span>
                 </div>
                 <p class="text-2xl font-mono">${item.endereco}</p>
@@ -60,7 +60,6 @@
             </div>`;
         }
       } catch (e) {
-        console.error("Erro:", e);
         container.innerHTML = `<p class="text-red-400 text-center py-12">Erro ao carregar lista</p>`;
       }
     }
