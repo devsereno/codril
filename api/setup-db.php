@@ -40,10 +40,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // MIGRACÃO SEGURA: Tenta adicionar a coluna requerer_troca se ela não existir
             try {
                 $pdo->exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS requerer_troca BOOLEAN DEFAULT FALSE;");
-                $migracaoStatus = "Coluna 'requerer_troca' verificada/adicionada com sucesso.";
+                $migracaoStatus1 = "Coluna 'requerer_troca' verificada.";
             } catch (Exception $e) {
-                // Fallback para bancos que não suportam o "IF NOT EXISTS" no ALTER TABLE
-                $migracaoStatus = "A coluna 'requerer_troca' já deve existir ou foi processada.";
+                $migracaoStatus1 = "Coluna 'requerer_troca' já existente.";
             }
 
             // Cria a tabela 'enderecos' se não existir
@@ -54,11 +53,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     endereco VARCHAR(50) NOT NULL,
                     codigo_produto VARCHAR(50) NOT NULL,
                     lote VARCHAR(50) NOT NULL,
+                    quantidade INT DEFAULT 1,
                     descricao TEXT,
                     data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     UNIQUE (tipo, endereco, codigo_produto, lote)
                 )
             ");
+
+            // MIGRACÃO SEGURA: Tenta adicionar a coluna quantidade na tabela enderecos
+            try {
+                $pdo->exec("ALTER TABLE enderecos ADD COLUMN IF NOT EXISTS quantidade INT DEFAULT 1;");
+                $migracaoStatus2 = "Coluna 'quantidade' adicionada/verificada com sucesso.";
+            } catch (Exception $e) {
+                $migracaoStatus2 = "Coluna 'quantidade' já existente.";
+            }
 
             // Insere ou atualiza o usuário Ricardo Master
             $email = 'ricardomaster@gmail.com';
@@ -72,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             echo json_encode([
                 'success' => true, 
-                'message' => 'Estruturas base configuradas com sucesso! ' . $migracaoStatus
+                'message' => "Estruturas configuradas! $migracaoStatus1 | $migracaoStatus2"
             ]);
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => 'Erro no auto-setup: ' . $e->getMessage()]);
@@ -258,7 +266,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }, 3000);
     }
 
-    async function executarAutoSetup() {
+    async function ejecutarAutoSetup() {
       const senha = document.getElementById('senhaAuto').value;
       if (!senha) return mostrarAviso("Insira a chave de segurança para instalar.", "alerta");
 
