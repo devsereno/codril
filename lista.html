@@ -43,7 +43,7 @@
         <span class="text-4xl">📋</span>
         <div>
           <h1 class="text-2xl font-extrabold tracking-tight">Estoque Ativo</h1>
-          <p id="contadorItens" class="text-slate-400 text-xs">Carregando posições...</p>
+          <p id="contadorItens" class="text-slate-400 text-xs font-semibold">Carregando posições...</p>
         </div>
       </div>
       <a href="index.html" class="px-5 py-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-2xl text-xs font-bold transition-all flex items-center gap-1">
@@ -58,14 +58,13 @@
 
     <!-- SELETOR DE ABAS RÁPIDAS (FILTRAGEM DE TIPO) -->
     <div class="flex gap-2 mb-6 overflow-x-auto pb-1">
-      <button onclick="filtrarTipo('todos')" id="aba-todos" class="px-5 py-2.5 bg-blue-600 text-xs font-bold rounded-full transition-colors whitespace-nowrap">Todos</button>
+      <button onclick="filtrarTipo('todos')" id="aba-todos" class="px-5 py-2.5 bg-blue-600 text-xs font-bold rounded-full transition-colors whitespace-nowrap text-white">Todos</button>
       <button onclick="filtrarTipo('pulmao')" id="aba-pulmao" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-xs text-slate-400 hover:text-white font-bold rounded-full transition-colors whitespace-nowrap">Pulmão AE</button>
       <button onclick="filtrarTipo('picking')" id="aba-picking" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-xs text-slate-400 hover:text-white font-bold rounded-full transition-colors whitespace-nowrap">Picking</button>
     </div>
 
     <!-- GRID DE CARDS MODERNOS -->
     <div id="gridCards" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <!-- Cards de produto são renderizados de forma dinâmica por JavaScript -->
       <div class="sm:col-span-2 text-center py-16 text-slate-500">
         <span class="text-3xl block mb-2">🔄</span>
         Buscando registros ativos no Render...
@@ -78,9 +77,8 @@
     let itensEstoque = [];
     let tipoAtivo = 'todos';
     let itemIdParaApagar = null;
-    let nivelDeAcesso = 'user'; // Por padrão, segurança máxima
+    let nivelDeAcesso = 'user'; // Segurança máxima padrão
 
-    // Roda ao carregar a página para segurança e carregamento
     window.onload = function() {
       verificarSessao();
       carregarDadosDoServidor();
@@ -94,31 +92,40 @@
       }
       
       const user = JSON.parse(userRaw);
-      // Salva nível de acesso para ocultar ou exibir botões
       nivelDeAcesso = (user.role || user.nivel || 'user').toLowerCase().trim();
     }
 
-    // BUSCA OS DADOS NA API REAL
+    // BUSCA OS DADOS NA API REAL (Tenta rotas alternativas para evitar erros de arquivo inexistente)
     async function carregarDadosDoServidor() {
-      try {
-        // Faz a chamada para a sua listagem de produtos
-        const res = await fetch('https://codril.onrender.com/api/listar-produtos.php');
-        if (!res.ok) throw new Error('Erro na requisição');
-        
-        const data = await res.json();
-        
-        if (data.success) {
-          // Garante compatibilidade caso retorne "dados" ou "itens"
-          itensEstoque = data.dados || data.itens || [];
-          filtrarCards();
-        } else {
-          mostrarAviso("Não foi possível carregar dados do banco de dados.", "erro");
+      const endpoints = [
+        'https://codril.onrender.com/api/salvar-produto.php', // Tenta a rota unificada (que aceita GET para listar)
+        'https://codril.onrender.com/api/listar-produtos.php'  // Tenta o arquivo específico
+      ];
+
+      let dadosCarregados = false;
+
+      for (const url of endpoints) {
+        if (dadosCarregados) break;
+        try {
+          const res = await fetch(url);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success) {
+              itensEstoque = data.dados || data.itens || [];
+              dadosCarregados = true;
+              filtrarCards();
+              break;
+            }
+          }
+        } catch (err) {
+          console.warn(`Tentativa falhou na URL: ${url}`);
         }
-      } catch (err) {
-        console.error(err);
+      }
+
+      if (!dadosCarregados) {
         document.getElementById('gridCards').innerHTML = `
           <div class="sm:col-span-2 bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center text-red-400">
-            ❌ Falha ao comunicar com o servidor Render. Verifique a internet ou API.
+            ❌ Falha ao comunicar com o servidor Render. Verifique o estado da API ou internet.
           </div>
         `;
       }
@@ -152,7 +159,7 @@
           ? `<p class="text-xs text-slate-400 border-t border-slate-800/80 pt-3 mt-3 italic">${item.descricao}</p>` 
           : '';
 
-        // SEURANÇA ATIVA: Só mostra o botão de apagar para Master e Super
+        // SEGURANÇA ATIVA: Só mostra o botão de apagar para Master e Super
         const podeApagar = (nivelDeAcesso === 'master' || nivelDeAcesso === 'super');
         const botaoApagar = podeApagar 
           ? `<button onclick="abrirConfirmarDelete(${item.id})" class="w-full bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 py-2.5 rounded-xl text-red-400 font-bold transition-all text-xs">Apagar Registro</button>`
@@ -274,23 +281,46 @@
       if (!itemIdParaApagar) return;
 
       const btn = document.getElementById('btnConfirmarExclusao');
+      
+      // Lista de possíveis endpoints para deletar produtos
+      const endpointsDelete = [
+        'https://codril.onrender.com/api/apagar-produto.php',
+        'https://codril.onrender.com/api/deletar-produto.php'
+      ];
+
+      let sucessoExclusao = false;
+
       try {
         btn.disabled = true;
         btn.textContent = "Apagando...";
 
-        const res = await fetch('https://codril.onrender.com/api/apagar-produto.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: itemIdParaApagar })
-        });
+        for (const url of endpointsDelete) {
+          if (sucessoExclusao) break;
+          try {
+            const res = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: itemIdParaApagar })
+            });
 
-        const data = await res.json();
-        if (data.success) {
+            if (res.ok) {
+              const data = await res.json();
+              if (data.success) {
+                sucessoExclusao = true;
+                break;
+              }
+            }
+          } catch (e) {
+            console.warn(`Falhou tentativa de exclusão na URL: ${url}`);
+          }
+        }
+
+        if (sucessoExclusao) {
           mostrarAviso("Registro de posição apagado com sucesso!", "sucesso");
           fecharModalDelete();
-          carregarDadosDoServidor(); // Recarrega os dados reais
+          carregarDadosDoServidor(); // Recarrega os dados atualizados
         } else {
-          mostrarAviso(data.message || "Erro ao apagar o registro.", "erro");
+          mostrarAviso("Não foi possível apagar o registro no servidor.", "erro");
           btn.disabled = false;
           btn.textContent = "Confirmar";
         }
