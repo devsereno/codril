@@ -3,97 +3,55 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pulmão AE - Lista de Itens</title>
+  <title>Pulmão AE - Lista</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-950 text-white min-h-screen">
   <div class="max-w-4xl mx-auto p-4">
 
     <div class="flex justify-between items-center mb-8 border-b border-slate-700 pb-4">
-      <div class="flex items-center gap-3">
-        <span class="text-4xl">📋</span>
-        <div>
-          <h1 class="text-3xl font-bold">Itens Cadastrados</h1>
-          <p id="totalItens" class="text-slate-400 text-sm">Carregando total...</p>
-        </div>
-      </div>
-      <div class="flex gap-2">
+      <h1 class="text-3xl font-bold">Itens Cadastrados</h1>
+      <div class="flex gap-3">
         <button onclick="carregarItens()" 
-                class="px-4 py-3 bg-red-600 hover:bg-red-500 rounded-2xl text-sm font-medium flex items-center gap-2 transition-all active:scale-95">
-          🔄 Atualizar
+                class="px-6 py-3 bg-red-600 hover:bg-red-500 rounded-2xl text-sm font-medium flex items-center gap-2 transition-all active:scale-95">
+          🔄 Atualizar Lista
         </button>
-        <a href="index.html" class="px-4 py-3 bg-blue-600 hover:bg-blue-500 rounded-2xl text-sm font-medium transition-colors text-center">
-          + Novo
+        <a href="index.html" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-2xl text-sm font-medium">
+          + Novo Cadastro
         </a>
       </div>
     </div>
 
-    <div class="mb-4">
-      <input id="busca" 
-             type="text"
-             placeholder="🔍 Buscar por pulmão, picking, endereço, código, lote ou descrição..." 
-             class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 placeholder-slate-400 text-white" 
-             onkeyup="filtrarItens()">
-    </div>
+    <input id="busca" placeholder="🔍 Buscar por lote, código ou endereço..." 
+           class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-6" onkeyup="filtrarItens()">
 
-    <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
-      <button onclick="filtrarPorTipo('todos')" id="btn-todos" class="px-5 py-2 bg-blue-600 text-sm font-medium rounded-full transition-colors whitespace-nowrap">
-        Todos
-      </button>
-      <button onclick="filtrarPorTipo('pulmao')" id="btn-pulmao" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-sm font-medium rounded-full transition-colors whitespace-nowrap">
-        Só Pulmão
-      </button>
-      <button onclick="filtrarPorTipo('picking')" id="btn-picking" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-sm font-medium rounded-full transition-colors whitespace-nowrap">
-        Só Picking
-      </button>
-    </div>
-
-    <div id="listaItens" class="space-y-4">
-      <p class="text-center py-12 text-slate-400">Carregando itens...</p>
-    </div>
-
+    <div id="listaItens" class="space-y-4"></div>
   </div>
 
   <script>
-    // Armazenamento local dos dados para busca instantânea de alto desempenho
+    // Variável global para guardar os itens e permitir a busca local sem sobrecarregar a API
     let todosOsItens = [];
-    let tipoSelecionado = 'todos';
 
-    // Função para buscar dados da sua API no Render
     async function carregarItens() {
       const container = document.getElementById('listaItens');
-      const contadorTxt = document.getElementById('totalItens');
-      container.innerHTML = `<p class="text-center py-12 text-slate-400">⏳ Conectando à API no Render...</p>`;
+      container.innerHTML = `<p class="text-center py-12 text-slate-400">Carregando itens...</p>`;
 
       try {
         const res = await fetch('https://codril.onrender.com/api/salvar-produto.php');
-        
-        if (!res.ok) {
-          throw new Error(`Erro no servidor: ${res.status}`);
-        }
-
         const data = await res.json();
 
         if (data.success && data.itens) {
-          todosOsItens = data.itens;
-          contadorTxt.textContent = `${data.total || todosOsItens.length} itens encontrados no banco`;
-          filtrarItens(); // Renderiza aplicando os filtros atuais
+          todosOsItens = data.itens; // Salva os dados recebidos
+          renderizarItens(todosOsItens);
         } else {
-          contadorTxt.textContent = "0 itens encontrados";
           exibirMensagemVazia();
         }
       } catch (e) {
-        console.error("Erro ao carregar os dados:", e);
-        contadorTxt.textContent = "Erro de sincronização";
-        container.innerHTML = `
-          <div class="text-center py-12">
-            <p class="text-red-400 font-medium">❌ Erro ao carregar lista</p>
-            <p class="text-slate-500 text-xs mt-2">O servidor do Render pode estar iniciando ou ocorreu um bloqueio de rede.</p>
-          </div>`;
+        console.error("Erro na requisição:", e);
+        container.innerHTML = `<p class="text-red-400 text-center py-12">Erro ao carregar lista. Verifique o console.</p>`;
       }
     }
 
-    // Função responsável por desenhar os blocos de produtos na tela
     function renderizarItens(itens) {
       const container = document.getElementById('listaItens');
       
@@ -104,7 +62,54 @@
 
       let html = '';
       itens.forEach(item => {
-        // Formatações e defesas contra valores nulos/vazios
-        const tipoLimpo = item.tipo ? item.tipo.toLowerCase() : '';
-        const tipoExibicao = item.tipo ? item.tipo.toUpperCase()
-          
+        // Correção da sintaxe das chaves e verificação de campos nulos
+        const tipo = item.tipo ? item.tipo.toUpperCase() : 'N/A';
+        const dataCadastro = item.data_cadastro ? item.data_cadastro.substring(0,10) : '';
+        const descricaoHtml = item.descricao ? `<p class="text-slate-400 text-sm mt-2">${item.descricao}</p>` : '';
+
+        html += `
+          <div class="item-card bg-slate-900 p-5 rounded-3xl border border-slate-700">
+            <div class="flex justify-between mb-3">
+              <span class="px-4 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">${tipo}</span>
+              <span class="text-xs text-slate-500">${dataCadastro}</span>
+            </div>
+            <p class="text-2xl font-mono">${item.endereco || 'Sem Endereço'}</p>
+            <p class="text-lg">${item.codigo_produto || ''} • ${item.lote || ''}</p>
+            ${descricaoHtml}
+          </div>`;
+      });
+      container.innerHTML = html;
+    }
+
+    function exibirMensagemVazia() {
+      const container = document.getElementById('listaItens');
+      container.innerHTML = `
+        <div class="bg-slate-900 rounded-3xl p-12 text-center border border-slate-700">
+          <p class="text-6xl mb-4">📦</p>
+          <p class="text-xl text-slate-300">Nenhum item encontrado</p>
+        </div>`;
+    }
+
+    // Filtro inteligente que busca diretamente nos dados salvos na memória
+    function filtrarItens() {
+      const termo = document.getElementById('busca').value.toLowerCase();
+      
+      const itensFiltrados = todosOsItens.filter(item => {
+        const endereco = (item.endereco || '').toLowerCase();
+        const codigo = (item.codigo_produto || '').toLowerCase();
+        const lote = (item.lote || '').toLowerCase();
+        const descricao = (item.descricao || '').toLowerCase();
+
+        return endereco.includes(termo) || 
+               codigo.includes(termo) || 
+               lote.includes(termo) || 
+               descricao.includes(termo);
+      });
+
+      renderizarItens(itensFiltrados);
+    }
+
+    window.onload = carregarItens;
+  </script>
+</body>
+</html>
