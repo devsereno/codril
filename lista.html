@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pulmão AE - Lista de Itens</title>
+  <title>Pulmão AE - Lista</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-950 text-white min-h-screen">
@@ -28,11 +28,7 @@
   <script>
     async function carregarItens() {
       const container = document.getElementById('listaItens');
-      container.innerHTML = `
-        <div class="text-center py-12">
-          <div class="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p class="text-slate-400">Carregando itens...</p>
-        </div>`;
+      container.innerHTML = `<p class="text-center py-12 text-slate-400">Carregando itens...</p>`;
 
       try {
         const res = await fetch('https://codril.onrender.com/api/salvar-produto.php');
@@ -43,12 +39,12 @@
           data.itens.forEach(item => {
             html += `
               <div class="bg-slate-900 p-5 rounded-3xl border border-slate-700">
-                <div class="flex justify-between mb-3">
+                <div class="flex justify-between mb-2">
                   <span class="px-4 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">${item.tipo.toUpperCase()}</span>
                   <span class="text-xs text-slate-500">${item.data_cadastro ? item.data_cadastro.substring(0,10) : ''}</span>
                 </div>
                 <p class="text-2xl font-mono">${item.endereco}</p>
-                <p class="text-lg mt-1">${item.codigo_produto} • ${item.lote}</p>
+                <p class="text-lg">${item.codigo_produto} • ${item.lote}</p>
                 \( {item.descricao ? `<p class="text-slate-400 text-sm mt-2"> \){item.descricao}</p>` : ''}
               </div>`;
           });
@@ -58,15 +54,11 @@
             <div class="bg-slate-900 rounded-3xl p-12 text-center border border-slate-700">
               <p class="text-6xl mb-4">📦</p>
               <p class="text-xl text-slate-300">Nenhum item cadastrado ainda</p>
-              <p class="text-slate-500 mt-2">Cadastre produtos na tela anterior</p>
             </div>`;
         }
       } catch (e) {
-        container.innerHTML = `
-          <div class="text-center py-12 text-red-400">
-            ❌ Erro ao carregar lista<br>
-            <button onclick="carregarItens()" class="mt-4 px-6 py-2 bg-red-500/20 rounded-2xl">Tentar novamente</button>
-          </div>`;
+        console.error(e);
+        container.innerHTML = `<p class="text-red-400 text-center py-12">Erro ao carregar lista</p>`;
       }
     }
 
@@ -74,7 +66,7 @@
       carregarItens();
     }
 
-    // Carrega ao abrir a página
+    // Carrega automaticamente
     window.onload = carregarItens;
   </script>
 </body>
