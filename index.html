@@ -59,7 +59,7 @@
         </label>
 
         <label class="block">
-          <span class="text-xs text-slate-400 font-medium mb-1 block">Código do Produto (Apenas numbers)</span>
+          <span class="text-xs text-slate-400 font-medium mb-1 block">Código do Produto (Apenas números)</span>
           <input id="codigo" placeholder="Digite o SKU" type="text" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500">
         </label>
 
@@ -88,7 +88,6 @@
   </div>
 
   <script>
-    // FUNÇÃO QUE GERENCIA AS NOTIFICAÇÕES TOAST
     function mostrarAviso(mensagem, tipo = 'sucesso') {
       const toast = document.getElementById('toast');
       const toastBg = document.getElementById('toastBg');
@@ -107,7 +106,6 @@
       }
 
       toastMessage.textContent = mensagem;
-
       toast.classList.remove('opacity-0', 'pointer-events-none', 'scale-90', 'top-5');
       toast.classList.add('opacity-100', 'scale-100', 'top-8');
 
@@ -117,7 +115,6 @@
       }, 3000);
     }
 
-    // ENVIO DOS DADOS PARA A API
     async function cadastrarProduto() {
       const btn = document.getElementById('btnSalvar');
       
@@ -146,7 +143,6 @@
         });
 
         if (!res.ok) throw new Error(`Erro no servidor: ${res.status}`);
-
         const data = await res.json();
         
         if (data.success) {
@@ -156,7 +152,7 @@
           mostrarAviso(data.message || "Erro ao salvar o produto.", "erro");
         }
       } catch (e) {
-        console.error("Erro no cadastro:", e);
+        console.error(e);
         mostrarAviso("Erro de conexão com o servidor.", "erro");
       } finally {
         btn.disabled = false;
@@ -177,35 +173,31 @@
       location.href = 'login.html';
     }
 
-    // VALIDAÇÃO ATIVA E SEGURO DE CARREGAMENTO
     window.onload = function() {
       try {
         const userRaw = localStorage.getItem('currentUser');
         const admContainer = document.getElementById('admLink');
         
-        // SE NÃO TIVER LOGADO: Redireciona imediatamente para o login protegendo o index
         if (!userRaw) {
           location.href = 'login.html';
           return;
         }
 
         const user = JSON.parse(userRaw);
-        
-        // Mostra o nome recuperado do login
         document.getElementById('userName').textContent = `Olá, ${user.nome || 'Operador'}`;
 
-        // Trata o nível com total segurança contra falhas de texto
         const nivel = (user.nivel || '').toLowerCase().trim();
+        const nome = (user.nome || '').toLowerCase();
         
-        if (nivel === 'super' || nivel === 'master') {
+        // Exibe o botão se for admin ou se tiver "master" no nome
+        if (nivel === 'super' || nivel === 'master' || nome.includes('master')) {
           if (admContainer) admContainer.classList.remove('hidden');
         } else {
           if (admContainer) admContainer.classList.add('hidden');
         }
 
       } catch (err) {
-        console.error("Erro no carregamento inicial:", err);
-        // Se der algum erro de leitura no JSON, limpa o estado corrompido e desloga
+        console.error(err);
         localStorage.clear();
         location.href = 'login.html';
       }
