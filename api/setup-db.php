@@ -1,12 +1,12 @@
 <?php
-// Permite acessos e requisições externas
+// Permite acessos e requisições externas (CORS)
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 
 include 'config.php';
 
-// ==================== PROCESSAMENTO DE REQUISIÇÕES AJAX (POST) ====================
+// ==================== PROCESSAMENTO DE REQUISICÕES AJAX (POST) ====================
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header("Content-Type: application/json; charset=UTF-8");
     $data = json_decode(file_get_contents('php://input'), true);
@@ -20,9 +20,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Ação 1: Configuração Automática das Tabelas Base
+    // Ação 1: Configuração Automática e Migração de Colunas
     if ($action === 'auto_setup') {
         try {
+            // Cria a tabela 'users' se não existir
             $pdo->exec("
                 CREATE TABLE IF NOT EXISTS users (
                     id SERIAL PRIMARY KEY,
@@ -36,6 +37,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 )
             ");
 
+            // MIGRACÃO SEGURA: Tenta adicionar a coluna requerer_troca se ela não existir
+            try {
+                $pdo->exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS requerer_troca BOOLEAN DEFAULT FALSE;");
+                $migracaoStatus = "Coluna 'requerer_troca' verificada/adicionada com sucesso.";
+            } catch (Exception $e) {
+                // Fallback para bancos que não suportam o "IF NOT EXISTS" no ALTER TABLE
+                $migracaoStatus = "A coluna 'requerer_troca' já deve existir ou foi processada.";
+            }
+
+            // Cria a tabela 'enderecos' se não existir
             $pdo->exec("
                 CREATE TABLE IF NOT EXISTS enderecos (
                     id SERIAL PRIMARY KEY,
@@ -49,19 +60,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 )
             ");
 
-            // Insere usuário Ricardo Master
+            // Insere ou atualiza o usuário Ricardo Master
             $email = 'ricardomaster@gmail.com';
             $nome = 'Ricardo Master';
             $senha_master_hash = password_hash('8486', PASSWORD_DEFAULT);
 
-            $stmt = $pdo->prepare("INSERT INTO users (email, nome, senha_hash, role, encryption_seed, autorizado) 
-                                   VALUES (?, ?, ?, 'master', 'chave-master-2026', TRUE)
+            $stmt = $pdo->prepare("INSERT INTO users (email, nome, senha_hash, role, encryption_seed, autorizado, requerer_troca) 
+                                   VALUES (?, ?, ?, 'master', 'chave-master-2026', TRUE, FALSE)
                                    ON CONFLICT (email) DO NOTHING");
             $stmt->execute([$email, $nome, $senha_master_hash]);
 
             echo json_encode([
                 'success' => true, 
-                'message' => 'Tabelas base "users", "enderecos" e o usuário Ricardo Master configurados com sucesso!'
+                'message' => 'Estruturas base configuradas com sucesso! ' . $migracaoStatus
             ]);
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => 'Erro no auto-setup: ' . $e->getMessage()]);
@@ -78,7 +89,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         try {
-            // Se for um comando SELECT, tenta retornar as linhas
             if (stripos($sql, 'SELECT') === 0 || stripos($sql, 'SHOW') === 0 || stripos($sql, 'DESCRIBE') === 0) {
                 $stmt = $pdo->query($sql);
                 $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -88,7 +98,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'dados' => $resultados
                 ]);
             } else {
-                // Para comandos de edição (CREATE, ALTER, INSERT, UPDATE, DROP)
                 $linhasAfetadas = $pdo->exec($sql);
                 echo json_encode([
                     'success' => true, 
@@ -104,19 +113,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Ação 3: Obter tabelas existentes
     if ($action === 'obter_tabelas') {
         try {
-            // Tenta obter as tabelas do banco de dados (funciona para PostgreSQL e MySQL)
             $tabelas = [];
-            
-            // Tenta para PostgreSQL/CockroachDB
             try {
                 $stmt = $pdo->query("SELECT table_name FROM information_schema.tables WHERE table_schema='public'");
                 $tabelas = $stmt->fetchAll(PDO::FETCH_COLUMN);
             } catch (Exception $ex) {
-                // Tenta para MySQL/MariaDB
                 $stmt = $pdo->query("SHOW TABLES");
                 $tabelas = $stmt->fetchAll(PDO::FETCH_COLUMN);
             }
-
             echo json_encode(['success' => true, 'tabelas' => $tabelas]);
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => 'Não foi possível ler as tabelas: ' . $e->getMessage()]);
@@ -130,7 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <!-- ==================== INTERFACE GRÁFICA DO PAINEL (GET) ==================== -->
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -166,7 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- Bloco 1: Auto-Setup -->
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl">
           <h2 class="text-lg font-bold mb-2 text-slate-200">1. Setup Inicial</h2>
-          <p class="text-xs text-slate-400 mb-6">Cria as tabelas base e o login Master de forma automatizada no banco.</p>
+          <p class="text-xs text-slate-400 mb-6">Cria as tabelas base, adiciona novas colunas e configura o login Master de forma automatizada no banco.</p>
           
           <div class="space-y-4">
             <input id="senhaAuto" type="password" placeholder="Digite a Senha Mestra (8486)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-xs text-center focus:outline-none focus:border-blue-500 font-mono">
@@ -227,7 +231,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </div>
 
   <script>
-    // Sistema Toast de Alerta
     function mostrarAviso(mensagem, tipo = 'sucesso') {
       const toast = document.getElementById('toast');
       const toastBg = document.getElementById('toastBg');
@@ -255,7 +258,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }, 3000);
     }
 
-    // Acionar a Instalação Inicial Base
     async function executarAutoSetup() {
       const senha = document.getElementById('senhaAuto').value;
       if (!senha) return mostrarAviso("Insira a chave de segurança para instalar.", "alerta");
@@ -279,7 +281,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
     }
 
-    // Executar comandos SQL digitados na área de texto
     async function executarSQLTerm() {
       const sql = document.getElementById('sqlTerminal').value.trim();
       const senha = document.getElementById('senhaTerminal').value;
@@ -302,7 +303,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           mostrarAviso(data.message);
           
           if (data.dados) {
-            // Se retornar linhas do banco de dados (Query de SELECT), monta visualização bonita
             saida.innerHTML = `<p class="text-emerald-400 font-bold mb-2">Resultados retornados (${data.dados.length}):</p>` +
                               `<pre class="text-slate-300">${JSON.stringify(data.dados, null, 2)}</pre>`;
           } else {
@@ -319,7 +319,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
     }
 
-    // Listar tabelas criadas no banco de dados ativo
     async function obterTabelasAtivas() {
       const container = document.getElementById('listaTabelas');
       
@@ -327,7 +326,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const res = await fetch('', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'obter_tabelas', senha: '8486' }) // usa a chave mestre para obter
+          body: JSON.stringify({ action: 'obter_tabelas', senha: '8486' })
         });
         const data = await res.json();
 
@@ -353,7 +352,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
     }
 
-    // Roda no carregamento inicial para atualizar as tabelas se já houver tabelas criadas
     obterTabelasAtivas();
   </script>
 </body>
