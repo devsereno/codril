@@ -39,7 +39,7 @@
       </div>
     </div>
 
-    <!-- FORMULÁRIO DE NOVO CADASTRO (RESTAURADO) -->
+    <!-- FORMULÁRIO DE NOVO CADASTRO (RESTAURADO E AMPLIADO) -->
     <div class="bg-slate-900 rounded-3xl p-6 mb-8 border border-slate-800 shadow-2xl">
       <h2 class="text-xl font-bold mb-5 flex items-center gap-2 text-slate-200">
         <span>📝</span> Novo Cadastro de Posição
@@ -67,6 +67,12 @@
         <label class="block">
           <span class="text-xs text-slate-400 font-semibold mb-1.5 block">Lote</span>
           <input id="lote" placeholder="Digite o lote" maxlength="20" type="text" oninput="this.value = this.value.toUpperCase()" class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 uppercase focus:outline-none focus:border-blue-500 text-white text-sm">
+        </label>
+
+        <!-- NOVO CAMPO: QUANTIDADE DE UNIDADES -->
+        <label class="block">
+          <span class="text-xs text-slate-400 font-semibold mb-1.5 block">Quantidade de Unidades (Apenas números)</span>
+          <input id="quantidade" placeholder="Ex: 15" type="text" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 text-white text-sm" value="1">
         </label>
 
         <label class="block">
@@ -128,6 +134,7 @@
         endereco: document.getElementById('endereco').value.trim(),
         codigo_produto: document.getElementById('codigo').value.trim(),
         lote: document.getElementById('lote').value.trim().toUpperCase(),
+        quantidade: parseInt(document.getElementById('quantidade').value.trim()) || 1,
         descricao: document.getElementById('descricao').value.trim()
       };
 
@@ -171,6 +178,7 @@
       document.getElementById('endereco').value = '';
       document.getElementById('codigo').value = '';
       document.getElementById('lote').value = '';
+      document.getElementById('quantidade').value = '1';
       document.getElementById('descricao').value = '';
     }
 
@@ -183,7 +191,6 @@
     // CONTROLE DE ACESSO E SESSÃO SEGURO
     window.onload = function() {
       try {
-        // Aceita tanto a sessão estruturada nova quanto os logins antigos
         const userRaw = sessionStorage.getItem('usuarioLogado') || localStorage.getItem('currentUser');
         const admContainer = document.getElementById('admLink');
         
@@ -195,7 +202,6 @@
         const user = JSON.parse(userRaw);
         document.getElementById('userName').textContent = `Olá, ${user.nome || 'Operador'}`;
 
-        // Libera ou oculta o painel ADM baseado no nível salvo
         const role = (user.role || user.nivel || '').toLowerCase().trim();
         const nome = (user.nome || '').toLowerCase();
         
