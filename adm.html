@@ -6,129 +6,86 @@
   <title>Pulmão AE - Painel ADM</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-950 text-white min-h-screen relative">
-
-  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 transform transition-all duration-300 opacity-0 pointer-events-none scale-90">
-    <div id="toastBg" class="flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-sm">
-      <span id="toastIcon" class="text-xl"></span>
-      <span id="toastMessage" class="font-medium text-sm"></span>
-    </div>
-  </div>
-
-  <div id="mainContent" class="max-w-4xl mx-auto p-4 hidden">
+<body class="bg-slate-950 text-white min-h-screen">
+  <div class="max-w-4xl mx-auto p-4">
 
     <div class="flex justify-between items-center mb-8 border-b border-slate-700 pb-4">
       <div class="flex items-center gap-3">
-        <span class="text-5xl">⚙️</span>
+        <span class="text-4xl">⚙️</span>
         <div>
           <h1 class="text-3xl font-bold">Painel Administrativo</h1>
-          <p id="admUser" class="text-amber-400 text-sm font-medium">Carregando permissões...</p>
+          <p id="userName" class="text-slate-400">Carregando...</p>
         </div>
       </div>
-      
-      <div>
-        <a href="index.html" class="px-5 py-3 bg-slate-800 hover:bg-slate-700 rounded-2xl text-sm font-semibold transition-colors flex items-center gap-2">
-          ⬅️ Voltar ao Início
-        </a>
-      </div>
+      <a href="index.html" class="px-6 py-2 bg-slate-700 hover:bg-slate-600 rounded-2xl text-sm">
+        ← Voltar ao Dashboard
+      </a>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       
-      <div class="bg-slate-900 p-6 rounded-3xl border border-slate-700 shadow-xl flex flex-col justify-between">
-        <div>
-          <div class="text-3xl mb-3">👥</div>
-          <h2 class="text-xl font-bold mb-2">Gerenciar Usuários</h2>
-          <p class="text-slate-400 text-sm mb-4">Cadastre novos operadores, altere níveis de acesso ou remova permissões do sistema.</p>
-        </div>
-        <button onclick="mostrarAviso('Funcionalidade em desenvolvimento', 'alerta')" class="w-full bg-amber-600 hover:bg-amber-500 py-3 rounded-xl font-medium transition-colors">
-          Abrir Usuários
+      <!-- Card 1 -->
+      <div class="bg-slate-900 rounded-3xl p-6 border border-slate-700">
+        <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
+          👥 Gerenciar Usuários
+        </h2>
+        <p class="text-slate-400 mb-6">Cadastrar, editar e remover usuários do sistema.</p>
+        <button onclick="alert('Funcionalidade em desenvolvimento...')" 
+                class="w-full py-4 bg-blue-600 hover:bg-blue-500 rounded-2xl font-medium">
+          Acessar Gerenciador de Usuários
         </button>
       </div>
 
-      <div class="bg-slate-900 p-6 rounded-3xl border border-slate-700 shadow-xl flex flex-col justify-between">
-        <div>
-          <div class="text-3xl mb-3">📊</div>
-          <h2 class="text-xl font-bold mb-2">Relatórios de Movimentação</h2>
-          <p class="text-slate-400 text-sm mb-4">Veja o histórico completo de entradas, auditoria de posições e exportação de dados.</p>
-        </div>
-        <button onclick="mostrarAviso('Histórico em desenvolvimento', 'alerta')" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-600 py-3 rounded-xl font-medium transition-colors">
-          Visualizar Logs
+      <!-- Card 2 -->
+      <div class="bg-slate-900 rounded-3xl p-6 border border-slate-700">
+        <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
+          📊 Relatórios
+        </h2>
+        <p class="text-slate-400 mb-6">Visualizar relatórios de cadastros por tipo, lote, etc.</p>
+        <button onclick="alert('Funcionalidade em desenvolvimento...')" 
+                class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 rounded-2xl font-medium">
+          Ver Relatórios
         </button>
       </div>
 
-    </div>
+      <!-- Card 3 -->
+      <div class="bg-slate-900 rounded-3xl p-6 border border-slate-700">
+        <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
+          🗑️ Limpeza de Dados
+        </h2>
+        <p class="text-slate-400 mb-6">Ferramentas de manutenção do banco.</p>
+        <button onclick="alert('Funcionalidade em desenvolvimento...')" 
+                class="w-full py-4 bg-amber-600 hover:bg-amber-500 rounded-2xl font-medium">
+          Ferramentas de Limpeza
+        </button>
+      </div>
 
-    <div class="bg-slate-900 rounded-3xl p-6 border border-slate-800 text-center">
-      <p class="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Conexão do Sistema</p>
-      <p class="text-sm text-emerald-400 font-mono flex items-center justify-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-        API Integrada: https://codril.onrender.com
-      </p>
+      <!-- Card 4 -->
+      <div class="bg-slate-900 rounded-3xl p-6 border border-slate-700">
+        <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
+          ⚙️ Configurações do Sistema
+        </h2>
+        <p class="text-slate-400 mb-6">Configurações gerais da aplicação.</p>
+        <button onclick="alert('Funcionalidade em desenvolvimento...')" 
+                class="w-full py-4 bg-purple-600 hover:bg-purple-500 rounded-2xl font-medium">
+          Configurações Avançadas
+        </button>
+      </div>
+
     </div>
 
   </div>
 
   <script>
-    // FUNÇÃO TOAST COMPATÍVEL
-    function mostrarAviso(mensagem, tipo = 'sucesso') {
-      const toast = document.getElementById('toast');
-      const toastBg = document.getElementById('toastBg');
-      const toastIcon = document.getElementById('toastIcon');
-      const toastMessage = document.getElementById('toastMessage');
-
-      if (tipo === 'sucesso') {
-        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-emerald-500/90 border-emerald-400 text-white backdrop-blur-sm";
-        toastIcon.textContent = "✅";
-      } else if (tipo === 'erro') {
-        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-red-500/90 border-red-400 text-white backdrop-blur-sm";
-        toastIcon.textContent = "❌";
-      } else {
-        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-amber-500/90 border-amber-400 text-white backdrop-blur-sm";
-        toastIcon.textContent = "⚠️";
-      }
-
-      toastMessage.textContent = mensagem;
-
-      toast.classList.remove('opacity-0', 'pointer-events-none', 'scale-90', 'top-5');
-      toast.classList.add('opacity-100', 'scale-100', 'top-8');
-
-      setTimeout(() => {
-        toast.classList.remove('opacity-100', 'scale-100', 'top-8');
-        toast.classList.add('opacity-0', 'pointer-events-none', 'scale-90', 'top-5');
-      }, 3000);
-    }
-
-    // VALIDAÇÃO CORRIGIDA
+    // Mostra nome do usuário logado
     window.onload = function() {
       try {
         const userRaw = localStorage.getItem('currentUser');
-        
-        if (!userRaw) {
-          location.href = 'login.html';
-          return;
+        if (userRaw) {
+          const user = JSON.parse(userRaw);
+          document.getElementById('userName').textContent = `Olá, ${user.nome || 'Administrador'}`;
         }
-
-        const user = JSON.parse(userRaw);
-        const nivel = (user.nivel || '').toLowerCase().trim();
-
-        // VALIDAÇÃO EXPANDIDA: Aceita "super" ou "master" sem travar
-        if (nivel === 'super' || nivel === 'master') {
-          // Revela a página para o administrador
-          document.getElementById('mainContent').classList.remove('hidden');
-          document.getElementById('admUser').textContent = `Administrador: ${user.nome || 'Master'}`;
-        } else {
-          // Se for operador comum, exibe o toast de erro e redireciona após 2 segundos
-          mostrarAviso("Acesso negado! Área exclusiva para administradores.", "erro");
-          setTimeout(() => {
-            location.href = 'index.html';
-          }, 2000);
-        }
-
-      } catch (err) {
-        console.error("Erro ao validar permissões ADM:", err);
-        location.href = 'index.html';
-      }
+      } catch (e) {}
     };
   </script>
 </body>
