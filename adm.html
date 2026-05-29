@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-PT">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pulmão AE - Painel ADM</title>
+  <title>Administração - Pulmão AE</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-950 text-white min-h-screen relative">
+<body class="bg-slate-950 text-white min-h-screen font-sans">
 
+  <!-- TOAST NOTIFICATION -->
   <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 transform transition-all duration-300 opacity-0 pointer-events-none scale-90">
     <div id="toastBg" class="flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-sm">
       <span id="toastIcon" class="text-xl"></span>
@@ -15,61 +16,116 @@
     </div>
   </div>
 
-  <div id="mainContent" class="max-w-4xl mx-auto p-4 hidden">
-
-    <div class="flex justify-between items-center mb-8 border-b border-slate-700 pb-4">
-      <div class="flex items-center gap-3">
-        <span class="text-5xl">⚙️</span>
-        <div>
-          <h1 class="text-3xl font-bold">Painel Administrativo</h1>
-          <p id="admUser" class="text-amber-400 text-sm font-medium">Carregando permissões...</p>
-        </div>
+  <!-- MODAL DE CONFIRMAÇÃO SEGURO -->
+  <div id="confirmModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl transform scale-95 transition-all duration-200">
+      <h3 id="confirmTitle" class="text-lg font-bold text-slate-200 mb-2">Aviso de Segurança</h3>
+      <p id="confirmDesc" class="text-xs text-slate-400 mb-6"></p>
+      <div class="flex gap-3 justify-end">
+        <button id="btnCancelConfirm" class="px-4 py-2 bg-slate-850 hover:bg-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-all">Cancelar</button>
+        <button id="btnActionConfirm" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold transition-all"></button>
       </div>
-      
+    </div>
+  </div>
+
+  <div class="max-w-6xl mx-auto px-4 py-8">
+    
+    <!-- Cabeçalho -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 border-b border-slate-900 pb-6">
       <div>
-        <a href="index.html" class="px-5 py-3 bg-slate-800 hover:bg-slate-700 rounded-2xl text-sm font-semibold transition-colors flex items-center gap-2">
-          ⬅️ Voltar ao Início
-        </a>
+        <h1 class="text-3xl font-extrabold text-blue-400 flex items-center gap-2">
+          <span>⚙️</span> Painel Administrativo
+        </h1>
+        <p class="text-slate-400 text-sm">Controle utilizadores, altere níveis de acesso e faça manutenções</p>
       </div>
+      <a href="index.html" class="bg-slate-900 hover:bg-slate-850 px-5 py-3 rounded-2xl text-xs font-bold transition-all border border-slate-800">
+        ⬅️ Voltar ao Registo
+      </a>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       
-      <div class="bg-slate-900 p-6 rounded-3xl border border-slate-700 shadow-xl flex flex-col justify-between">
-        <div>
-          <div class="text-3xl mb-3">👥</div>
-          <h2 class="text-xl font-bold mb-2">Gerenciar Usuários</h2>
-          <p class="text-slate-400 text-sm mb-4">Cadastre novos operadores, altere níveis de acesso ou remova permissões do sistema.</p>
+      <!-- Formulário de Cadastro -->
+      <div class="lg:col-span-1 space-y-6">
+        <div class="bg-slate-900 border border-slate-800/80 rounded-3xl p-6 shadow-xl">
+          <h2 class="text-lg font-bold mb-1 text-slate-200">Adicionar Utilizador</h2>
+          <p class="text-xs text-slate-400 mb-6">Cadastre novos operadores ou administradores no sistema</p>
+
+          <form id="formNovoUsuario" onsubmit="cadastrarNovoUsuario(event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Nome Completo</label>
+              <input type="text" id="addNome" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-blue-500">
+            </div>
+            
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Endereço de E-mail</label>
+              <input type="email" id="addEmail" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-blue-500">
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Nível de Acesso</label>
+              <select id="addRole" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-blue-500">
+                <option value="user">Operador (Apenas Registo e Consulta)</option>
+                <option value="super">Super (Registo, Consulta e Exclusão)</option>
+                <option value="master">Master (Acesso Completo às Configurações)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Senha Inicial</label>
+              <input type="password" id="addSenha" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-blue-500">
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl text-xs font-bold transition-all active:scale-95 text-white">
+              Salvar Utilizador
+            </button>
+          </form>
         </div>
-        <button onclick="mostrarAviso('Funcionalidade em desenvolvimento', 'alerta')" class="w-full bg-amber-600 hover:bg-amber-500 py-3 rounded-xl font-medium transition-colors">
-          Abrir Usuários
-        </button>
       </div>
 
-      <div class="bg-slate-900 p-6 rounded-3xl border border-slate-700 shadow-xl flex flex-col justify-between">
-        <div>
-          <div class="text-3xl mb-3">📊</div>
-          <h2 class="text-xl font-bold mb-2">Relatórios de Movimentação</h2>
-          <p class="text-slate-400 text-sm mb-4">Veja o histórico completo de entradas, auditoria de posições e exportação de dados.</p>
+      <!-- Tabela de Utilizadores Registados -->
+      <div class="lg:col-span-2">
+        <div class="bg-slate-900 border border-slate-800/80 rounded-3xl p-6 shadow-xl h-full flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-center mb-6">
+              <div>
+                <h2 class="text-lg font-bold text-slate-200">Utilizadores do Sistema</h2>
+                <p class="text-xs text-slate-400">Gerencie permissões, redefina senhas ou remova o acesso</p>
+              </div>
+              <button onclick="carregarUsuariosServidor()" class="text-xs text-blue-400 hover:underline font-bold">Atualizar 🔄</button>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="text-slate-400 text-xs uppercase tracking-wider">
+                    <th class="p-4 font-semibold">Nome / Estado</th>
+                    <th class="p-4 font-semibold">E-mail</th>
+                    <th class="p-4 font-semibold">Nível (Acesso)</th>
+                    <th class="p-4 font-semibold text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="tabelaUtilizadores" class="text-xs divide-y divide-slate-800">
+                  <tr>
+                    <td colspan="4" class="p-8 text-center text-slate-500">Carregando utilizadores...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-        <button onclick="mostrarAviso('Histórico em desenvolvimento', 'alerta')" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-600 py-3 rounded-xl font-medium transition-colors">
-          Visualizar Logs
-        </button>
       </div>
 
-    </div>
-
-    <div class="bg-slate-900 rounded-3xl p-6 border border-slate-800 text-center">
-      <p class="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Conexão do Sistema</p>
-      <p class="text-sm text-emerald-400 font-mono flex items-center justify-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-        API Integrada: https://codril.onrender.com
-      </p>
     </div>
 
   </div>
 
   <script>
+    const API_URL = 'https://codril.onrender.com/api/usuarios.php';
+    let todosOsUsuarios = [];
+    let modalActionCallback = null;
+
+    // Toast de Alerta Personalizado
     function mostrarAviso(mensagem, tipo = 'sucesso') {
       const toast = document.getElementById('toast');
       const toastBg = document.getElementById('toastBg');
@@ -97,35 +153,207 @@
       }, 3000);
     }
 
-    window.onload = function() {
+    // Modal de Confirmação Seguro
+    function abrirModalConfirmacao(titulo, desc, textoBotao, acaoConfirmar, corBotao = 'bg-red-600') {
+      const modal = document.getElementById('confirmModal');
+      document.getElementById('confirmTitle').textContent = titulo;
+      document.getElementById('confirmDesc').textContent = desc;
+      
+      const btnAction = document.getElementById('btnActionConfirm');
+      btnAction.textContent = textoBotao;
+      btnAction.className = `px-4 py-2 ${corBotao} text-white rounded-xl text-xs font-bold transition-all hover:opacity-90`;
+
+      modal.classList.remove('hidden');
+      modalActionCallback = acaoConfirmar;
+    }
+
+    document.getElementById('btnCancelConfirm').addEventListener('click', () => {
+      document.getElementById('confirmModal').classList.add('hidden');
+    });
+
+    document.getElementById('btnActionConfirm').addEventListener('click', () => {
+      if (modalActionCallback) modalActionCallback();
+      document.getElementById('confirmModal').classList.add('hidden');
+    });
+
+    // Listar todos os utilizadores através da API
+    async function carregarUsuariosServidor() {
+      const tbody = document.getElementById('tabelaUtilizadores');
+      
       try {
-        const userRaw = localStorage.getItem('currentUser');
-        
-        if (!userRaw) {
-          location.href = 'login.html';
-          return;
-        }
+        const res = await fetch(API_URL);
+        const data = await res.json();
 
-        const user = JSON.parse(userRaw);
-        const nivel = (user.nivel || '').toLowerCase().trim();
-        const nome = (user.nome || '').toLowerCase();
-
-        // Validação tolerante com dupla verificação
-        if (nivel === 'super' || nivel === 'master' || nome.includes('master')) {
-          document.getElementById('mainContent').classList.remove('hidden');
-          document.getElementById('admUser').textContent = `Administrador: ${user.nome || 'Master'}`;
+        if (data.success) {
+          todosOsUsuarios = data.usuarios;
+          renderizarTabela();
         } else {
-          mostrarAviso("Acesso negado! Área exclusiva para administradores.", "erro");
-          setTimeout(() => {
-            location.href = 'index.html';
-          }, 2000);
+          tbody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-red-400">Falha ao carregar utilizadores.</td></tr>';
         }
-
       } catch (err) {
-        console.error(err);
-        location.href = 'index.html';
+        tbody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-red-400">Sem ligação com o servidor Render.</td></tr>';
       }
-    };
+    }
+
+    // Renderizar a tabela na tela de forma limpa e com botões
+    function renderizarTabela() {
+      const tbody = document.getElementById('tabelaUtilizadores');
+      tbody.innerHTML = '';
+
+      if (todosOsUsuarios.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-slate-500">Nenhum utilizador registado.</td></tr>';
+        return;
+      }
+
+      todosOsUsuarios.forEach((u) => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-900/35 transition-colors";
+        
+        const ehMasterPrincipal = u.email.toLowerCase() === 'ricardomaster@gmail.com';
+        const disabledAttr = ehMasterPrincipal ? 'disabled' : '';
+
+        // Exibe etiqueta de status se for troca obrigatória de senha
+        const tagSenha = u.requerer_troca 
+          ? `<span class="block text-[9px] text-amber-400 font-extrabold mt-0.5 uppercase">⚠️ Troca Obrigatória</span>` 
+          : `<span class="block text-[9px] text-slate-500 mt-0.5">Senha Salva</span>`;
+
+        tr.innerHTML = `
+          <td class="p-4 font-bold text-slate-200">
+            ${u.nome}
+            ${tagSenha}
+          </td>
+          <td class="p-4 font-mono text-slate-400 text-xs">${u.email}</td>
+          <td class="p-4">
+            <select onchange="alterarNivelUtilizador(${u.id}, this.value)" ${disabledAttr} class="bg-slate-800 text-slate-300 border border-slate-700 rounded-lg px-2 py-1 focus:outline-none focus:border-blue-500 text-xs cursor-pointer">
+              <option value="user" ${u.role === 'user' ? 'selected' : ''}>Operador</option>
+              <option value="super" ${u.role === 'super' ? 'selected' : ''}>Super</option>
+              <option value="master" ${u.role === 'master' ? 'selected' : ''}>Master</option>
+            </select>
+          </td>
+          <td class="p-4 text-right space-x-2">
+            <button onclick="resetarSenhaUtilizador(${u.id}, '${u.nome}')" ${disabledAttr} class="text-amber-500 hover:text-amber-400 font-bold ${ehMasterPrincipal ? 'opacity-20 cursor-not-allowed' : ''}">
+              Redefinir
+            </button>
+            <span class="text-slate-700">|</span>
+            <button onclick="excluirUtilizador(${u.id}, '${u.nome}')" ${disabledAttr} class="text-red-500 hover:text-red-400 font-bold ${ehMasterPrincipal ? 'opacity-20 cursor-not-allowed' : ''}">
+              Excluir
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Criar um novo utilizador
+    async function cadastrarNovoUsuario(e) {
+      e.preventDefault();
+
+      const nome = document.getElementById('addNome').value;
+      const email = document.getElementById('addEmail').value;
+      const role = document.getElementById('addRole').value;
+      const senha = document.getElementById('addSenha').value;
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome, email, role, senha })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          mostrarAviso(data.message);
+          document.getElementById('formNovoUsuario').reset();
+          carregarUsuariosServidor();
+        } else {
+          mostrarAviso(data.message, "erro");
+        }
+      } catch (err) {
+        mostrarAviso("Erro ao conectar ao servidor.", "erro");
+      }
+    }
+
+    // Ação: Alterar nível de acesso
+    async function alterarNivelUtilizador(id, novoNivel) {
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'UPDATE_ROLE', id, role: novoNivel })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          mostrarAviso(data.message);
+          carregarUsuariosServidor();
+        } else {
+          mostrarAviso(data.message, "erro");
+        }
+      } catch (err) {
+        mostrarAviso("Erro de rede ao alterar nível.", "erro");
+      }
+    }
+
+    // Ação: Resetar senha do utilizador
+    function resetarSenhaUtilizador(id, nome) {
+      abrirModalConfirmacao(
+        "Confirmar Redefinição",
+        `Deseja redefinir a senha do utilizador "${nome}" para "123456"? Ele será obrigado a alterá-la ao iniciar sessão.`,
+        "Redefinir Senha",
+        async () => {
+          try {
+            const res = await fetch(API_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'RESET_PASSWORD', id })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+              mostrarAviso(data.message);
+              carregarUsuariosServidor();
+            } else {
+              mostrarAviso(data.message, "erro");
+            }
+          } catch (err) {
+            mostrarAviso("Erro na ligação ao servidor.", "erro");
+          }
+        },
+        'bg-amber-600'
+      );
+    }
+
+    // Ação: Excluir Utilizador
+    function excluirUtilizador(id, nome) {
+      abrirModalConfirmacao(
+        "Confirmar Remoção",
+        `Tem certeza que deseja remover o utilizador "${nome}"? Esta operação não pode ser revertida e ele perderá acesso imediatamente.`,
+        "Excluir Utilizador",
+        async () => {
+          try {
+            const res = await fetch(API_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'DELETE', id })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+              mostrarAviso(data.message);
+              carregarUsuariosServidor();
+            } else {
+              mostrarAviso(data.message, "erro");
+            }
+          } catch (err) {
+            mostrarAviso("Erro ao efetuar exclusão de utilizador.", "erro");
+          }
+        },
+        'bg-red-600'
+      );
+    }
+
+    // Inicialização
+    carregarUsuariosServidor();
   </script>
 </body>
 </html>
