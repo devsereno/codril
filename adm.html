@@ -6,16 +6,23 @@
   <title>Pulmão AE - Painel ADM</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-950 text-white min-h-screen">
+<body class="bg-slate-950 text-white min-h-screen relative">
 
-  <div class="max-w-4xl mx-auto p-4">
+  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 transform transition-all duration-300 opacity-0 pointer-events-none scale-90">
+    <div id="toastBg" class="flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-sm">
+      <span id="toastIcon" class="text-xl"></span>
+      <span id="toastMessage" class="font-medium text-sm"></span>
+    </div>
+  </div>
+
+  <div id="mainContent" class="max-w-4xl mx-auto p-4 hidden">
 
     <div class="flex justify-between items-center mb-8 border-b border-slate-700 pb-4">
       <div class="flex items-center gap-3">
         <span class="text-5xl">⚙️</span>
         <div>
           <h1 class="text-3xl font-bold">Painel Administrativo</h1>
-          <p class="text-amber-400 text-sm font-medium">Acesso Restrito: Master / Super</p>
+          <p id="admUser" class="text-amber-400 text-sm font-medium">Carregando permissões...</p>
         </div>
       </div>
       
@@ -34,7 +41,7 @@
           <h2 class="text-xl font-bold mb-2">Gerenciar Usuários</h2>
           <p class="text-slate-400 text-sm mb-4">Cadastre novos operadores, altere níveis de acesso ou remova permissões do sistema.</p>
         </div>
-        <button onclick="alert('Funcionalidade de usuários em desenvolvimento')" class="w-full bg-amber-600 hover:bg-amber-500 py-3 rounded-xl font-medium transition-colors">
+        <button onclick="mostrarAviso('Funcionalidade em desenvolvimento', 'alerta')" class="w-full bg-amber-600 hover:bg-amber-500 py-3 rounded-xl font-medium transition-colors">
           Abrir Usuários
         </button>
       </div>
@@ -45,7 +52,7 @@
           <h2 class="text-xl font-bold mb-2">Relatórios de Movimentação</h2>
           <p class="text-slate-400 text-sm mb-4">Veja o histórico completo de entradas, auditoria de posições e exportação de dados.</p>
         </div>
-        <button onclick="alert('Funcionalidade de relatórios em desenvolvimento')" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-600 py-3 rounded-xl font-medium transition-colors">
+        <button onclick="mostrarAviso('Histórico em desenvolvimento', 'alerta')" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-600 py-3 rounded-xl font-medium transition-colors">
           Visualizar Logs
         </button>
       </div>
@@ -63,12 +70,40 @@
   </div>
 
   <script>
-    // TRAVA DE SEGURANÇA NA ENTRADA DA PÁGINA
+    // FUNÇÃO TOAST COMPATÍVEL
+    function mostrarAviso(mensagem, tipo = 'sucesso') {
+      const toast = document.getElementById('toast');
+      const toastBg = document.getElementById('toastBg');
+      const toastIcon = document.getElementById('toastIcon');
+      const toastMessage = document.getElementById('toastMessage');
+
+      if (tipo === 'sucesso') {
+        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-emerald-500/90 border-emerald-400 text-white backdrop-blur-sm";
+        toastIcon.textContent = "✅";
+      } else if (tipo === 'erro') {
+        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-red-500/90 border-red-400 text-white backdrop-blur-sm";
+        toastIcon.textContent = "❌";
+      } else {
+        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-amber-500/90 border-amber-400 text-white backdrop-blur-sm";
+        toastIcon.textContent = "⚠️";
+      }
+
+      toastMessage.textContent = mensagem;
+
+      toast.classList.remove('opacity-0', 'pointer-events-none', 'scale-90', 'top-5');
+      toast.classList.add('opacity-100', 'scale-100', 'top-8');
+
+      setTimeout(() => {
+        toast.classList.remove('opacity-100', 'scale-100', 'top-8');
+        toast.classList.add('opacity-0', 'pointer-events-none', 'scale-90', 'top-5');
+      }, 3000);
+    }
+
+    // VALIDAÇÃO CORRIGIDA
     window.onload = function() {
       try {
         const userRaw = localStorage.getItem('currentUser');
         
-        // Se não houver login, chuta para a tela de login
         if (!userRaw) {
           location.href = 'login.html';
           return;
@@ -77,10 +112,17 @@
         const user = JSON.parse(userRaw);
         const nivel = (user.nivel || '').toLowerCase().trim();
 
-        // Se NÃO for administrador (Super ou Master), bloqueia e joga de volta pro Index
-        if (nivel !== 'super' && nivel !== 'master') {
-          alert("⚠️ Acesso negado! Esta área é exclusiva para administradores.");
-          location.href = 'index.html';
+        // VALIDAÇÃO EXPANDIDA: Aceita "super" ou "master" sem travar
+        if (nivel === 'super' || nivel === 'master') {
+          // Revela a página para o administrador
+          document.getElementById('mainContent').classList.remove('hidden');
+          document.getElementById('admUser').textContent = `Administrador: ${user.nome || 'Master'}`;
+        } else {
+          // Se for operador comum, exibe o toast de erro e redireciona após 2 segundos
+          mostrarAviso("Acesso negado! Área exclusiva para administradores.", "erro");
+          setTimeout(() => {
+            location.href = 'index.html';
+          }, 2000);
         }
 
       } catch (err) {
