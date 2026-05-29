@@ -10,7 +10,10 @@
   <div class="max-w-4xl mx-auto p-4">
 
     <div class="flex justify-between items-center mb-8 border-b border-slate-700 pb-4">
-      <h1 class="text-3xl font-bold">Itens Cadastrados</h1>
+      <div>
+        <h1 class="text-3xl font-bold">Itens Cadastrados</h1>
+        <p id="totalItens" class="text-slate-400 text-sm">Total: 0</p>
+      </div>
       <div class="flex gap-3">
         <button onclick="carregarItens()" 
                 class="px-6 py-3 bg-red-600 hover:bg-red-500 rounded-2xl text-sm font-medium flex items-center gap-2 transition-all active:scale-95">
@@ -29,7 +32,6 @@
   </div>
 
   <script>
-    // Variável global para guardar os itens e permitir a busca local sem sobrecarregar a API
     let todosOsItens = [];
 
     async function carregarItens() {
@@ -41,20 +43,20 @@
         const data = await res.json();
 
         if (data.success && data.itens) {
-          todosOsItens = data.itens; // Salva os dados recebidos
+          todosOsItens = data.itens;
+          document.getElementById('totalItens').textContent = `Total: ${data.itens.length}`;
           renderizarItens(todosOsItens);
         } else {
           exibirMensagemVazia();
         }
       } catch (e) {
-        console.error("Erro na requisição:", e);
-        container.innerHTML = `<p class="text-red-400 text-center py-12">Erro ao carregar lista. Verifique o console.</p>`;
+        console.error(e);
+        container.innerHTML = `<p class="text-red-400 text-center py-12">Erro ao carregar lista</p>`;
       }
     }
 
     function renderizarItens(itens) {
       const container = document.getElementById('listaItens');
-      
       if (itens.length === 0) {
         exibirMensagemVazia();
         return;
@@ -62,20 +64,25 @@
 
       let html = '';
       itens.forEach(item => {
-        // Correção da sintaxe das chaves e verificação de campos nulos
-        const tipo = item.tipo ? item.tipo.toUpperCase() : 'N/A';
-        const dataCadastro = item.data_cadastro ? item.data_cadastro.substring(0,10) : '';
-        const descricaoHtml = item.descricao ? `<p class="text-slate-400 text-sm mt-2">${item.descricao}</p>` : '';
-
         html += `
-          <div class="item-card bg-slate-900 p-5 rounded-3xl border border-slate-700">
+          <div class="bg-slate-900 p-5 rounded-3xl border border-slate-700">
             <div class="flex justify-between mb-3">
-              <span class="px-4 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">${tipo}</span>
-              <span class="text-xs text-slate-500">${dataCadastro}</span>
+              <span class="px-4 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">${(item.tipo || 'N/A').toUpperCase()}</span>
+              <span class="text-xs text-slate-500">${item.data_cadastro ? item.data_cadastro.substring(0,10) : ''}</span>
             </div>
-            <p class="text-2xl font-mono">${item.endereco || 'Sem Endereço'}</p>
-            <p class="text-lg">${item.codigo_produto || ''} • ${item.lote || ''}</p>
-            ${descricaoHtml}
+            
+            <p class="text-2xl font-mono">${item.endereco || 'Sem endereço'}</p>
+            
+            <p class="text-lg mt-1">
+              Código: 
+              <span onclick="filtrarPorCodigo('${item.codigo_produto}')" 
+                    class="text-blue-400 underline cursor-pointer hover:text-blue-300">
+                ${item.codigo_produto || 'N/A'}
+              </span> 
+              • Lote: ${item.lote || 'N/A'}
+            </p>
+            
+            \( {item.descricao ? `<p class="text-slate-400 text-sm mt-2"> \){item.descricao}</p>` : ''}
           </div>`;
       });
       container.innerHTML = html;
@@ -90,23 +97,32 @@
         </div>`;
     }
 
-    // Filtro inteligente que busca diretamente nos dados salvos na memória
+    // Filtro normal pela busca
     function filtrarItens() {
-      const termo = document.getElementById('busca').value.toLowerCase();
+      const termo = document.getElementById('busca').value.toLowerCase().trim();
       
-      const itensFiltrados = todosOsItens.filter(item => {
-        const endereco = (item.endereco || '').toLowerCase();
-        const codigo = (item.codigo_produto || '').toLowerCase();
-        const lote = (item.lote || '').toLowerCase();
-        const descricao = (item.descricao || '').toLowerCase();
-
-        return endereco.includes(termo) || 
-               codigo.includes(termo) || 
-               lote.includes(termo) || 
-               descricao.includes(termo);
+      const filtrados = todosOsItens.filter(item => {
+        return (item.endereco || '').toLowerCase().includes(termo) ||
+               (item.codigo_produto || '').toLowerCase().includes(termo) ||
+               (item.lote || '').toLowerCase().includes(termo) ||
+               (item.descricao || '').toLowerCase().includes(termo);
       });
 
-      renderizarItens(itensFiltrados);
+      renderizarItens(filtrados);
+    }
+
+    // Novo: Filtrar clicando no código do produto
+    function filtrarPorCodigo(codigo) {
+      if (!codigo) return;
+      
+      const filtrados = todosOsItens.filter(item => 
+        (item.codigo_produto || '') === codigo
+      );
+      
+      renderizarItens(filtrados);
+      
+      // Limpa o campo de busca e mostra o que está filtrando
+      document.getElementById('busca').value = `Código: ${codigo}`;
     }
 
     window.onload = carregarItens;
