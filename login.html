@@ -7,58 +7,87 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="manifest" href="manifest.json">
 </head>
-<body class="bg-slate-950 dark:bg-slate-950 text-white min-h-screen flex items-center justify-center p-4 transition-colors">
+<body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4 relative">
+
+  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 transform transition-all duration-300 opacity-0 pointer-events-none scale-90">
+    <div id="toastBg" class="flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-sm">
+      <span id="toastIcon" class="text-xl"></span>
+      <span id="toastMessage" class="font-medium text-sm"></span>
+    </div>
+  </div>
+
   <div class="max-w-md w-full">
 
     <div class="text-center mb-10">
       <span class="text-6xl">📦</span>
       <h1 class="text-4xl font-bold mt-4">PULMÃO AE</h1>
-      <p class="text-slate-400">Sistema de Armazenamento Inteligente</p>
+      <p class="text-slate-400 text-sm tracking-wide mt-1">Sistema de Armazenamento Inteligente</p>
     </div>
 
-    <div class="bg-slate-900 dark:bg-slate-900 rounded-3xl p-8 border border-slate-700">
-      <h2 class="text-xl font-semibold mb-6 text-center">Login</h2>
+    <div class="bg-slate-900 rounded-3xl p-8 border border-slate-700 shadow-2xl">
+      <h2 class="text-xl font-semibold mb-6 text-center flex items-center justify-center gap-2">
+        🔒 Controle de Acesso
+      </h2>
       
-      <input id="email" type="email" value="ricardomaster@gmail.com" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-4">
-      <input id="senha" type="password" value="8486" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 mb-6">
+      <div class="space-y-4">
+        <div>
+          <label class="text-xs text-slate-400 font-medium mb-1 block">E-mail de Usuário</label>
+          <input id="email" type="email" value="ricardomaster@gmail.com" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 text-white">
+        </div>
 
-      <button onclick="fazerLogin()" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-semibold text-lg">
-        Entrar
+        <div>
+          <label class="text-xs text-slate-400 font-medium mb-1 block">Senha Numérica</label>
+          <input id="senha" type="password" value="8486" class="w-full bg-slate-800 border border-slate-600 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 font-mono text-white tracking-widest">
+        </div>
+      </div>
+
+      <button id="btnEntrar" onclick="fazerLogin()" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-semibold text-lg mt-8 transition-all active:scale-[0.99] shadow-lg shadow-blue-600/20 flex justify-center items-center">
+        <span>Entrar no Sistema</span>
       </button>
     </div>
 
-    <p id="mensagem" class="text-center mt-6 text-red-400"></p>
   </div>
 
   <script>
+    function mostrarAviso(mensagem, tipo = 'sucesso') {
+      const toast = document.getElementById('toast');
+      const toastBg = document.getElementById('toastBg');
+      const toastIcon = document.getElementById('toastIcon');
+      const toastMessage = document.getElementById('toastMessage');
+
+      if (tipo === 'sucesso') {
+        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-emerald-500/90 border-emerald-400 text-white backdrop-blur-sm";
+        toastIcon.textContent = "✅";
+      } else if (tipo === 'erro') {
+        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-red-500/90 border-red-400 text-white backdrop-blur-sm";
+        toastIcon.textContent = "❌";
+      } else {
+        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-amber-500/90 border-amber-400 text-white backdrop-blur-sm";
+        toastIcon.textContent = "⚠️";
+      }
+
+      toastMessage.textContent = mensagem;
+      toast.classList.remove('opacity-0', 'pointer-events-none', 'scale-90', 'top-5');
+      toast.classList.add('opacity-100', 'scale-100', 'top-8');
+
+      setTimeout(() => {
+        toast.classList.remove('opacity-100', 'scale-100', 'top-8');
+        toast.classList.add('opacity-0', 'pointer-events-none', 'scale-90', 'top-5');
+      }, 3000);
+    }
+
     async function fazerLogin() {
+      const btn = document.getElementById('btnEntrar');
       const email = document.getElementById('email').value.trim();
       const senha = document.getElementById('senha').value.trim();
-      const msg = document.getElementById('mensagem');
 
-      msg.textContent = "Conectando...";
+      if (!email || !senha) {
+        mostrarAviso("Por favor, preencha o e-mail e a senha.", "alerta");
+        return;
+      }
 
       try {
-        const res = await fetch('https://codril.onrender.com/api/login.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, senha })
-        });
-
-        const data = await res.json();
-
-        if (data.success) {
-          msg.style.color = "lime";
-          msg.textContent = `✅ Bem-vindo, ${data.user.nome}!`;
-          localStorage.setItem('currentUser', JSON.stringify(data.user));
-          setTimeout(() => window.location.href = 'index.html', 1500);
-        } else {
-          msg.textContent = data.message || "Login inválido";
-        }
-      } catch (e) {
-        msg.textContent = "❌ Erro de conexão";
-      }
-    }
-  </script>
-</body>
-</html>
+        btn.disabled = true;
+        btn.innerHTML = `<span>⏳ Autenticando...</span>`;
+        btn.classList.replace('bg-blue-600
+                              
