@@ -29,6 +29,9 @@
   </div>
 
   <script>
+    // Variável global para guardar os itens e permitir a busca local sem sobrecarregar a API
+    let todosOsItens = [];
+
     async function carregarItens() {
       const container = document.getElementById('listaItens');
       container.innerHTML = `<p class="text-center py-12 text-slate-400">Carregando itens...</p>`;
@@ -37,35 +40,73 @@
         const res = await fetch('https://codril.onrender.com/api/salvar-produto.php');
         const data = await res.json();
 
-        if (data.success && data.itens && data.itens.length > 0) {
-          let html = '';
-          data.itens.forEach(item => {
-            html += `
-              <div class="bg-slate-900 p-5 rounded-3xl border border-slate-700">
-                <div class="flex justify-between mb-3">
-                  <span class="px-4 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">${item.tipo.toUpperCase()}</span>
-                  <span class="text-xs text-slate-500">${item.data_cadastro ? item.data_cadastro.substring(0,10) : ''}</span>
-                </div>
-                <p class="text-2xl font-mono">${item.endereco}</p>
-                <p class="text-lg">${item.codigo_produto} • ${item.lote}</p>
-                \( {item.descricao ? `<p class="text-slate-400 text-sm mt-2"> \){item.descricao}</p>` : ''}
-              </div>`;
-          });
-          container.innerHTML = html;
+        if (data.success && data.itens) {
+          todosOsItens = data.itens; // Salva os dados recebidos
+          renderizarItens(todosOsItens);
         } else {
-          container.innerHTML = `
-            <div class="bg-slate-900 rounded-3xl p-12 text-center border border-slate-700">
-              <p class="text-6xl mb-4">📦</p>
-              <p class="text-xl text-slate-300">Nenhum item cadastrado ainda</p>
-            </div>`;
+          exibirMensagemVazia();
         }
       } catch (e) {
-        container.innerHTML = `<p class="text-red-400 text-center py-12">Erro ao carregar lista</p>`;
+        console.error("Erro na requisição:", e);
+        container.innerHTML = `<p class="text-red-400 text-center py-12">Erro ao carregar lista. Verifique o console.</p>`;
       }
     }
 
+    function renderizarItens(itens) {
+      const container = document.getElementById('listaItens');
+      
+      if (itens.length === 0) {
+        exibirMensagemVazia();
+        return;
+      }
+
+      let html = '';
+      itens.forEach(item => {
+        // Correção da sintaxe das chaves e verificação de campos nulos
+        const tipo = item.tipo ? item.tipo.toUpperCase() : 'N/A';
+        const dataCadastro = item.data_cadastro ? item.data_cadastro.substring(0,10) : '';
+        const descricaoHtml = item.descricao ? `<p class="text-slate-400 text-sm mt-2">${item.descricao}</p>` : '';
+
+        html += `
+          <div class="item-card bg-slate-900 p-5 rounded-3xl border border-slate-700">
+            <div class="flex justify-between mb-3">
+              <span class="px-4 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">${tipo}</span>
+              <span class="text-xs text-slate-500">${dataCadastro}</span>
+            </div>
+            <p class="text-2xl font-mono">${item.endereco || 'Sem Endereço'}</p>
+            <p class="text-lg">${item.codigo_produto || ''} • ${item.lote || ''}</p>
+            ${descricaoHtml}
+          </div>`;
+      });
+      container.innerHTML = html;
+    }
+
+    function exibirMensagemVazia() {
+      const container = document.getElementById('listaItens');
+      container.innerHTML = `
+        <div class="bg-slate-900 rounded-3xl p-12 text-center border border-slate-700">
+          <p class="text-6xl mb-4">📦</p>
+          <p class="text-xl text-slate-300">Nenhum item encontrado</p>
+        </div>`;
+    }
+
+    // Filtro inteligente que busca diretamente nos dados salvos na memória
     function filtrarItens() {
-      carregarItens();
+      const termo = document.getElementById('busca').value.toLowerCase();
+      
+      const itensFiltrados = todosOsItens.filter(item => {
+        const endereco = (item.endereco || '').toLowerCase();
+        const codigo = (item.codigo_produto || '').toLowerCase();
+        const lote = (item.lote || '').toLowerCase();
+        const descricao = (item.descricao || '').toLowerCase();
+
+        return endereco.includes(termo) || 
+               codigo.includes(termo) || 
+               lote.includes(termo) || 
+               descricao.includes(termo);
+      });
+
+      renderizarItens(itensFiltrados);
     }
 
     window.onload = carregarItens;
