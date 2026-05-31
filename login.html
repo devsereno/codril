@@ -22,7 +22,7 @@
       <div class="text-center mb-6">
         <span class="text-4xl">🔐</span>
         <h3 class="text-xl font-extrabold text-slate-100 mt-3">Alteração de Senha Obrigatória</h3>
-        <p class="text-xs text-slate-400 mt-2">Você está usando uma senha temporária. Defina uma senha forte de sua escolha antes de continuar.</p>
+        <p class="text-xs text-slate-400 mt-2">Está a utilizar uma senha padrão ou temporária. Defina uma nova palavra-passe de segurança para prosseguir.</p>
       </div>
 
       <form id="formTrocarSenha" onsubmit="processarTrocaDeSenha(event)" class="space-y-4">
@@ -46,9 +46,9 @@
   <!-- CAIXA DE LOGIN PRINCIPAL -->
   <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl">
     <div class="text-center mb-8">
-      <div class="text-4xl mb-3">🩺</div>
+      <div class="text-4xl mb-3">📦</div>
       <h1 class="text-2xl font-extrabold text-blue-400">Pulmão AE</h1>
-      <p class="text-xs text-slate-400 mt-1">Insira suas credenciais para aceder ao sistema</p>
+      <p class="text-xs text-slate-400 mt-1">Insira as credenciais para aceder ao estoque</p>
     </div>
 
     <form id="formLogin" onsubmit="processarLogin(event)" class="space-y-4">
@@ -62,7 +62,7 @@
         <input type="password" id="loginSenha" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 font-mono">
       </div>
 
-      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 py-3.5 rounded-xl text-xs font-bold transition-all active:scale-95 text-white">
+      <button id="btnLogin" type="submit" class="w-full bg-blue-600 hover:bg-blue-500 py-3.5 rounded-xl text-xs font-bold transition-all active:scale-95 text-white">
         Entrar no Painel
       </button>
     </form>
@@ -73,7 +73,6 @@
     const API_USUARIOS = 'https://codril.onrender.com/api/usuarios.php';
     let emailSendoAlterado = '';
 
-    // Alertas customizados sem usar alert() nativo
     function mostrarAviso(mensagem, tipo = 'sucesso') {
       const toast = document.getElementById('toast');
       const toastBg = document.getElementById('toastBg');
@@ -101,14 +100,18 @@
       }, 3000);
     }
 
-    // Processa a tentativa de login normal
+    // Processa login com recuperação de Token de Sessão Criptográfico
     async function processarLogin(e) {
       e.preventDefault();
 
+      const btn = document.getElementById('btnLogin');
       const email = document.getElementById('loginEmail').value.trim();
       const senha = document.getElementById('loginSenha').value;
 
       try {
+        btn.disabled = true;
+        btn.textContent = "Conectando...";
+
         const res = await fetch(API_LOGIN, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -117,29 +120,39 @@
         const data = await res.json();
 
         if (data.success) {
-          // Se o banco indicar que o utilizador precisa obrigatoriamente trocar de senha
+          // Salva de forma unificada as informações na sessão
+          const userData = {
+            nome: data.user.nome,
+            email: data.user.email,
+            role: data.user.role,
+            token: data.token // O TOKEN gerado criptografado pelo banco
+          };
+
           if (data.user.requerer_troca) {
             emailSendoAlterado = email;
             document.getElementById('modalTrocaSenha').classList.remove('hidden');
-            mostrarAviso("Troca de senha necessária!", "alerta");
+            mostrarAviso("Requerimento de alteração de senha temporária!", "alerta");
           } else {
-            // Guarda dados do utilizador na sessão e segue para o index
-            sessionStorage.setItem('usuarioLogado', JSON.stringify(data.user));
-            mostrarAviso("Login efetuado com sucesso!");
+            // Guarda com segurança e despacha para o Dashboard
+            sessionStorage.setItem('usuarioLogado', JSON.stringify(userData));
+            mostrarAviso("Acesso concedido. Bem-vindo!");
             
             setTimeout(() => {
               window.location.href = 'index.html';
             }, 1000);
           }
         } else {
-          mostrarAviso(data.message, "erro");
+          mostrarAviso(data.message || "Credenciais incorretas.", "erro");
         }
       } catch (err) {
-        mostrarAviso("Erro ao ligar ao servidor de login.", "erro");
+        mostrarAviso("Erro ao conectar com o servidor.", "erro");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Entrar no Painel";
       }
     }
 
-    // Processa a troca de senha mandatória
+    // Altera a senha mandatória de primeiro acesso
     async function processarTrocaDeSenha(e) {
       e.preventDefault();
 
@@ -147,7 +160,7 @@
       const n2 = document.getElementById('novaSenha2').value;
 
       if (n1 !== n2) {
-        return mostrarAviso("As senhas digitadas não coincidem!", "erro");
+        return mostrarAviso("As senhas não coincidem!", "erro");
       }
 
       try {
@@ -163,14 +176,14 @@
         const data = await res.json();
 
         if (data.success) {
-          mostrarAviso("Nova senha definitiva salva com sucesso! Faça login para entrar.");
+          mostrarAviso("Senha atualizada com sucesso! Insira suas novas credenciais.");
           document.getElementById('modalTrocaSenha').classList.add('hidden');
-          document.getElementById('loginSenha').value = ''; // Limpa senha temporária do campo
+          document.getElementById('loginSenha').value = '';
         } else {
           mostrarAviso(data.message, "erro");
         }
       } catch (err) {
-        mostrarAviso("Erro ao salvar senha definitiva.", "erro");
+        mostrarAviso("Erro de conexão ao redefinir palavra-passe.", "erro");
       }
     }
   </script>
