@@ -17,7 +17,7 @@
   </div>
 
   <!-- MODAL DE CONFIRMAÇÃO SEGURO -->
-  <div id="confirmModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden">
+  <div id="confirmModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm hidden">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl transform scale-95 transition-all duration-200">
       <h3 id="confirmTitle" class="text-lg font-bold text-slate-200 mb-2">Aviso de Segurança</h3>
       <p id="confirmDesc" class="text-xs text-slate-400 mb-6"></p>
@@ -36,7 +36,7 @@
         <h1 class="text-3xl font-extrabold text-blue-400 flex items-center gap-2">
           <span>⚙️</span> Painel Administrativo
         </h1>
-        <p class="text-slate-400 text-sm">Controle utilizadores, altere níveis de acesso e faça manutenções</p>
+        <p class="text-slate-400 text-sm font-semibold">Controle utilizadores, altere níveis de acesso e faça manutenções</p>
       </div>
       <a href="index.html" class="bg-slate-900 hover:bg-slate-850 px-5 py-3 rounded-2xl text-xs font-bold transition-all border border-slate-800">
         ⬅️ Voltar ao Registo
@@ -45,41 +45,47 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       
-      <!-- Formulário de Cadastro -->
+      <!-- Formulário de Criação de Códigos / Convites de Adesão -->
       <div class="lg:col-span-1 space-y-6">
+        
+        <!-- NOVO: Bloco Gerador de Convites de Autorização -->
         <div class="bg-slate-900 border border-slate-800/80 rounded-3xl p-6 shadow-xl">
-          <h2 class="text-lg font-bold mb-1 text-slate-200">Adicionar Utilizador</h2>
-          <p class="text-xs text-slate-400 mb-6">Cadastre novos operadores ou administradores no sistema</p>
+          <h2 class="text-lg font-bold mb-1 text-amber-400 flex items-center gap-2">
+            <span>🔑</span> Gerar Convite
+          </h2>
+          <p class="text-xs text-slate-400 mb-6">Gere um código de autorização para que o novo operador faça seu próprio registo.</p>
 
-          <form id="formNovoUsuario" onsubmit="cadastrarNovoUsuario(event)" class="space-y-4">
+          <div class="space-y-4">
             <div>
-              <label class="block text-xs font-medium text-slate-400 mb-1">Nome Completo</label>
-              <input type="text" id="addNome" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-blue-500">
-            </div>
-            
-            <div>
-              <label class="block text-xs font-medium text-slate-400 mb-1">Endereço de E-mail</label>
-              <input type="email" id="addEmail" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-blue-500">
-            </div>
-
-            <div>
-              <label class="block text-xs font-medium text-slate-400 mb-1">Nível de Acesso</label>
-              <select id="addRole" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-blue-500">
+              <label class="block text-xs font-medium text-slate-400 mb-1">Nível Reservado</label>
+              <select id="inviteRole" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-blue-500 text-slate-200">
                 <option value="user">Operador (Apenas Registo e Consulta)</option>
                 <option value="super">Super (Registo, Consulta e Exclusão)</option>
                 <option value="master">Master (Acesso Completo às Configurações)</option>
               </select>
             </div>
 
-            <div>
-              <label class="block text-xs font-medium text-slate-400 mb-1">Senha Inicial</label>
-              <input type="password" id="addSenha" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-blue-500">
-            </div>
-
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl text-xs font-bold transition-all active:scale-95 text-white">
-              Salvar Utilizador
+            <button onclick="criarCodigoConvite()" class="w-full bg-amber-600 hover:bg-amber-500 py-3 text-white rounded-xl text-xs font-bold transition-all active:scale-95 shadow-lg shadow-amber-600/10">
+              Gerar Código de Adesão
             </button>
-          </form>
+          </div>
+
+          <!-- Caixa que exibe o código recém gerado -->
+          <div id="resultadoInvite" class="hidden mt-6 bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-center">
+            <span class="text-[10px] text-slate-500 block uppercase font-bold mb-1">Código de Autorização</span>
+            <div class="flex items-center justify-between bg-slate-900 border border-slate-800 p-3 rounded-xl">
+              <span id="txtCodigoGerado" class="font-mono text-lg font-black text-emerald-400 tracking-widest"></span>
+              <button onclick="copiarCodigo()" class="text-[10px] text-blue-400 font-bold hover:underline">Copiar 📋</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- NOVO: Lista de Convites Ativos que não foram utilizados -->
+        <div class="bg-slate-900 border border-slate-800/80 rounded-3xl p-6 shadow-xl">
+          <h3 class="text-xs text-slate-400 font-extrabold uppercase tracking-widest mb-4">Códigos Disponíveis</h3>
+          <div id="listaConvitesAtivos" class="space-y-2 text-xs">
+            <p class="text-slate-500">Nenhum código pendente de uso.</p>
+          </div>
         </div>
       </div>
 
@@ -90,7 +96,7 @@
             <div class="flex justify-between items-center mb-6">
               <div>
                 <h2 class="text-lg font-bold text-slate-200">Utilizadores do Sistema</h2>
-                <p class="text-xs text-slate-400">Gerencie permissões, redefina senhas ou remova o acesso</p>
+                <p class="text-xs text-slate-400">Gerencie permissões, redefina senhas ou remova o acesso de utilizadores</p>
               </div>
               <button onclick="carregarUsuariosServidor()" class="text-xs text-blue-400 hover:underline font-bold">Atualizar 🔄</button>
             </div>
@@ -124,8 +130,38 @@
     const API_URL = 'https://codril.onrender.com/api/usuarios.php';
     let todosOsUsuarios = [];
     let modalActionCallback = null;
+    let userToken = '';
 
-    // Toast de Alerta Personalizado
+    window.onload = function() {
+      verificarSessao();
+    };
+
+    function verificarSessao() {
+      try {
+        const userRaw = sessionStorage.getItem('usuarioLogado');
+        if (!userRaw) {
+          location.href = 'login.html';
+          return;
+        }
+
+        const user = JSON.parse(userRaw);
+        userToken = user.token || ''; // Captura o token gerado no login
+
+        const role = (user.role || '').toLowerCase().trim();
+        const nome = (user.nome || '').toLowerCase();
+
+        if (role === 'super' || role === 'master' || nome.includes('master')) {
+          carregarUsuariosServidor();
+          carregarConvitesAtivos();
+        } else {
+          alert("Acesso negado! Área restrita para administradores.");
+          location.href = 'index.html';
+        }
+      } catch (err) {
+        location.href = 'login.html';
+      }
+    }
+
     function mostrarAviso(mensagem, tipo = 'sucesso') {
       const toast = document.getElementById('toast');
       const toastBg = document.getElementById('toastBg');
@@ -153,7 +189,6 @@
       }, 3000);
     }
 
-    // Modal de Confirmação Seguro
     function abrirModalConfirmacao(titulo, desc, textoBotao, acaoConfirmar, corBotao = 'bg-red-600') {
       const modal = document.getElementById('confirmModal');
       document.getElementById('confirmTitle').textContent = titulo;
@@ -176,26 +211,113 @@
       document.getElementById('confirmModal').classList.add('hidden');
     });
 
-    // Listar todos os utilizadores através da API
+    // ==================== OPERAÇÕES COM CONVITES DE ADESÃO ====================
+    async function criarCodigoConvite() {
+      const role = document.getElementById('inviteRole').value;
+      
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'CREATE_INVITE', token: userToken, role })
+        });
+        const data = await res.json();
+
+        if (data.success && data.codigo) {
+          mostrarAviso(data.message);
+          
+          const box = document.getElementById('resultadoInvite');
+          box.classList.remove('hidden');
+          document.getElementById('txtCodigoGerado').textContent = data.codigo;
+          carregarConvitesAtivos();
+        } else {
+          mostrarAviso(data.message || "Erro ao criar código.", "erro");
+        }
+      } catch (err) {
+        mostrarAviso("Erro ao se conectar ao servidor.", "erro");
+      }
+    }
+
+    function copiarCodigo() {
+      const cod = document.getElementById('txtCodigoGerado').textContent;
+      if (!cod) return;
+      
+      const tempInput = document.createElement("input");
+      tempInput.value = cod;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+      mostrarAviso("Código copiado para a área de transferência!");
+    }
+
+    async function carregarConvitesAtivos() {
+      const container = document.getElementById('listaConvitesAtivos');
+      
+      try {
+        const res = await fetch(`${API_URL}?token=${userToken}&convites=true`);
+        const data = await res.json();
+
+        if (data.success && data.convites) {
+          if (data.convites.length === 0) {
+            container.innerHTML = '<p class="text-slate-500 font-medium">Nenhum código pendente de uso.</p>';
+            return;
+          }
+
+          let html = '';
+          data.convites.forEach(c => {
+            html += `
+              <div class="flex justify-between items-center bg-slate-950 p-3 rounded-2xl border border-slate-800">
+                <div>
+                  <span class="font-mono font-black text-emerald-400 tracking-widest">${c.codigo}</span>
+                  <span class="block text-[9px] text-slate-500 uppercase font-bold mt-0.5">${c.role}</span>
+                </div>
+                <button onclick="excluirConvite(${c.id})" class="text-red-500 hover:text-red-400 font-bold text-[10px]">Apagar</button>
+              </div>`;
+          });
+          container.innerHTML = html;
+        }
+      } catch (err) {
+        container.innerHTML = '<p class="text-red-500 font-medium">Erro ao carregar lista.</p>';
+      }
+    }
+
+    async function excluirConvite(id) {
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'DELETE_INVITE', token: userToken, id })
+        });
+        const data = await res.json();
+        if (data.success) {
+          mostrarAviso(data.message);
+          carregarConvitesAtivos();
+        }
+      } catch (err) {
+        mostrarAviso("Falha ao comunicar exclusão.", "erro");
+      }
+    }
+
+    // ==================== OPERAÇÕES COM UTILIZADORES ====================
     async function carregarUsuariosServidor() {
       const tbody = document.getElementById('tabelaUtilizadores');
       
       try {
-        const res = await fetch(API_URL);
+        const res = await fetch(`${API_URL}?token=${userToken}`);
         const data = await res.json();
 
         if (data.success) {
           todosOsUsuarios = data.usuarios;
           renderizarTabela();
         } else {
-          tbody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-red-400">Falha ao carregar utilizadores.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-red-400 font-bold">Sessão expirada. Volte a fazer login.</td></tr>';
         }
       } catch (err) {
         tbody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-red-400">Sem ligação com o servidor Render.</td></tr>';
       }
     }
 
-    // Renderizar a tabela na tela de forma limpa e com botões
     function renderizarTabela() {
       const tbody = document.getElementById('tabelaUtilizadores');
       tbody.innerHTML = '';
@@ -212,7 +334,6 @@
         const ehMasterPrincipal = u.email.toLowerCase() === 'ricardomaster@gmail.com';
         const disabledAttr = ehMasterPrincipal ? 'disabled' : '';
 
-        // Exibe etiqueta de status se for troca obrigatória de senha
         const tagSenha = u.requerer_troca 
           ? `<span class="block text-[9px] text-amber-400 font-extrabold mt-0.5 uppercase">⚠️ Troca Obrigatória</span>` 
           : `<span class="block text-[9px] text-slate-500 mt-0.5">Senha Salva</span>`;
@@ -244,42 +365,12 @@
       });
     }
 
-    // Criar um novo utilizador
-    async function cadastrarNovoUsuario(e) {
-      e.preventDefault();
-
-      const nome = document.getElementById('addNome').value;
-      const email = document.getElementById('addEmail').value;
-      const role = document.getElementById('addRole').value;
-      const senha = document.getElementById('addSenha').value;
-
-      try {
-        const res = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nome, email, role, senha })
-        });
-        const data = await res.json();
-
-        if (data.success) {
-          mostrarAviso(data.message);
-          document.getElementById('formNovoUsuario').reset();
-          carregarUsuariosServidor();
-        } else {
-          mostrarAviso(data.message, "erro");
-        }
-      } catch (err) {
-        mostrarAviso("Erro ao conectar ao servidor.", "erro");
-      }
-    }
-
-    // Ação: Alterar nível de acesso
     async function alterarNivelUtilizador(id, novoNivel) {
       try {
         const res = await fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'UPDATE_ROLE', id, role: novoNivel })
+          body: JSON.stringify({ action: 'UPDATE_ROLE', token: userToken, id, role: novoNivel })
         });
         const data = await res.json();
 
@@ -294,7 +385,6 @@
       }
     }
 
-    // Ação: Resetar senha do utilizador
     function resetarSenhaUtilizador(id, nome) {
       abrirModalConfirmacao(
         "Confirmar Redefinição",
@@ -305,7 +395,7 @@
             const res = await fetch(API_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ action: 'RESET_PASSWORD', id })
+              body: JSON.stringify({ action: 'RESET_PASSWORD', token: userToken, id })
             });
             const data = await res.json();
 
@@ -323,7 +413,6 @@
       );
     }
 
-    // Ação: Excluir Utilizador
     function excluirUtilizador(id, nome) {
       abrirModalConfirmacao(
         "Confirmar Remoção",
@@ -334,7 +423,7 @@
             const res = await fetch(API_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ action: 'DELETE', id })
+              body: JSON.stringify({ action: 'DELETE', token: userToken, id })
             });
             const data = await res.json();
 
@@ -351,9 +440,6 @@
         'bg-red-600'
       );
     }
-
-    // Inicialização
-    carregarUsuariosServidor();
   </script>
 </body>
 </html>
