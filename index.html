@@ -8,7 +8,7 @@
 </head>
 <body class="bg-slate-950 text-white min-h-screen relative font-sans">
 
-  <!-- NOTIFICAÇÃO PERSONALIZADA (TOAST) EM HTML -->
+  <!-- TOAST NOTIFICATION -->
   <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 transform transition-all duration-300 opacity-0 pointer-events-none scale-90">
     <div id="toastBg" class="flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-sm">
       <span id="toastIcon" class="text-xl"></span>
@@ -29,7 +29,6 @@
       </div>
       
       <div class="flex items-center gap-2">
-        <!-- Botão ADM: Fica invisível por padrão e aparece apenas para Master e Super -->
         <a id="admLink" href="adm.html" class="hidden px-4 py-2.5 bg-amber-600/20 text-amber-400 border border-amber-500/30 hover:bg-amber-600/30 rounded-2xl text-xs font-bold transition-all">
           ⚙️ Painel ADM
         </a>
@@ -39,7 +38,7 @@
       </div>
     </div>
 
-    <!-- FORMULÁRIO DE NOVO CADASTRO (RESTAURADO E AMPLIADO) -->
+    <!-- FORMULÁRIO DE NOVO CADASTRO -->
     <div class="bg-slate-900 rounded-3xl p-6 mb-8 border border-slate-800 shadow-2xl">
       <h2 class="text-xl font-bold mb-5 flex items-center gap-2 text-slate-200">
         <span>📝</span> Novo Cadastro de Posição
@@ -69,9 +68,8 @@
           <input id="lote" placeholder="Digite o lote" maxlength="20" type="text" oninput="this.value = this.value.toUpperCase()" class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 uppercase focus:outline-none focus:border-blue-500 text-white text-sm">
         </label>
 
-        <!-- NOVO CAMPO: QUANTIDADE DE UNIDADES -->
         <label class="block">
-          <span class="text-xs text-slate-400 font-semibold mb-1.5 block">Quantidade de Unidades (Apenas números)</span>
+          <span class="text-xs text-slate-400 font-semibold mb-1.5 block">Quantidade de Unidades</span>
           <input id="quantidade" placeholder="Ex: 15" type="text" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 text-white text-sm" value="1">
         </label>
 
@@ -81,14 +79,14 @@
         </label>
       </div>
 
-      <button id="btnSalvar" onclick="cadastrarProduto()" class="mt-6 w-full bg-blue-600 hover:bg-blue-500 py-5 rounded-2xl font-bold transition-all active:scale-[0.99] flex justify-center items-center gap-2 shadow-lg shadow-blue-600/20 text-sm">
+      <button id="btnSalvar" onclick="cadastrarProduto()" class="mt-6 w-full bg-blue-600 hover:bg-blue-500 py-5 rounded-2xl font-bold transition-all active:scale-[0.99] flex justify-center items-center gap-2 shadow-lg shadow-blue-600/20 text-sm text-white">
         <span>💾 Salvar no Sistema</span>
       </button>
     </div>
 
     <!-- BOTÕES DE NAVEGAÇÃO -->
     <div class="flex gap-4">
-      <a href="lista.html" class="flex-1 bg-slate-900 hover:bg-slate-850 border border-slate-800 py-5 rounded-2xl text-center font-bold transition-all flex justify-center items-center gap-2 text-sm">
+      <a href="lista.html" class="flex-1 bg-slate-900 hover:bg-slate-850 border border-slate-800 py-5 rounded-2xl text-center font-bold transition-all flex justify-center items-center gap-2 text-sm text-slate-200">
         <span>📋</span> Ver Todos os Itens
       </a>
     </div>
@@ -96,7 +94,8 @@
   </div>
 
   <script>
-    // FUNÇÃO QUE GERENCIA AS NOTIFICAÇÕES TOAST
+    let userToken = '';
+
     function mostrarAviso(mensagem, tipo = 'sucesso') {
       const toast = document.getElementById('toast');
       const toastBg = document.getElementById('toastBg');
@@ -115,7 +114,6 @@
       }
 
       toastMessage.textContent = mensagem;
-
       toast.classList.remove('opacity-0', 'pointer-events-none', 'scale-90', 'top-5');
       toast.classList.add('opacity-100', 'scale-100', 'top-8');
 
@@ -125,11 +123,12 @@
       }, 3000);
     }
 
-    // ENVIO DOS DADOS PARA A API DO RENDER
+    // ENVIO DOS DADOS PASSANDO O TOKEN DE AUTENTICAÇÃO NO CORPO
     async function cadastrarProduto() {
       const btn = document.getElementById('btnSalvar');
       
       const dados = {
+        token: userToken, // ENVIA O TOKEN CRIPTOGRÁFICO DE VALIDAÇÃO
         tipo: document.getElementById('tipo').value,
         endereco: document.getElementById('endereco').value.trim(),
         codigo_produto: document.getElementById('codigo').value.trim(),
@@ -159,13 +158,12 @@
         const data = await res.json();
         
         if (data.success) {
-          mostrarAviso("Salvo com sucesso!", "sucesso");
+          mostrarAviso("Nova posição gravada com sucesso!", "sucesso");
           limparFormulario();
         } else {
           mostrarAviso(data.message || "Erro ao salvar o produto.", "erro");
         }
       } catch (e) {
-        console.error("Erro no cadastro:", e);
         mostrarAviso("Erro de conexão com o servidor.", "erro");
       } finally {
         btn.disabled = false;
@@ -184,14 +182,13 @@
 
     function logout() {
       sessionStorage.removeItem('usuarioLogado');
-      localStorage.removeItem('currentUser');
       location.href = 'login.html';
     }
 
-    // CONTROLE DE ACESSO E SESSÃO SEGURO
+    // VALIDAÇÃO DA SESSÃO E CARREGAMENTO
     window.onload = function() {
       try {
-        const userRaw = sessionStorage.getItem('usuarioLogado') || localStorage.getItem('currentUser');
+        const userRaw = sessionStorage.getItem('usuarioLogado');
         const admContainer = document.getElementById('admLink');
         
         if (!userRaw) {
@@ -200,19 +197,18 @@
         }
 
         const user = JSON.parse(userRaw);
+        userToken = user.token || ''; // Captura o token salvo
+        
         document.getElementById('userName').textContent = `Olá, ${user.nome || 'Operador'}`;
 
-        const role = (user.role || user.nivel || '').toLowerCase().trim();
-        const nome = (user.nome || '').toLowerCase();
-        
-        if (role === 'super' || role === 'master' || nome.includes('master')) {
+        const role = (user.role || '').toLowerCase().trim();
+        if (role === 'super' || role === 'master') {
           if (admContainer) admContainer.classList.remove('hidden');
         } else {
           if (admContainer) admContainer.classList.add('hidden');
         }
 
       } catch (err) {
-        console.error("Erro no carregamento inicial:", err);
         location.href = 'login.html';
       }
     };
