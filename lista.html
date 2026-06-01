@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestão de Divergências - Lista</title>
+  <title>Gestão de Divergências</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.autotable.min.js"></script>
@@ -11,24 +11,25 @@
 <body class="bg-[#020617] text-white min-h-screen p-4 font-sans">
 
   <div class="max-w-6xl mx-auto">
+    <!-- Cabeçalho -->
     <div class="flex justify-between items-end mb-6">
       <div>
-        <h1 class="text-2xl font-black text-blue-500">Divergências</h1>
-        <p id="infoStatus" class="text-xs opacity-50">Carregando dados...</p>
+        <h1 class="text-2xl font-black text-blue-500">Gestão de Divergências</h1>
+        <p id="infoStatus" class="text-xs opacity-50">Carregando...</p>
       </div>
       <div class="flex gap-2">
-        <button onclick="imprimirLista()" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg text-xs font-bold">Imprimir</button>
+        <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg text-xs font-bold">Imprimir</button>
         <button onclick="exportarPDF()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-xs font-bold">Exportar PDF</button>
       </div>
     </div>
 
-    <!-- Filtros e Paginação -->
+    <!-- Filtros e Controles -->
     <div class="flex flex-col md:flex-row gap-4 mb-6 bg-slate-900 p-4 rounded-xl border border-slate-800">
-      <input type="text" id="filtro" oninput="paginaAtual = 1; renderizar()" placeholder="🔍 Pesquisar (SKU, Lote, Endereço)..." class="flex-1 bg-transparent border-b border-slate-700 p-2 text-sm focus:outline-none focus:border-blue-500">
+      <input type="text" id="filtro" oninput="paginaAtual = 1; renderizar()" placeholder="🔍 Pesquisar por Endereço, SKU ou Lote..." class="flex-1 bg-transparent border-b border-slate-700 p-2 text-sm focus:outline-none focus:border-blue-500">
       <select id="itensPorPagina" onchange="paginaAtual = 1; renderizar()" class="bg-slate-800 text-xs p-2 rounded-lg">
-        <option value="5">5 por pág.</option>
-        <option value="10" selected>10 por pág.</option>
+        <option value="10">10 por pág.</option>
         <option value="20">20 por pág.</option>
+        <option value="50">50 por pág.</option>
       </select>
     </div>
 
@@ -59,10 +60,11 @@
       try {
         const response = await fetch("https://codril.onrender.com/api/salvar-produto.php");
         const data = await response.json();
-        todosOsDados = data.dados || data || [];
+        // Acesso ao campo 'itens' conforme o seu PHP
+        todosOsDados = data.itens || [];
         renderizar();
       } catch (err) {
-        document.getElementById('infoStatus').innerText = "Erro ao carregar dados.";
+        document.getElementById('infoStatus').innerText = "Erro ao carregar dados do servidor.";
       }
     }
 
@@ -86,7 +88,7 @@
           <td class="p-4 font-bold text-emerald-400">${item.endereco || '-'}</td>
           <td class="p-4">${item.codigo_produto || '-'}</td>
           <td class="p-4">${item.lote || '-'}</td>
-          <td class="p-4"><span class="px-2 py-1 bg-slate-800 rounded text-[10px]">${item.status || 'Pendente'}</span></td>
+          <td class="p-4"><span class="px-2 py-1 bg-slate-800 rounded text-[10px]">${item.status_estoque || 'Normal'}</span></td>
         </tr>
       `).join('');
 
@@ -101,15 +103,13 @@
       `).join('');
     }
 
-    function imprimirLista() { window.print(); }
-
     function exportarPDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
-      doc.text("Relatorio de Divergencias", 14, 15);
+      doc.text("Relatório de Divergências", 14, 15);
       doc.autoTable({
-        head: [['Endereco', 'SKU', 'Lote', 'Status']],
-        body: todosOsDados.map(i => [i.endereco, i.codigo_produto, i.lote, i.status]),
+        head: [['Endereço', 'SKU', 'Lote', 'Status']],
+        body: todosOsDados.map(i => [i.endereco, i.codigo_produto, i.lote, i.status_estoque]),
         startY: 20
       });
       doc.save("divergencias.pdf");
