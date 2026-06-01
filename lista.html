@@ -6,65 +6,101 @@
   <title>Gestão de Divergências</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = {
-      darkMode: 'class',
-    }
+    tailwind.config = { darkMode: 'class' }
   </script>
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      #tabelaImpressao { display: table !important; width: 100%; border-collapse: collapse; }
+      #tabelaImpressao th, #tabelaImpressao td { border: 1px solid #000; padding: 8px; text-align: center; }
+      #tabelaImpressao tr:nth-child(even) { background-color: #f2f2f2; }
+      body { background: white !important; color: black !important; }
+    }
+  </style>
 </head>
-<body class="bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 transition-colors duration-300 min-h-screen">
+<body class="bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 min-h-screen p-4 transition-colors">
 
-  <div class="max-w-4xl mx-auto p-4 md:p-6">
-    <!-- Header com Título, Botão de Tema e Ações -->
+  <div class="max-w-2xl mx-auto no-print">
     <header class="flex justify-between items-center mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-blue-700 dark:text-blue-500">Gestão de Divergências</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400">Total: 15 itens</p>
+        <h1 class="text-xl font-black text-blue-600 dark:text-blue-500">Divergências</h1>
+        <p id="infoStatus" class="text-xs opacity-60">A carregar...</p>
       </div>
-      
-      <div class="flex items-center gap-2">
-        <!-- Botão de Alternância de Tema -->
-        <button onclick="document.documentElement.classList.toggle('dark')" class="p-2 rounded-xl bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
-          <span class="dark:hidden">🌙</span>
-          <span class="hidden dark:inline">☀️</span>
-        </button>
-        <button class="bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 px-4 py-2 rounded-xl font-medium text-sm">Nova</button>
-        <button class="bg-blue-600 text-white px-4 py-2 rounded-xl font-medium text-sm">Imprimir</button>
+      <div class="flex gap-2">
+        <button onclick="document.documentElement.classList.toggle('dark')" class="p-2 bg-slate-200 dark:bg-slate-800 rounded-lg">🌓</button>
+        <a href="index.html" class="bg-slate-800 dark:bg-slate-200 text-white dark:text-black px-4 py-2 rounded-lg font-bold text-xs">Nova</a>
+        <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-xs">Imprimir</button>
       </div>
     </header>
 
-    <!-- Barra de busca e filtros -->
-    <div class="mb-6 space-y-3">
-      <input type="text" placeholder="Pesquisar por Endereço, SKU ou Lote..." class="w-full p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-blue-500 outline-none">
-      <select class="w-full p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-        <option>10 por pág.</option>
+    <div class="space-y-4 mb-6">
+      <input type="text" id="filtro" oninput="paginaAtual=1; renderizar()" placeholder="🔍 Pesquisar SKU, Lote ou Endereço..." class="w-full p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+      <select id="itensPorPagina" onchange="paginaAtual=1; renderizar()" class="w-full p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm">
+        <option value="5">5 por pág.</option>
+        <option value="10" selected>10 por pág.</option>
+        <option value="20">20 por pág.</option>
       </select>
     </div>
 
-    <!-- Lista de Cards (Exemplo dos itens) -->
-    <div class="space-y-4">
-      <!-- Exemplo de Card -->
-      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm">
-        <div class="flex justify-between items-start mb-2">
-          <h2 class="text-2xl font-bold text-green-700 dark:text-green-500">Endereço: 1333333</h2>
-          <span class="text-xs px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">FALTANDO</span>
-        </div>
-        <div class="grid grid-cols-2 gap-4 text-sm mt-4 text-slate-600 dark:text-slate-400">
-          <p>SKU: <span class="font-semibold text-slate-800 dark:text-slate-200">266666</span></p>
-          <p>Lote: <span class="font-semibold text-slate-800 dark:text-slate-200">Hdgd7enzijq</span></p>
-          <p>Quantidade: <span class="font-semibold text-slate-800 dark:text-slate-200">165</span></p>
-        </div>
-      </div>
-      <!-- Repita este bloco para outros itens -->
-    </div>
+    <div id="gridCards" class="grid grid-cols-1 gap-4"></div>
+    <div id="paginacao" class="flex justify-center gap-2 mt-6"></div>
   </div>
 
+  <!-- Tabela Oculta para Impressão -->
+  <table id="tabelaImpressao" class="hidden">
+    <thead><tr><th>Endereço</th><th>SKU</th><th>Lote</th><th>Qtd</th><th>Status</th></tr></thead>
+    <tbody id="corpoTabelaImpressao"></tbody>
+  </table>
+
   <script>
-    // Carrega a preferência salva
-    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
+    let todosOsDados = [];
+    let paginaAtual = 1;
+
+    async function carregarDados() {
+      try {
+        const response = await fetch("https://codril.onrender.com/api/salvar-produto.php");
+        const data = await response.json();
+        todosOsDados = data.itens || [];
+        renderizar();
+      } catch (err) { document.getElementById('infoStatus').innerText = "Erro ao carregar dados."; }
     }
+
+    function renderizar() {
+      const filtro = document.getElementById('filtro').value.toLowerCase();
+      const limite = parseInt(document.getElementById('itensPorPagina').value);
+      const filtrados = todosOsDados.filter(i => 
+        (i.endereco?.toLowerCase().includes(filtro)) || (i.codigo_produto?.toLowerCase().includes(filtro)) || (i.lote?.toLowerCase().includes(filtro))
+      );
+      
+      const totalPaginas = Math.ceil(filtrados.length / limite);
+      const paginados = filtrados.slice((paginaAtual - 1) * limite, paginaAtual * limite);
+
+      document.getElementById('gridCards').innerHTML = paginados.map(item => `
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl shadow-sm">
+          <div class="flex justify-between items-center mb-2">
+            <h2 class="text-lg font-black text-green-700 dark:text-green-500">Endereço: ${item.endereco || '-'}</h2>
+            <span class="text-[9px] px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800">${item.status_estoque || 'Normal'}</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs opacity-80">
+            <p>SKU: <span class="font-bold text-slate-900 dark:text-white">${item.codigo_produto || '-'}</span></p>
+            <p>Lote: <span class="font-bold text-slate-900 dark:text-white">${item.lote || '-'}</span></p>
+            <p class="col-span-2">Quantidade: <span class="font-bold text-slate-900 dark:text-white">${item.quantidade || '1'}</span></p>
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('corpoTabelaImpressao').innerHTML = filtrados.map(item => `
+        <tr><td>${item.endereco}</td><td>${item.codigo_produto}</td><td>${item.lote}</td><td>${item.quantidade}</td><td>${item.status_estoque}</td></tr>
+      `).join('');
+
+      document.getElementById('infoStatus').innerText = `Total: ${filtrados.length} itens`;
+      
+      document.getElementById('paginacao').innerHTML = Array.from({length: totalPaginas}, (_, i) => i + 1).map(p => `
+        <button onclick="paginaAtual=${p}; renderizar()" class="px-4 py-2 rounded-xl text-xs font-bold ${paginaAtual === p ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-800'}">${p}</button>
+      `).join('');
+    }
+
+    carregarDados();
   </script>
 </body>
 </html>
