@@ -1,316 +1,152 @@
-<?php
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type");
-header("Content-Type: application/json; charset=UTF-8");
+<!DOCTYPE html>
+<html lang="pt-PT" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Divergências</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      #tabelaImpressao { display: table !important; width: 100%; border-collapse: collapse; }
+      #tabelaImpressao th, #tabelaImpressao td { border: 1px solid #000; padding: 8px; text-align: center; }
+      #tabelaImpressao tr:nth-child(even) { background-color: #f2f2f2 !important; }
+      body { background: white !important; color: black !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 min-h-screen transition-colors">
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
+  <!-- Barra de Perfil -->
+  <nav class="w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-2 mb-4 flex justify-between items-center no-print">
+    <div class="flex items-center gap-2">
+      <div id="avatarUser" class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs">U</div>
+      <span id="nomeExibicao" class="text-xs font-semibold">Carregando...</span>
+    </div>
+    <button onclick="logout()" class="text-[10px] text-red-500 font-bold uppercase hover:underline">Sair</button>
+  </nav>
 
-include 'config.php';
+  <div class="max-w-2xl mx-auto p-4 no-print">
+    <header class="flex justify-between items-center mb-6">
+      <div>
+        <h1 class="text-xl font-black text-blue-600 dark:text-blue-500">Divergências</h1>
+        <p id="infoStatus" class="text-xs opacity-60">Carregando...</p>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="document.documentElement.classList.toggle('dark')" class="p-2 bg-slate-200 dark:bg-slate-800 rounded-lg">🌓</button>
+        <a href="index.html" class="bg-slate-800 dark:bg-slate-200 text-white dark:text-black px-4 py-2 rounded-lg font-bold text-xs">Nova</a>
+        <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-xs">Imprimir</button>
+      </div>
+    </header>
 
-// ====================== MÉTODO GET: LISTAR UTILIZADORES OU CONVITES ATIVOS ======================
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $token = $_GET['token'] ?? '';
-    
-    // Valida o Token de Sessão administrativo
-    try {
-        $stmtSessao = $pdo->prepare("
-            SELECT u.role 
-            FROM user_sessions s 
-            JOIN users u ON s.user_id = u.id 
-            WHERE s.token = ? AND s.active = TRUE
-        ");
-        $stmtSessao->execute([$token]);
-        $sessao = $stmtSessao->fetch(PDO::FETCH_ASSOC);
+    <div class="space-y-4 mb-6">
+      <input type="text" id="filtro" oninput="paginaAtual=1; renderizar()" placeholder="🔍 Buscar SKU, Lote ou Endereço..." class="w-full p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm">
+      <select id="itensPorPagina" onchange="paginaAtual=1; renderizar()" class="w-full p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm">
+        <option value="5">5 por pág.</option>
+        <option value="10" selected>10 por pág.</option>
+        <option value="20">20 por pág.</option>
+      </select>
+    </div>
 
-        if (!$sessao || !in_array($sessao['role'], ['master', 'super'])) {
-            echo json_encode(['success' => false, 'message' => 'Sessão inválida ou sem permissão.']);
-            exit;
-        }
-    } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => 'Erro de segurança de sessão.']);
-        exit;
+    <div id="gridCards" class="grid grid-cols-1 gap-4"></div>
+    <div id="paginacao" class="flex justify-center gap-2 mt-6"></div>
+  </div>
+
+  <div id="modalConfirmacao" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl w-full max-w-sm text-center shadow-2xl">
+      <h3 class="text-lg font-black mb-4">Deseja realmente deletar?</h3>
+      <div class="flex gap-4 justify-center">
+        <button id="btnSim" class="bg-red-600 text-white px-8 py-2 rounded-xl font-bold">SIM</button>
+        <button onclick="document.getElementById('modalConfirmacao').classList.add('hidden')" class="bg-slate-200 dark:bg-slate-800 px-8 py-2 rounded-xl font-bold">NÃO</button>
+      </div>
+    </div>
+  </div>
+
+  <table id="tabelaImpressao" class="hidden">
+    <thead><tr class="bg-gray-200"><th>Endereço</th><th>SKU</th><th>Lote</th><th>Qtd</th><th>Status</th></tr></thead>
+    <tbody id="corpoTabelaImpressao"></tbody>
+  </table>
+
+  <script>
+    // Recupera o nome do usuário salvo no localStorage durante o Login
+    const nomeUser = localStorage.getItem('nomeUsuario') || 'Usuário';
+    document.getElementById('nomeExibicao').innerText = nomeUser;
+    document.getElementById('avatarUser').innerText = nomeUser.charAt(0).toUpperCase();
+
+    function logout() {
+      // Limpa os dados de sessão
+      localStorage.removeItem('nomeUsuario');
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
     }
 
-    // Se pedir convites ativos (?convites=true)
-    if (isset($_GET['convites'])) {
-        try {
-            $stmtConvites = $pdo->query("SELECT id, codigo, role, usado, criado_em FROM user_invites WHERE usado = FALSE ORDER BY id DESC");
-            $convites = $stmtConvites->fetchAll(PDO::FETCH_ASSOC);
-            echo json_encode(['success' => true, 'convites' => $convites]);
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => 'Erro ao listar convites.']);
-        }
-        exit;
+    let todosOsDados = [];
+    let paginaAtual = 1;
+    let idParaRemover = null;
+
+    async function carregarDados() {
+      try {
+        const response = await fetch("https://codril.onrender.com/api/salvar-produto.php");
+        const data = await response.json();
+        todosOsDados = data.itens || [];
+        renderizar();
+      } catch (err) { document.getElementById('infoStatus').innerText = "Erro ao carregar dados."; }
     }
 
-    // Caso contrário, lista utilizadores padrão
-    try {
-        $stmt = $pdo->query("SELECT id, nome, email, role, autorizado, requerer_troca FROM users ORDER BY id DESC");
-        $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        echo json_encode(['success' => true, 'usuarios' => $usuarios]);
-    } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => 'Erro ao listar utilizadores.']);
-    }
-    exit;
-}
+    function renderizar() {
+      const filtro = document.getElementById('filtro').value.toLowerCase();
+      const limite = parseInt(document.getElementById('itensPorPagina').value);
+      const filtrados = todosOsDados.filter(i => 
+        (i.endereco?.toLowerCase().includes(filtro)) || (i.codigo_produto?.toLowerCase().includes(filtro)) || (i.lote?.toLowerCase().includes(filtro))
+      );
+      
+      const totalPaginas = Math.ceil(filtrados.length / limite);
+      const paginados = filtrados.slice((paginaAtual - 1) * limite, paginaAtual * limite);
 
-// ====================== MÉTODO POST: PROCESSAR REQUISIÇÕES ======================
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $data = json_decode(file_get_contents('php://input'), true);
-    
-    if (!$data) {
-        echo json_encode(['success' => false, 'message' => 'Dados de requisição inválidos.']);
-        exit;
-    }
+      document.getElementById('gridCards').innerHTML = paginados.map(item => {
+        const status = (item.status_estoque || '').toUpperCase();
+        const isFaltando = status.includes('FALTANDO');
+        const colorClass = isFaltando ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-500';
 
-    $action = $data['action'] ?? '';
+        return `
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl shadow-sm transition-all" id="card-${item.id}">
+            <div class="flex justify-between items-start mb-4">
+              <h2 class="text-lg font-black dark:text-white">Endereço: ${item.endereco}</h2>
+              <button onclick="idParaRemover='${item.id}'; document.getElementById('modalConfirmacao').classList.remove('hidden')" class="text-slate-400 hover:text-red-500 text-xl">🗑️</button>
+            </div>
+            <div class="flex justify-between items-center mb-2">
+              <p class="text-xs opacity-70">SKU: <span class="font-bold text-slate-900 dark:text-white">${item.codigo_produto}</span></p>
+              <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${colorClass}">${status || 'NORMAL'}</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs opacity-80 mt-2">
+              <p>Lote: <span class="font-bold text-slate-900 dark:text-white">${item.lote}</span></p>
+              <p>Qtd: <span class="font-bold text-slate-900 dark:text-white">${item.quantidade}</span></p>
+            </div>
+          </div>
+        `;
+      }).join('');
 
-    // =========================================================================
-    // FLUXO PÚBLICO: NOVO REGISTRO UTILIZANDO CONVITE DE AUTORIZAÇÃO
-    // =========================================================================
-    if ($action === 'REGISTER_WITH_INVITE') {
-        $codigo = trim($data['codigo'] ?? '');
-        $nome = trim($data['nome'] ?? '');
-        $email = trim($data['email'] ?? '');
-        $senha = trim($data['senha'] ?? '');
+      document.getElementById('corpoTabelaImpressao').innerHTML = filtrados.map(item => `
+        <tr><td>${item.endereco}</td><td>${item.codigo_produto}</td><td>${item.lote}</td><td>${item.quantidade}</td><td>${item.status_estoque}</td></tr>
+      `).join('');
 
-        if (empty($codigo) || empty($nome) || empty($email) || empty($senha)) {
-            echo json_encode(['success' => false, 'message' => 'Por favor, preencha todos os campos do registo.']);
-            exit;
-        }
-
-        try {
-            // Verifica se o convite existe, é válido e ainda não foi usado
-            $stmtConvite = $pdo->prepare("SELECT id, role, usado FROM user_invites WHERE codigo = ? AND usado = FALSE");
-            $stmtConvite->execute([$codigo]);
-            $convite = $stmtConvite->fetch(PDO::FETCH_ASSOC);
-
-            if (!$convite) {
-                echo json_encode(['success' => false, 'message' => 'Código de autorização inválido, inexistente ou já utilizado.']);
-                exit;
-            }
-
-            // Verifica se o e-mail escolhido já está em uso
-            $stmtEmail = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-            $stmtEmail->execute([$email]);
-            if ($stmtEmail->rowCount() > 0) {
-                echo json_encode(['success' => false, 'message' => 'Este e-mail já está cadastrado no sistema.']);
-                exit;
-            }
-
-            // Inicia transação SQL para garantir integridade total
-            $pdo->beginTransaction();
-
-            // Insere o novo usuário herdando o nível ('role') predefinido no convite
-            $senha_hash = password_hash($senha, PASSWORD_DEFAULT);
-            $stmtInsere = $pdo->prepare("INSERT INTO users (email, nome, senha_hash, role, autorizado, requerer_troca) VALUES (?, ?, ?, ?, TRUE, FALSE)");
-            $stmtInsere->execute([$email, $nome, $senha_hash, $convite['role']]);
-
-            // Marca o convite correspondente como utilizado
-            $stmtUsaConvite = $pdo->prepare("UPDATE user_invites SET usado = TRUE WHERE id = ?");
-            $stmtUsaConvite->execute([$convite['id']]);
-
-            $pdo->commit();
-
-            echo json_encode(['success' => true, 'message' => 'Registo efetuado com sucesso! Agora você já pode iniciar sessão com seu e-mail e senha.']);
-        } catch (Exception $e) {
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
-            echo json_encode(['success' => false, 'message' => 'Erro interno de processamento ao registrar usuário: ' . $e->getMessage()]);
-        }
-        exit;
+      document.getElementById('infoStatus').innerText = `Total: ${filtrados.length} itens`;
+      document.getElementById('paginacao').innerHTML = Array.from({length: totalPaginas}, (_, i) => i + 1).map(p => `
+        <button onclick="paginaAtual=${p}; renderizar()" class="px-4 py-2 rounded-xl text-xs font-bold ${paginaAtual === p ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-800'}">${p}</button>
+      `).join('');
     }
 
-    // =========================================================================
-    // REQUISIÇÕES ADMINISTRATIVAS (EXIGEM VALIDAÇÃO DE TOKEN DE SESSÃO DO MASTER/SUPER)
-    // =========================================================================
-    $token = $data['token'] ?? '';
-    
-    try {
-        $stmtSessao = $pdo->prepare("
-            SELECT u.id, u.role 
-            FROM user_sessions s 
-            JOIN users u ON s.user_id = u.id 
-            WHERE s.token = ? AND s.active = TRUE
-        ");
-        $stmtSessao->execute([$token]);
-        $usuarioLogado = $stmtSessao->fetch(PDO::FETCH_ASSOC);
+    document.getElementById('btnSim').onclick = () => {
+      const card = document.getElementById(`card-${idParaRemover}`);
+      card.classList.add('opacity-0', 'scale-90', 'transition-all', 'duration-500');
+      setTimeout(() => {
+        todosOsDados = todosOsDados.filter(i => i.id !== idParaRemover);
+        renderizar();
+        document.getElementById('modalConfirmacao').classList.add('hidden');
+      }, 500);
+    };
 
-        if (!$usuarioLogado || !in_array($usuarioLogado['role'], ['master', 'super'])) {
-            echo json_encode(['success' => false, 'message' => 'Sessão administrativa inválida ou expirada.']);
-            exit;
-        }
-    } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => 'Erro de validação de segurança.']);
-        exit;
-    }
-
-    // 1. GERAR NOVO CÓDIGO DE CONVITE (NOVO!)
-    if ($action === 'CREATE_INVITE') {
-        $roleConvite = trim($data['role'] ?? 'user');
-
-        if (!in_array($roleConvite, ['user', 'super', 'master'])) {
-            echo json_encode(['success' => false, 'message' => 'Nível de permissão inválido para o convite.']);
-            exit;
-        }
-
-        try {
-            // Gera um código alfanumérico aleatório seguro e curto de 8 dígitos (ex: K9FA39BD)
-            $novoCodigo = strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
-
-            $stmtConvite = $pdo->prepare("INSERT INTO user_invites (codigo, role, criado_por) VALUES (?, ?, ?)");
-            $stmtConvite->execute([$novoCodigo, $roleConvite, $usuarioLogado['id']]);
-
-            echo json_encode([
-                'success' => true,
-                'message' => 'Código de convite gerado com sucesso!',
-                'codigo' => $novoCodigo
-            ]);
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => 'Erro ao gerar o código no banco.']);
-        }
-        exit;
-    }
-
-    // 2. EXCLUIR CONVITE ATIVO
-    if ($action === 'DELETE_INVITE' && isset($data['id'])) {
-        try {
-            $id = intval($data['id']);
-            $stmt = $pdo->prepare("DELETE FROM user_invites WHERE id = ?");
-            $stmt->execute([$id]);
-            echo json_encode(['success' => true, 'message' => 'Código de convite removido.']);
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => 'Erro ao apagar código.']);
-        }
-        exit;
-    }
-
-    // 3. EXCLUIR UTILIZADOR
-    if ($action === 'DELETE' && isset($data['id'])) {
-        try {
-            $id = intval($data['id']);
-            
-            $check = $pdo->prepare("SELECT email FROM users WHERE id = ?");
-            $check->execute([$id]);
-            $user = $check->fetch(PDO::FETCH_ASSOC);
-            
-            if ($user && strtolower($user['email']) === 'ricardomaster@gmail.com') {
-                echo json_encode(['success' => false, 'message' => 'Não é permitido excluir o administrador mestre principal.']);
-                exit;
-            }
-
-            $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
-            $stmt->execute([$id]);
-            echo json_encode(['success' => true, 'message' => 'Utilizador removido com sucesso.']);
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => 'Erro ao remover o utilizador.']);
-        }
-        exit;
-    }
-
-    // 4. ATUALIZAR NÍVEL DE ACESSO (ROLE)
-    if ($action === 'UPDATE_ROLE' && isset($data['id']) && isset($data['role'])) {
-        try {
-            $id = intval($data['id']);
-            $role = trim($data['role']);
-
-            if (!in_array($role, ['user', 'super', 'master'])) {
-                echo json_encode(['success' => false, 'message' => 'Nível de acesso inválido.']);
-                exit;
-            }
-
-            $check = $pdo->prepare("SELECT email FROM users WHERE id = ?");
-            $check->execute([$id]);
-            $user = $check->fetch(PDO::FETCH_ASSOC);
-            
-            if ($user && strtolower($user['email']) === 'ricardomaster@gmail.com') {
-                echo json_encode(['success' => false, 'message' => 'O nível de acesso do Administrador Mestre não pode ser alterado.']);
-                exit;
-            }
-
-            $stmt = $pdo->prepare("UPDATE users SET role = ? WHERE id = ?");
-            $stmt->execute([$role, $id]);
-            echo json_encode(['success' => true, 'message' => 'Nível de acesso atualizado com sucesso!']);
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => 'Erro ao alterar o nível de acesso.']);
-        }
-        exit;
-    }
-
-    // 5. RESETAR SENHA
-    if ($action === 'RESET_PASSWORD' && isset($data['id'])) {
-        try {
-            $id = intval($data['id']);
-            $senhaPadrao = '123456';
-            $senha_hash = password_hash($senhaPadrao, PASSWORD_DEFAULT);
-
-            $stmt = $pdo->prepare("UPDATE users SET senha_hash = ?, requerer_troca = TRUE WHERE id = ?");
-            $stmt->execute([$senha_hash, $id]);
-
-            echo json_encode([
-                'success' => true, 
-                'message' => "Senha redefinida para a padrão temporária: $senhaPadrao. O utilizador será obrigado a trocá-la no primeiro acesso."
-            ]);
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => 'Erro ao redefinir a senha.']);
-        }
-        exit;
-    }
-
-    // 6. ALTERAR SENHA MANDATÓRIA (PRIMEIRO ACESSO)
-    if ($action === 'CHANGE_PASSWORD') {
-        $email = trim($data['email'] ?? '');
-        $novaSenha = trim($data['nova_senha'] ?? '');
-
-        if (empty($email) || empty($novaSenha)) {
-            echo json_encode(['success' => false, 'message' => 'Dados incompletos para redefinição de senha.']);
-            exit;
-        }
-
-        try {
-            $senha_hash = password_hash($novaSenha, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("UPDATE users SET senha_hash = ?, requerer_troca = FALSE WHERE email = ?");
-            $stmt->execute([$senha_hash, $email]);
-
-            echo json_encode(['success' => true, 'message' => 'Sua senha definitiva foi salva com sucesso! Agora você pode entrar.']);
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => 'Erro ao salvar nova senha no servidor.']);
-        }
-        exit;
-    }
-
-    // 7. CRIAR UTILIZADOR MANUALMENTE (FLUXO ANTIGO/RESERVA)
-    $nome = trim($data['nome'] ?? '');
-    $email = trim($data['email'] ?? '');
-    $senha = trim($data['senha'] ?? '');
-    $role = trim($data['role'] ?? 'user');
-
-    if (empty($nome) || empty($email) || empty($senha)) {
-        echo json_encode(['success' => false, 'message' => 'Preencha todos os campos obrigatórios.']);
-        exit;
-    }
-
-    try {
-        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-        $stmt->execute([$email]);
-        if ($stmt->rowCount() > 0) {
-            echo json_encode(['success' => false, 'message' => 'Este e-mail já está cadastrado.']);
-            exit;
-        }
-
-        $senha_hash = password_hash($senha, PASSWORD_DEFAULT);
-        $stmt = $pdo->prepare("INSERT INTO users (email, nome, senha_hash, role, autorizado, requerer_troca) VALUES (?, ?, ?, ?, TRUE, FALSE)");
-        $stmt->execute([$email, $nome, $senha_hash, $role]);
-
-        echo json_encode(['success' => true, 'message' => 'Utilizador cadastrado com sucesso!']);
-    } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => 'Erro ao cadastrar: ' . $e->getMessage()]);
-    }
-    exit;
-}
-?>
+    carregarDados();
+  </script>
+</body>
+</html>
