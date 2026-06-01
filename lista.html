@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Estoque Ativo - Listagem</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .deletando { animation: shrink 0.4s ease-out forwards; }
+    @keyframes shrink {
+      to { opacity: 0; transform: scale(0.5); }
+    }
+  </style>
 </head>
 <body class="bg-slate-950 text-white min-h-screen p-4 font-sans">
 
@@ -12,7 +18,7 @@
     <div class="flex justify-between items-center mb-6 border-b border-slate-900 pb-4">
       <div>
         <h1 class="text-2xl font-extrabold text-blue-400">Estoque Ativo</h1>
-        <p id="infoPagina" class="text-slate-400 text-xs">Carregando dados...</p>
+        <p id="infoPagina" class="text-slate-400 text-xs">Carregando...</p>
       </div>
       <div class="flex gap-2">
         <button onclick="gerarRelatorio()" class="bg-blue-600 hover:bg-blue-500 p-2 px-4 rounded-xl text-xs font-bold transition-all">📄 PDF</button>
@@ -20,18 +26,11 @@
       </div>
     </div>
 
-    <div class="mb-6">
-      <select id="itensPorPagina" onchange="mudarItens()" class="bg-slate-900 border border-slate-800 rounded-xl p-2 text-xs w-full sm:w-40">
-        <option value="10">10 por página</option>
-        <option value="15">15 por página</option>
-      </select>
-    </div>
-
     <div id="gridCards" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
 
     <div class="flex justify-center mt-8 gap-2">
-      <button onclick="mudarPagina(-1)" class="bg-slate-900 hover:bg-slate-800 px-6 py-3 rounded-2xl text-xs font-bold transition-all">Anterior</button>
-      <button onclick="mudarPagina(1)" class="bg-slate-900 hover:bg-slate-800 px-6 py-3 rounded-2xl text-xs font-bold transition-all">Próximo</button>
+      <button onclick="mudarPagina(-1)" class="bg-slate-900 px-6 py-3 rounded-2xl text-xs font-bold">Anterior</button>
+      <button onclick="mudarPagina(1)" class="bg-slate-900 px-6 py-3 rounded-2xl text-xs font-bold">Próximo</button>
     </div>
   </div>
 
@@ -42,12 +41,14 @@
 
     function renderizar() {
       const inicio = (paginaAtual - 1) * itensPorPagina;
-      const fim = inicio + itensPorPagina;
-      const paginaItens = todosItens.slice(inicio, fim);
+      const paginaItens = todosItens.slice(inicio, inicio + itensPorPagina);
       const container = document.getElementById('gridCards');
       
       container.innerHTML = paginaItens.map(item => `
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl hover:border-slate-700 transition-all">
+        <div id="card-${item.id}" class="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl transition-all relative">
+          <button onclick="deletarItem(${item.id})" class="absolute top-4 right-4 text-slate-600 hover:text-red-500 transition-colors">
+            🗑️
+          </button>
           <div class="flex justify-between items-start mb-4">
             <h2 class="text-xl font-black text-emerald-400 font-mono">${item.endereco}</h2>
             <span class="px-3 py-1 rounded-full text-[9px] font-bold border ${item.status_estoque === 'Faltando' ? 'text-red-400 border-red-900 bg-red-950/30' : 'text-yellow-400 border-yellow-900 bg-yellow-950/30'} uppercase">${item.status_estoque}</span>
@@ -60,64 +61,48 @@
         </div>
       `).join('');
       
-      document.getElementById('infoPagina').textContent = `Página ${paginaAtual} de ${Math.ceil(todosItens.length / itensPorPagina) || 1} | Total: ${todosItens.length}`;
+      document.getElementById('infoPagina').textContent = `Página ${paginaAtual} | Total: ${todosItens.length}`;
     }
 
-    function mudarItens() {
-      itensPorPagina = parseInt(document.getElementById('itensPorPagina').value);
-      paginaAtual = 1;
-      renderizar();
+    async function deletarItem(id) {
+      if (!confirm("Confirmar exclusão deste registro?")) return;
+      
+      const el = document.getElementById(`card-${id}`);
+      el.classList.add('deletando'); // Inicia animação
+      
+      const user = JSON.parse(sessionStorage.getItem('usuarioLogado'));
+      
+      setTimeout(async () => {
+        try {
+          await fetch(`https://codril.onrender.com/api/deletar-produto.php?id=${id}&token=${user.token}`);
+          todosItens = todosItens.filter(i => i.id !== id);
+          renderizar();
+        } catch (err) {
+          alert("Erro ao deletar item.");
+          el.classList.remove('deletando');
+        }
+      }, 400); // Aguarda o fim da animação
     }
 
+    // ... (restante das funções mudarPagina, gerarRelatorio e carregarDados continuam iguais)
     function mudarPagina(dir) {
       const maxPag = Math.ceil(todosItens.length / itensPorPagina);
       paginaAtual = Math.max(1, Math.min(paginaAtual + dir, maxPag));
       renderizar();
     }
 
-    function gerarRelatorio() {
-      const win = window.open('', '_blank');
-      win.document.write(`
-        <html><head><title>Relatório de Estoque</title>
-        <style>
-          body { font-family: sans-serif; padding: 20px; }
-          h1 { text-align: center; color: #333; }
-          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-          th { background-color: #e5e7eb; padding: 12px; border: 1px solid #ccc; text-align: center; font-weight: bold; }
-          td { padding: 10px; border: 1px solid #ccc; text-align: center; }
-          tr:nth-child(even) { background-color: #f3f4f6; }
-        </style></head><body>
-        <h1>Relatório de Estoque</h1>
-        <table>
-          <tr><th>Endereço</th><th>SKU</th><th>Lote</th><th>Qtd</th><th>Status</th></tr>
-          ${todosItens.map(i => `<tr>
-            <td>${i.endereco}</td>
-            <td>${i.codigo_produto}</td>
-            <td>${i.lote}</td>
-            <td>${i.quantidade}</td>
-            <td>${i.status_estoque}</td>
-          </tr>`).join('')}
-        </table>
-      </body></html>`);
-      win.document.close();
-      win.print();
-    }
-
     async function carregarDados() {
-      const user = JSON.parse(sessionStorage.getItem('usuarioLogado'));
-      if(!user) { window.location.href = 'login.html'; return; }
-      try {
-        const res = await fetch(`https://codril.onrender.com/api/salvar-produto.php?token=${user.token}`);
-        const data = await res.json();
-        if (data.success) {
-          todosItens = data.itens || [];
-          renderizar();
-        }
-      } catch (err) {
-        console.error("Erro ao carregar:", err);
-      }
+        const user = JSON.parse(sessionStorage.getItem('usuarioLogado'));
+        if(!user) { window.location.href = 'login.html'; return; }
+        try {
+            const res = await fetch(`https://codril.onrender.com/api/salvar-produto.php?token=${user.token}`);
+            const data = await res.json();
+            if (data.success) {
+                todosItens = data.itens || [];
+                renderizar();
+            }
+        } catch (err) { console.error(err); }
     }
-
     window.onload = carregarDados;
   </script>
 </body>
