@@ -3,33 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Estoque Ativo - Paginação</title>
+  <title>Estoque Ativo</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-950 text-white min-h-screen p-4">
+<body class="bg-slate-950 text-white min-h-screen p-4 font-sans">
 
   <div class="max-w-4xl mx-auto">
-    <!-- Cabeçalho -->
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-xl font-bold">Listagem de Estoque</h1>
-      <button onclick="gerarRelatorio()" class="bg-blue-600 px-4 py-2 rounded-xl text-xs font-bold">📄 Relatório PDF</button>
+    <div class="flex justify-between items-center mb-6 border-b border-slate-900 pb-4">
+      <div>
+        <h1 class="text-2xl font-extrabold">Estoque Ativo</h1>
+        <p id="infoPagina" class="text-slate-400 text-xs">Carregando...</p>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="gerarRelatorio()" class="bg-slate-800 p-2 rounded-xl text-xs">📄 PDF</button>
+        <a href="index.html" class="px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs font-bold">⬅️ Novo</a>
+      </div>
     </div>
 
-    <!-- Controles de Paginação -->
-    <div class="flex gap-4 mb-4 text-sm">
-      <select id="itensPorPagina" onchange="mudarItens()" class="bg-slate-900 border border-slate-800 rounded-lg p-2">
+    <!-- Controles -->
+    <div class="flex justify-between items-center mb-6 gap-2">
+      <select id="itensPorPagina" onchange="mudarItens()" class="bg-slate-900 border border-slate-800 rounded-xl p-2 text-xs">
         <option value="10">10 por página</option>
         <option value="15">15 por página</option>
       </select>
     </div>
 
-    <div id="gridCards" class="grid gap-4"></div>
+    <div id="gridCards" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <!-- Cards renderizados aqui -->
+    </div>
 
-    <!-- Navegação de página -->
-    <div class="flex justify-center mt-6 gap-2">
-      <button onclick="mudarPagina(-1)" class="bg-slate-800 px-4 py-2 rounded-lg text-sm">Anterior</button>
-      <span id="infoPagina" class="py-2 px-2 text-sm">Pág 1</span>
-      <button onclick="mudarPagina(1)" class="bg-slate-800 px-4 py-2 rounded-lg text-sm">Próximo</button>
+    <!-- Navegação -->
+    <div class="flex justify-center mt-8 gap-2">
+      <button onclick="mudarPagina(-1)" class="bg-slate-900 px-4 py-2 rounded-xl text-xs">Anterior</button>
+      <button onclick="mudarPagina(1)" class="bg-slate-900 px-4 py-2 rounded-xl text-xs">Próximo</button>
     </div>
   </div>
 
@@ -42,19 +48,23 @@
       const inicio = (paginaAtual - 1) * itensPorPagina;
       const fim = inicio + itensPorPagina;
       const paginaItens = todosItens.slice(inicio, fim);
-      
       const container = document.getElementById('gridCards');
+      
       container.innerHTML = paginaItens.map(item => `
-        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 flex justify-between items-center">
-          <div>
-            <p class="font-bold">${item.endereco} - ${item.codigo_produto}</p>
-            <p class="text-xs text-slate-400">Lote: ${item.lote} | Qtd: ${item.quantidade}</p>
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl">
+          <div class="flex justify-between items-start mb-4">
+            <h2 class="text-xl font-black text-emerald-400 font-mono">${item.endereco}</h2>
+            <span class="px-3 py-1 rounded-full text-[9px] font-bold border ${item.status_estoque === 'Faltando' ? 'text-red-400 border-red-900' : 'text-yellow-400 border-yellow-900'} uppercase">${item.status_estoque}</span>
           </div>
-          <span class="text-xs font-bold ${item.status_estoque === 'Faltando' ? 'text-red-400' : 'text-yellow-400'}">${item.status_estoque}</span>
+          <div class="grid grid-cols-2 gap-2 text-xs text-slate-400">
+            <div>SKU: <span class="font-bold text-white">${item.codigo_produto}</span></div>
+            <div>Lote: <span class="font-bold text-white">${item.lote}</span></div>
+            <div>Qtd: <span class="font-bold text-white">${item.quantidade}</span></div>
+          </div>
         </div>
       `).join('');
       
-      document.getElementById('infoPagina').textContent = `Pág ${paginaAtual}`;
+      document.getElementById('infoPagina').textContent = `Página ${paginaAtual} | Total: ${todosItens.length}`;
     }
 
     function mudarItens() {
@@ -70,22 +80,30 @@
     }
 
     function gerarRelatorio() {
-      // Abre uma nova janela para impressão
       const win = window.open('', '_blank');
-      win.document.write('<html><head><title>Relatório de Estoque</title></head><body>');
-      win.document.write('<h1>Relatório de Estoque</h1><table border="1" width="100%">');
-      win.document.write('<tr><th>Endereço</th><th>SKU</th><th>Lote</th><th>Status</th></tr>');
+      win.document.write('<html><head><title>Relatório</title><style>table{width:100%;border-collapse:collapse;} td,th{border:1px solid #000;padding:8px;}</style></head><body>');
+      win.document.write('<h1>Relatório de Estoque</h1><table><tr><th>Endereço</th><th>SKU</th><th>Lote</th><th>Status</th></tr>');
       todosItens.forEach(i => win.document.write(`<tr><td>${i.endereco}</td><td>${i.codigo_produto}</td><td>${i.lote}</td><td>${i.status_estoque}</td></tr>`));
       win.document.write('</table></body></html>');
       win.document.close();
       win.print();
     }
 
-    // Carregamento inicial (simulado)
     async function carregarDados() {
-      // Sua chamada fetch aqui...
-      // todosItens = data.itens; renderizar();
+      const user = JSON.parse(sessionStorage.getItem('usuarioLogado'));
+      try {
+        const res = await fetch(`https://codril.onrender.com/api/salvar-produto.php?token=${user.token}`);
+        const data = await res.json();
+        if (data.success) {
+          todosItens = data.itens || [];
+          renderizar();
+        }
+      } catch (err) {
+        console.error("Erro ao carregar:", err);
+      }
     }
+
+    window.onload = carregarDados;
   </script>
 </body>
 </html>
