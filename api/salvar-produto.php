@@ -1,4 +1,8 @@
 <?php
+// Desativa a exibição de erros que podem quebrar o JSON
+ini_set('display_errors', 0);
+error_reporting(0);
+
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Content-Type");
 header("Content-Type: application/json");
