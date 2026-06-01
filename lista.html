@@ -8,42 +8,54 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.autotable.min.js"></script>
   <style>
-    /* Estilo de impressão: Zebrado e limpo */
+    /* Oculta elementos que não devem aparecer na impressão */
     @media print {
       .no-print { display: none !important; }
+      #tabelaImpressao { display: table !important; }
       body { background: white; color: black; }
       table { width: 100%; border-collapse: collapse; }
-      tr:nth-child(even) { background-color: #f3f4f6; }
-      th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+      th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+      tr:nth-child(even) { background-color: #f2f2f2; }
     }
+    #tabelaImpressao { display: none; }
   </style>
 </head>
 <body class="bg-[#020617] text-white min-h-screen p-4 font-sans">
 
-  <div class="max-w-2xl mx-auto">
-    <div class="flex justify-between items-center mb-6">
+  <div class="max-w-xl mx-auto">
+    <!-- Cabeçalho -->
+    <div class="flex justify-between items-start mb-6">
       <div>
         <h1 class="text-xl font-black text-blue-500">Gestão de Divergências</h1>
-        <p id="infoStatus" class="text-[10px] opacity-60">Carregando...</p>
+        <p id="infoStatus" class="text-[10px] opacity-60">A carregar...</p>
       </div>
       <div class="flex gap-2 no-print">
+        <a href="index.html" class="bg-blue-600 px-3 py-1 rounded-lg text-[10px] font-bold">Nova</a>
         <button onclick="window.print()" class="bg-slate-800 px-3 py-1 rounded-lg text-[10px] font-bold">Imprimir</button>
-        <button onclick="exportarPDF()" class="bg-blue-600 px-3 py-1 rounded-lg text-[10px] font-bold">PDF</button>
+        <button onclick="exportarPDF()" class="bg-slate-800 px-3 py-1 rounded-lg text-[10px] font-bold">PDF</button>
       </div>
     </div>
 
+    <!-- Controles -->
     <div class="no-print flex flex-col gap-3 mb-6">
       <input type="text" id="filtro" oninput="paginaAtual = 1; renderizar()" placeholder="🔍 Buscar SKU, Lote ou Endereço..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-5 py-3 text-xs">
       <select id="itensPorPagina" onchange="paginaAtual = 1; renderizar()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-5 py-3 text-xs">
-        <option value="5">5 por pág.</option>
-        <option value="10" selected>10 por pág.</option>
+        <option value="10">10 por pág.</option>
         <option value="20">20 por pág.</option>
       </select>
     </div>
 
+    <!-- Cards (Visualização Web) -->
     <div id="gridCards" class="grid grid-cols-1 gap-4"></div>
 
+    <!-- Paginação -->
     <div id="paginacao" class="no-print flex justify-center gap-2 mt-6"></div>
+
+    <!-- Tabela Oculta (Usada apenas para Impressão) -->
+    <table id="tabelaImpressao">
+      <thead><tr><th>Endereço</th><th>SKU</th><th>Lote</th><th>Qtd</th><th>Status</th></tr></thead>
+      <tbody id="corpoTabelaImpressao"></tbody>
+    </table>
   </div>
 
   <script>
@@ -56,7 +68,7 @@
         const data = await response.json();
         todosOsDados = data.itens || [];
         renderizar();
-      } catch (err) { document.getElementById('infoStatus').innerText = "Erro ao carregar."; }
+      } catch (err) { document.getElementById('infoStatus').innerText = "Erro ao carregar dados."; }
     }
 
     function renderizar() {
@@ -70,17 +82,21 @@
       const paginados = filtrados.slice(inicio, inicio + limite);
 
       document.getElementById('gridCards').innerHTML = paginados.map(item => `
-        <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl shadow-lg">
-          <div class="flex justify-between items-center mb-3">
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl shadow-md">
+          <div class="flex justify-between items-center mb-2">
             <h2 class="text-lg font-black text-emerald-400">Endereço: ${item.endereco || '-'}</h2>
             <span class="px-2 py-1 bg-slate-800 rounded-full text-[9px] font-bold uppercase">${item.status_estoque || 'Normal'}</span>
           </div>
-          <div class="grid grid-cols-2 gap-2 text-xs">
-            <p class="opacity-70">SKU: <span class="text-white font-bold">${item.codigo_produto || '-'}</span></p>
-            <p class="opacity-70">Lote: <span class="text-white font-bold">${item.lote || '-'}</span></p>
+          <div class="grid grid-cols-2 gap-1 text-xs">
+            <p class="opacity-70">SKU: <span class="text-white">${item.codigo_produto || '-'}</span></p>
+            <p class="opacity-70">Lote: <span class="text-white">${item.lote || '-'}</span></p>
             <p class="opacity-70 col-span-2">Quantidade: <span class="text-white font-bold">${item.quantidade || '1'}</span></p>
           </div>
         </div>
+      `).join('');
+
+      document.getElementById('corpoTabelaImpressao').innerHTML = filtrados.map(item => `
+        <tr><td>${item.endereco}</td><td>${item.codigo_produto}</td><td>${item.lote}</td><td>${item.quantidade}</td><td>${item.status_estoque}</td></tr>
       `).join('');
 
       document.getElementById('infoStatus').innerText = `Total: ${filtrados.length} itens`;
@@ -101,8 +117,7 @@
       doc.autoTable({
         head: [['Endereço', 'SKU', 'Lote', 'Qtd', 'Status']],
         body: todosOsDados.map(i => [i.endereco, i.codigo_produto, i.lote, i.quantidade, i.status_estoque]),
-        startY: 20,
-        theme: 'striped'
+        startY: 20, theme: 'striped'
       });
       doc.save("divergencias.pdf");
     }
