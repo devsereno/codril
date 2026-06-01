@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PULMÃO AE - Cadastro</title>
+  <title>Novo Registro - Pulmão AE</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-950 text-white min-h-screen relative font-sans">
+<body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4 font-sans">
 
   <!-- TOAST NOTIFICATION -->
   <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 transform transition-all duration-300 opacity-0 pointer-events-none scale-90">
@@ -16,202 +16,132 @@
     </div>
   </div>
 
-  <div class="max-w-4xl mx-auto p-4">
-
-    <!-- CABEÇALHO COM LOGIN ADAPTATIVO -->
-    <div class="flex justify-between items-center mb-8 border-b border-slate-900 pb-4">
-      <div class="flex items-center gap-3">
-        <span class="text-5xl">📦</span>
-        <div>
-          <h1 class="text-3xl font-extrabold tracking-tight">PULMÃO AE</h1>
-          <p id="userName" class="text-slate-400 text-sm">Carregando utilizador...</p>
-        </div>
-      </div>
-      
-      <div class="flex items-center gap-2">
-        <a id="admLink" href="adm.html" class="hidden px-4 py-2.5 bg-amber-600/20 text-amber-400 border border-amber-500/30 hover:bg-amber-600/30 rounded-2xl text-xs font-bold transition-all">
-          ⚙️ Painel ADM
-        </a>
-        <button onclick="logout()" class="px-4 py-2.5 bg-red-600/10 text-red-400 border border-red-500/20 hover:bg-red-600/20 rounded-2xl text-xs font-bold transition-all">
-          Sair
-        </button>
-      </div>
+  <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl">
+    <div class="text-center mb-8">
+      <h1 class="text-2xl font-extrabold text-blue-400">📝 Novo Cadastro</h1>
+      <p class="text-xs text-slate-400 mt-1">Preencha os detalhes da posição de estoque</p>
     </div>
 
-    <!-- FORMULÁRIO DE NOVO CADASTRO -->
-    <div class="bg-slate-900 rounded-3xl p-6 mb-8 border border-slate-800 shadow-2xl">
-      <h2 class="text-xl font-bold mb-5 flex items-center gap-2 text-slate-200">
-        <span>📝</span> Novo Cadastro de Posição
-      </h2>
+    <form id="formCadastro" class="space-y-4">
       
-      <div class="grid grid-cols-1 gap-4">
-        <label class="block">
-          <span class="text-xs text-slate-400 font-semibold mb-1.5 block">Tipo de Armazenagem</span>
-          <select id="tipo" class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 text-white text-sm">
-            <option value="pulmao">Pulmão AE</option>
-            <option value="picking">Picking</option>
-          </select>
-        </label>
-
-        <label class="block">
-          <span class="text-xs text-slate-400 font-semibold mb-1.5 block">Endereço (Apenas números)</span>
-          <input id="endereco" placeholder="Ex: 101" type="text" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 text-white text-sm">
-        </label>
-
-        <label class="block">
-          <span class="text-xs text-slate-400 font-semibold mb-1.5 block">Código do Produto / SKU (Apenas números)</span>
-          <input id="codigo" placeholder="Digite o SKU" type="text" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 text-white text-sm">
-        </label>
-
-        <label class="block">
-          <span class="text-xs text-slate-400 font-semibold mb-1.5 block">Lote</span>
-          <input id="lote" placeholder="Digite o lote" maxlength="20" type="text" oninput="this.value = this.value.toUpperCase()" class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 uppercase focus:outline-none focus:border-blue-500 text-white text-sm">
-        </label>
-
-        <label class="block">
-          <span class="text-xs text-slate-400 font-semibold mb-1.5 block">Quantidade de Unidades</span>
-          <input id="quantidade" placeholder="Ex: 15" type="text" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 text-white text-sm" value="1">
-        </label>
-
-        <label class="block">
-          <span class="text-xs text-slate-400 font-semibold mb-1.5 block">Descrição (Opcional)</span>
-          <input id="descricao" placeholder="Observações do produto..." type="text" class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 text-white text-sm">
-        </label>
+      <!-- Tipo -->
+      <div>
+        <label class="block text-slate-400 text-xs font-bold mb-2">Tipo de Armazenagem</label>
+        <select id="tipoArmazenagem" class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-blue-500">
+          <option value="Pulmao">Pulmão AE</option>
+          <option value="Picking">Picking</option>
+        </select>
       </div>
 
-      <button id="btnSalvar" onclick="cadastrarProduto()" class="mt-6 w-full bg-blue-600 hover:bg-blue-500 py-5 rounded-2xl font-bold transition-all active:scale-[0.99] flex justify-center items-center gap-2 shadow-lg shadow-blue-600/20 text-sm text-white">
-        <span>💾 Salvar no Sistema</span>
+      <!-- Endereço -->
+      <div>
+        <label class="block text-slate-400 text-xs font-bold mb-2">Endereço (Apenas números)</label>
+        <input type="number" id="endereco" required placeholder="Ex: 101" class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-blue-500">
+      </div>
+
+      <!-- SKU -->
+      <div>
+        <label class="block text-slate-400 text-xs font-bold mb-2">Código do Produto / SKU</label>
+        <input type="number" id="sku" required placeholder="Digite o SKU" class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-blue-500">
+      </div>
+
+      <!-- Lote -->
+      <div>
+        <label class="block text-slate-400 text-xs font-bold mb-2">Lote</label>
+        <input type="text" id="lote" required placeholder="DIGITE O LOTE" class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-blue-500 uppercase">
+      </div>
+
+      <!-- Status da Posição (NOVO) -->
+      <div>
+        <label class="block text-slate-400 text-xs font-bold mb-2">Status da Posição</label>
+        <select id="statusEstoque" class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-blue-500">
+          <option value="Normal">Normal</option>
+          <option value="Faltando">Faltando</option>
+          <option value="Sobrando">Sobrando</option>
+        </select>
+      </div>
+
+      <!-- Quantidade -->
+      <div>
+        <label class="block text-slate-400 text-xs font-bold mb-2">Quantidade de Unidades</label>
+        <input type="number" id="quantidade" value="1" required class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-blue-500">
+      </div>
+
+      <!-- Descrição -->
+      <div>
+        <label class="block text-slate-400 text-xs font-bold mb-2">Observações (Opcional)</label>
+        <textarea id="descricao" placeholder="Observações do produto..." class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-blue-500 h-24"></textarea>
+      </div>
+
+      <button type="submit" id="btnSalvar" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl text-xs font-bold transition-all active:scale-95 shadow-lg shadow-blue-600/20">
+        💾 Salvar no Sistema
       </button>
-    </div>
+    </form>
 
-    <!-- BOTÕES DE NAVEGAÇÃO -->
-    <div class="flex gap-4">
-      <a href="lista.html" class="flex-1 bg-slate-900 hover:bg-slate-850 border border-slate-800 py-5 rounded-2xl text-center font-bold transition-all flex justify-center items-center gap-2 text-sm text-slate-200">
-        <span>📋</span> Ver Todos os Itens
-      </a>
+    <div class="mt-6 text-center">
+      <a href="lista.html" class="text-xs text-slate-500 hover:text-blue-400 font-bold transition-all">Ver Estoque Ativo →</a>
     </div>
-
   </div>
 
   <script>
-    let userToken = '';
+    const API_URL = 'https://codril.onrender.com/api/salvar-produto.php';
 
-    function mostrarAviso(mensagem, tipo = 'sucesso') {
-      const toast = document.getElementById('toast');
-      const toastBg = document.getElementById('toastBg');
-      const toastIcon = document.getElementById('toastIcon');
-      const toastMessage = document.getElementById('toastMessage');
-
-      if (tipo === 'sucesso') {
-        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-emerald-500/90 border-emerald-400 text-white backdrop-blur-sm";
-        toastIcon.textContent = "✅";
-      } else if (tipo === 'erro') {
-        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-red-500/90 border-red-400 text-white backdrop-blur-sm";
-        toastIcon.textContent = "❌";
-      } else {
-        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-amber-500/90 border-amber-400 text-white backdrop-blur-sm";
-        toastIcon.textContent = "⚠️";
-      }
-
-      toastMessage.textContent = mensagem;
-      toast.classList.remove('opacity-0', 'pointer-events-none', 'scale-90', 'top-5');
-      toast.classList.add('opacity-100', 'scale-100', 'top-8');
-
-      setTimeout(() => {
-        toast.classList.remove('opacity-100', 'scale-100', 'top-8');
-        toast.classList.add('opacity-0', 'pointer-events-none', 'scale-90', 'top-5');
-      }, 3000);
-    }
-
-    // ENVIO DOS DADOS PASSANDO O TOKEN DE AUTENTICAÇÃO NO CORPO
-    async function cadastrarProduto() {
+    document.getElementById('formCadastro').onsubmit = async function(e) {
+      e.preventDefault();
+      
       const btn = document.getElementById('btnSalvar');
+      btn.disabled = true;
+      btn.textContent = "Salvando...";
+
+      const user = JSON.parse(sessionStorage.getItem('usuarioLogado'));
       
       const dados = {
-        token: userToken, // ENVIA O TOKEN CRIPTOGRÁFICO DE VALIDAÇÃO
-        tipo: document.getElementById('tipo').value,
-        endereco: document.getElementById('endereco').value.trim(),
-        codigo_produto: document.getElementById('codigo').value.trim(),
-        lote: document.getElementById('lote').value.trim().toUpperCase(),
-        quantidade: parseInt(document.getElementById('quantidade').value.trim()) || 1,
-        descricao: document.getElementById('descricao').value.trim()
+        token: user ? user.token : '',
+        tipo: document.getElementById('tipoArmazenagem').value,
+        endereco: document.getElementById('endereco').value,
+        codigo_produto: document.getElementById('sku').value,
+        lote: document.getElementById('lote').value,
+        status_estoque: document.getElementById('statusEstoque').value, // Envio do novo campo
+        quantidade: document.getElementById('quantidade').value,
+        descricao: document.getElementById('descricao').value
       };
 
-      if (!dados.endereco || !dados.codigo_produto || !dados.lote) {
-        mostrarAviso("Preencha os campos obrigatórios: Endereço, Código e Lote.", "alerta");
-        return;
-      }
-
       try {
-        btn.disabled = true;
-        btn.innerHTML = `<span>⏳ Gravando dados...</span>`;
-        btn.classList.replace('bg-blue-600', 'bg-slate-700');
-
-        const res = await fetch('https://codril.onrender.com/api/salvar-produto.php', {
+        const res = await fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(dados)
         });
 
-        if (!res.ok) throw new Error(`Erro no servidor: ${res.status}`);
-
-        const data = await res.json();
+        const result = await res.json();
         
-        if (data.success) {
-          mostrarAviso("Nova posição gravada com sucesso!", "sucesso");
-          limparFormulario();
+        if (result.success) {
+          mostrarAviso("Registro salvo com sucesso!", "sucesso");
+          document.getElementById('formCadastro').reset();
         } else {
-          mostrarAviso(data.message || "Erro ao salvar o produto.", "erro");
+          mostrarAviso(result.message || "Erro ao salvar.", "erro");
         }
-      } catch (e) {
-        mostrarAviso("Erro de conexão com o servidor.", "erro");
+      } catch (err) {
+        mostrarAviso("Erro de conexão.", "erro");
       } finally {
         btn.disabled = false;
-        btn.innerHTML = `<span>💾 Salvar no Sistema</span>`;
-        btn.classList.replace('bg-slate-700', 'bg-blue-600');
-      }
-    }
-
-    function limparFormulario() {
-      document.getElementById('endereco').value = '';
-      document.getElementById('codigo').value = '';
-      document.getElementById('lote').value = '';
-      document.getElementById('quantidade').value = '1';
-      document.getElementById('descricao').value = '';
-    }
-
-    function logout() {
-      sessionStorage.removeItem('usuarioLogado');
-      location.href = 'login.html';
-    }
-
-    // VALIDAÇÃO DA SESSÃO E CARREGAMENTO
-    window.onload = function() {
-      try {
-        const userRaw = sessionStorage.getItem('usuarioLogado');
-        const admContainer = document.getElementById('admLink');
-        
-        if (!userRaw) {
-          location.href = 'login.html';
-          return;
-        }
-
-        const user = JSON.parse(userRaw);
-        userToken = user.token || ''; // Captura o token salvo
-        
-        document.getElementById('userName').textContent = `Olá, ${user.nome || 'Operador'}`;
-
-        const role = (user.role || '').toLowerCase().trim();
-        if (role === 'super' || role === 'master') {
-          if (admContainer) admContainer.classList.remove('hidden');
-        } else {
-          if (admContainer) admContainer.classList.add('hidden');
-        }
-
-      } catch (err) {
-        location.href = 'login.html';
+        btn.textContent = "💾 Salvar no Sistema";
       }
     };
+
+    function mostrarAviso(mensagem, tipo) {
+      const toast = document.getElementById('toast');
+      const toastBg = document.getElementById('toastBg');
+      const toastMessage = document.getElementById('toastMessage');
+      
+      toastBg.className = `flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-sm ${tipo === 'sucesso' ? 'bg-emerald-500/90 border-emerald-400' : 'bg-red-500/90 border-red-400'}`;
+      toastMessage.textContent = mensagem;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 3000);
+    }
   </script>
 </body>
 </html>
