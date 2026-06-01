@@ -6,50 +6,88 @@
   <title>Gestão de Divergências</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
+    // Gerenciador de tema
     function aplicarTema() {
-      const isDark = localStorage.getItem('modoEscuro') === 'true';
-      document.getElementById('htmlRoot').className = isDark ? 'dark' : '';
+      const isDark = localStorage.getItem('modoEscuro') !== 'false'; // Padrão escuro
+      if (isDark) document.getElementById('htmlRoot').classList.add('dark');
+      else document.getElementById('htmlRoot').classList.remove('dark');
     }
     function alternarTema() {
-      localStorage.setItem('modoEscuro', localStorage.getItem('modoEscuro') !== 'true');
+      const isDark = document.getElementById('htmlRoot').classList.contains('dark');
+      localStorage.setItem('modoEscuro', isDark ? 'false' : 'true');
       aplicarTema();
     }
   </script>
   <style>
+    body { transition: background-color 0.3s; }
     .dark body { background-color: #020617; color: white; }
     .light body { background-color: #f1f5f9; color: #0f172a; }
     .card { background-color: #0f172a; border: 1px solid #1e293b; }
     .light .card { background-color: #ffffff; border: 1px solid #e2e8f0; }
   </style>
 </head>
-<body class="p-4 transition-colors duration-300">
+<body class="p-4 font-sans">
   <div class="max-w-4xl mx-auto">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-black text-blue-500">Gestão de Divergências</h1>
       <div class="flex gap-2">
-        <button onclick="alternarTema()" class="bg-slate-800 p-2 rounded-xl">🌓</button>
+        <button onclick="alternarTema()" class="bg-slate-800 p-2 rounded-xl text-lg">🌓</button>
         <a href="index.html" class="border border-slate-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-700">Nova</a>
       </div>
     </div>
-    
-    <input type="text" placeholder="🔍 Buscar..." class="w-full p-4 mb-4 rounded-2xl bg-slate-900 border border-slate-700 text-sm">
+
+    <input type="text" id="busca" onkeyup="renderizarLista()" placeholder="🔍 Buscar por SKU, Lote ou Endereço..." class="w-full p-4 mb-4 rounded-2xl bg-slate-900 border border-slate-700 text-sm outline-none">
 
     <div id="gridCards" class="grid grid-cols-1 gap-4">
-      <!-- Cards renderizados via JS -->
+      <!-- Cards serão inseridos aqui -->
     </div>
 
-    <div class="flex justify-center mt-8 gap-2">
+    <div class="flex justify-center mt-8 gap-2 items-center">
       <button onclick="mudarPagina(-1)" class="bg-slate-800 px-6 py-3 rounded-2xl text-xs font-bold">Anterior</button>
+      <span id="infoPagina" class="text-xs font-bold opacity-60">Pág 1</span>
       <button onclick="mudarPagina(1)" class="bg-slate-800 px-6 py-3 rounded-2xl text-xs font-bold">Próximo</button>
     </div>
   </div>
+
   <script>
-    let paginaAtual = 1;
-    function mudarPagina(dir) {
-      paginaAtual = Math.max(1, paginaAtual + dir);
-      console.log("Navegando para página:", paginaAtual);
+    // Dados de exemplo
+    const dados = Array.from({length: 25}, (_, i) => ({
+      id: i, endereco: '1000' + i, sku: 'SKU-' + i, lote: 'LOTE' + i, status: 'NORMAL'
+    }));
+
+    let pagina = 1;
+    const porPagina = 5;
+
+    function renderizarLista() {
+      const termo = document.getElementById('busca').value.toLowerCase();
+      const filtrados = dados.filter(d => d.endereco.includes(termo) || d.sku.toLowerCase().includes(termo));
+      const inicio = (pagina - 1) * porPagina;
+      const fatiados = filtrados.slice(inicio, inicio + porPagina);
+
+      const grid = document.getElementById('gridCards');
+      grid.innerHTML = fatiados.map(item => `
+        <div class="card p-5 rounded-3xl">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-black text-emerald-500 font-mono">${item.endereco}</h2>
+            <span class="text-[10px] font-bold text-blue-400 bg-blue-950/30 px-3 py-1 rounded-full border border-blue-900">${item.status}</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs opacity-70">
+            <div>SKU: <span class="font-bold">${item.sku}</span></div>
+            <div>Lote: <span class="font-bold">${item.lote}</span></div>
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('infoPagina').innerText = `Página ${pagina}`;
     }
+
+    function mudarPagina(dir) {
+      pagina = Math.max(1, pagina + dir);
+      renderizarLista();
+    }
+
     aplicarTema();
+    renderizarLista();
   </script>
 </body>
 </html>
