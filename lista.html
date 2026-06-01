@@ -6,11 +6,8 @@
   <title>Listagem de Estoque</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Animação para a exclusão do card */
     .deletando { animation: shrink 0.4s ease-out forwards; }
-    @keyframes shrink { 
-      to { opacity: 0; transform: scale(0.5); } 
-    }
+    @keyframes shrink { to { opacity: 0; transform: scale(0.5); } }
   </style>
 </head>
 <body class="bg-slate-950 text-white min-h-screen p-4 font-sans">
@@ -28,15 +25,17 @@
       </div>
     </div>
 
-    <!-- Controle de Paginação -->
-    <div class="mb-6">
-      <select id="itensPorPagina" onchange="mudarItens()" class="bg-slate-900 border border-slate-800 rounded-xl p-2 text-xs w-full sm:w-40 outline-none">
+    <!-- Controles: Busca e Paginação -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      <input type="text" id="campoBusca" placeholder="🔍 Buscar SKU, Lote ou Endereço..." 
+             onkeyup="filtrarDados()" class="bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs w-full outline-none focus:border-blue-500">
+      
+      <select id="itensPorPagina" onchange="mudarItens()" class="bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs w-full outline-none">
         <option value="10">10 por página</option>
         <option value="15">15 por página</option>
       </select>
     </div>
 
-    <!-- Grid onde os cards serão injetados -->
     <div id="gridCards" class="grid grid-cols-1 sm:grid-cols-2 gap-4 min-h-[300px]"></div>
 
     <!-- Navegação -->
@@ -47,18 +46,17 @@
   </div>
 
   <script>
-    // Variáveis de estado
     let todosItens = [];
+    let itensFiltrados = [];
     let paginaAtual = 1;
     let itensPorPagina = 10;
 
-    // Função principal de renderização
     function renderizar() {
       const container = document.getElementById('gridCards');
       const inicio = (paginaAtual - 1) * itensPorPagina;
-      const paginaItens = todosItens.slice(inicio, inicio + itensPorPagina);
+      const paginaItens = itensFiltrados.slice(inicio, inicio + itensPorPagina);
 
-      if (todosItens.length === 0) {
+      if (itensFiltrados.length === 0) {
         container.innerHTML = `<p class="text-slate-500 text-center w-full mt-10">Nenhum registo encontrado.</p>`;
         return;
       }
@@ -80,10 +78,20 @@
         </div>
       `).join('');
 
-      document.getElementById('infoPagina').textContent = `Página ${paginaAtual} de ${Math.ceil(todosItens.length / itensPorPagina) || 1} | Total: ${todosItens.length}`;
+      document.getElementById('infoPagina').textContent = `Página ${paginaAtual} de ${Math.ceil(itensFiltrados.length / itensPorPagina) || 1} | Total: ${itensFiltrados.length}`;
     }
 
-    // Lógica de Paginação
+    function filtrarDados() {
+      const busca = document.getElementById('campoBusca').value.toLowerCase();
+      itensFiltrados = todosItens.filter(i => 
+        i.codigo_produto.toLowerCase().includes(busca) || 
+        i.lote.toLowerCase().includes(busca) || 
+        i.endereco.toLowerCase().includes(busca)
+      );
+      paginaAtual = 1;
+      renderizar();
+    }
+
     function mudarItens() {
       itensPorPagina = parseInt(document.getElementById('itensPorPagina').value);
       paginaAtual = 1;
@@ -91,12 +99,11 @@
     }
 
     function mudarPagina(dir) {
-      const maxPag = Math.ceil(todosItens.length / itensPorPagina);
+      const maxPag = Math.ceil(itensFiltrados.length / itensPorPagina);
       paginaAtual = Math.max(1, Math.min(paginaAtual + dir, maxPag));
       renderizar();
     }
 
-    // Lógica de exclusão com confirmação interna
     function confirmarExclusao(id) {
       const card = document.getElementById(`card-${id}`);
       card.innerHTML = `
@@ -114,41 +121,21 @@
       const el = document.getElementById(`card-${id}`);
       el.classList.add('deletando');
       const user = JSON.parse(sessionStorage.getItem('usuarioLogado'));
-      
       try {
         await fetch(`https://codril.onrender.com/api/deletar-produto.php?id=${id}&token=${user.token}`);
         todosItens = todosItens.filter(i => i.id !== id);
+        itensFiltrados = itensFiltrados.filter(i => i.id !== id);
         setTimeout(renderizar, 400);
-      } catch (err) { 
-        el.classList.remove('deletando');
-        alert("Erro ao excluir.");
-      }
+      } catch (err) { el.classList.remove('deletando'); }
     }
 
-    // Gerador de Relatório PDF/Impressão
     function gerarRelatorio() {
       const win = window.open('', '_blank');
-      win.document.write(`
-        <html><head><title>Relatório de Estoque</title>
-        <style>
-          body { font-family: sans-serif; padding: 20px; }
-          h1 { text-align: center; color: #333; }
-          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-          th { background-color: #e5e7eb; padding: 12px; border: 1px solid #ccc; text-align: center; font-weight: bold; }
-          td { padding: 10px; border: 1px solid #ccc; text-align: center; }
-          tr:nth-child(even) { background-color: #f3f4f6; }
-        </style></head><body>
-        <h1>Relatório de Estoque</h1>
-        <table>
-          <tr><th>Endereço</th><th>SKU</th><th>Lote</th><th>Qtd</th><th>Status</th></tr>
-          ${todosItens.map(i => `<tr><td>${i.endereco}</td><td>${i.codigo_produto}</td><td>${i.lote}</td><td>${i.quantidade}</td><td>${i.status_estoque}</td></tr>`).join('')}
-        </table>
-      </body></html>`);
+      win.document.write(`<html><head><title>Relatório</title><style>table{width:100%;border-collapse:collapse;font-family:sans-serif;} th{background:#e5e7eb;padding:12px;border:1px solid #ccc;text-align:center;} td{padding:10px;border:1px solid #ccc;text-align:center;} tr:nth-child(even){background:#f3f4f6;}</style></head><body><h1>Estoque</h1><table><tr><th>Endereço</th><th>SKU</th><th>Lote</th><th>Qtd</th><th>Status</th></tr>${itensFiltrados.map(i => `<tr><td>${i.endereco}</td><td>${i.codigo_produto}</td><td>${i.lote}</td><td>${i.quantidade}</td><td>${i.status_estoque}</td></tr>`).join('')}</table></body></html>`);
       win.document.close();
       win.print();
     }
 
-    // Carregamento inicial
     async function carregarDados() {
       const user = JSON.parse(sessionStorage.getItem('usuarioLogado'));
       if(!user) { window.location.href = 'login.html'; return; }
@@ -157,11 +144,10 @@
         const data = await res.json();
         if (data.success) {
           todosItens = data.itens || [];
+          itensFiltrados = todosItens;
           renderizar();
         }
-      } catch (err) { 
-        console.error("Erro ao carregar dados:", err);
-      }
+      } catch (err) { console.error("Erro:", err); }
     }
 
     window.onload = carregarDados;
