@@ -5,15 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestão de Divergências</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = { darkMode: 'class' }
-  </script>
   <style>
     @media print {
       .no-print { display: none !important; }
       #tabelaImpressao { display: table !important; width: 100%; border-collapse: collapse; }
       #tabelaImpressao th, #tabelaImpressao td { border: 1px solid #000; padding: 8px; text-align: center; }
-      #tabelaImpressao tr:nth-child(even) { background-color: #f2f2f2; }
+      #tabelaImpressao tr:nth-child(even) { background-color: #f2f2f2 !important; }
       body { background: white !important; color: black !important; }
     }
   </style>
@@ -24,7 +21,7 @@
     <header class="flex justify-between items-center mb-6">
       <div>
         <h1 class="text-xl font-black text-blue-600 dark:text-blue-500">Divergências</h1>
-        <p id="infoStatus" class="text-xs opacity-60">A carregar...</p>
+        <p id="infoStatus" class="text-xs opacity-60">Carregando...</p>
       </div>
       <div class="flex gap-2">
         <button onclick="document.documentElement.classList.toggle('dark')" class="p-2 bg-slate-200 dark:bg-slate-800 rounded-lg">🌓</button>
@@ -34,7 +31,7 @@
     </header>
 
     <div class="space-y-4 mb-6">
-      <input type="text" id="filtro" oninput="paginaAtual=1; renderizar()" placeholder="🔍 Pesquisar SKU, Lote ou Endereço..." class="w-full p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+      <input type="text" id="filtro" oninput="paginaAtual=1; renderizar()" placeholder="🔍 Buscar SKU, Lote ou Endereço..." class="w-full p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm">
       <select id="itensPorPagina" onchange="paginaAtual=1; renderizar()" class="w-full p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm">
         <option value="5">5 por pág.</option>
         <option value="10" selected>10 por pág.</option>
@@ -46,9 +43,8 @@
     <div id="paginacao" class="flex justify-center gap-2 mt-6"></div>
   </div>
 
-  <!-- Tabela Oculta para Impressão -->
   <table id="tabelaImpressao" class="hidden">
-    <thead><tr><th>Endereço</th><th>SKU</th><th>Lote</th><th>Qtd</th><th>Status</th></tr></thead>
+    <thead><tr class="bg-gray-200"><th>Endereço</th><th>SKU</th><th>Lote</th><th>Qtd</th><th>Status</th></tr></thead>
     <tbody id="corpoTabelaImpressao"></tbody>
   </table>
 
@@ -62,7 +58,24 @@
         const data = await response.json();
         todosOsDados = data.itens || [];
         renderizar();
-      } catch (err) { document.getElementById('infoStatus').innerText = "Erro ao carregar dados."; }
+      } catch (err) { document.getElementById('infoStatus').innerText = "Erro ao carregar."; }
+    }
+
+    function confirmarDeletar(el, id) {
+      el.innerHTML = `
+        <div class="flex gap-2 animate-in fade-in">
+          <button onclick="removerItem('${id}', this.closest('.card-item'))" class="text-red-500 font-bold text-xs">SIM</button>
+          <button onclick="renderizar()" class="text-slate-500 text-xs">NÃO</button>
+        </div>
+      `;
+    }
+
+    function removerItem(id, card) {
+      card.classList.add('opacity-0', 'scale-90', 'transition-all', 'duration-500');
+      setTimeout(() => {
+        todosOsDados = todosOsDados.filter(i => i.id !== id);
+        renderizar();
+      }, 500);
     }
 
     function renderizar() {
@@ -76,15 +89,15 @@
       const paginados = filtrados.slice((paginaAtual - 1) * limite, paginaAtual * limite);
 
       document.getElementById('gridCards').innerHTML = paginados.map(item => `
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl shadow-sm">
+        <div class="card-item bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl shadow-sm transition-all" id="card-${item.id}">
           <div class="flex justify-between items-center mb-2">
-            <h2 class="text-lg font-black text-green-700 dark:text-green-500">Endereço: ${item.endereco || '-'}</h2>
-            <span class="text-[9px] px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800">${item.status_estoque || 'Normal'}</span>
+            <h2 class="text-lg font-black text-green-700 dark:text-green-500">Endereço: ${item.endereco}</h2>
+            <button onclick="confirmarDeletar(this.parentElement, '${item.id}')" class="text-slate-400 hover:text-red-500">🗑️</button>
           </div>
           <div class="grid grid-cols-2 gap-2 text-xs opacity-80">
-            <p>SKU: <span class="font-bold text-slate-900 dark:text-white">${item.codigo_produto || '-'}</span></p>
-            <p>Lote: <span class="font-bold text-slate-900 dark:text-white">${item.lote || '-'}</span></p>
-            <p class="col-span-2">Quantidade: <span class="font-bold text-slate-900 dark:text-white">${item.quantidade || '1'}</span></p>
+            <p>SKU: <span class="font-bold text-slate-900 dark:text-white">${item.codigo_produto}</span></p>
+            <p>Lote: <span class="font-bold text-slate-900 dark:text-white">${item.lote}</span></p>
+            <p class="col-span-2">Quantidade: <span class="font-bold text-slate-900 dark:text-white">${item.quantidade}</span></p>
           </div>
         </div>
       `).join('');
