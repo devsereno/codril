@@ -2,50 +2,100 @@
 <html lang="pt-PT" id="htmlRoot">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nova Divergência</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     function aplicarTema() {
       const isDark = localStorage.getItem('modoEscuro') === 'true';
-      document.getElementById('htmlRoot').className = isDark ? 'dark' : '';
+      if (isDark) {
+        document.getElementById('htmlRoot').classList.add('dark');
+      } else {
+        document.getElementById('htmlRoot').classList.remove('dark');
+      }
     }
     function alternarTema() {
-      localStorage.setItem('modoEscuro', localStorage.getItem('modoEscuro') !== 'true');
+      const isDark = localStorage.getItem('modoEscuro') === 'true';
+      localStorage.setItem('modoEscuro', !isDark);
       aplicarTema();
     }
   </script>
   <style>
     .dark body { background-color: #020617; color: white; }
-    .dark .bg-form { background-color: #0f172a; border-color: #1e293b; }
+    .dark .bg-card { background-color: #0f172a; border-color: #1e293b; }
     .light body { background-color: #f8fafc; color: #0f172a; }
-    .light .bg-form { background-color: #ffffff; border-color: #e2e8f0; }
+    .light .bg-card { background-color: #ffffff; border-color: #e2e8f0; }
   </style>
 </head>
-<body class="min-h-screen p-4 flex items-center justify-center transition-colors duration-300">
+<body class="min-h-screen p-4 flex items-center justify-center font-sans transition-colors duration-300">
 
-  <div class="w-full max-w-md bg-form border p-8 rounded-3xl shadow-xl">
+  <div class="w-full max-w-md bg-card border p-8 rounded-3xl shadow-2xl transition-all">
+    <!-- Cabeçalho com Botão de Tema -->
     <div class="flex justify-between items-center mb-8">
-      <h1 class="text-2xl font-black text-blue-500">Nova Divergência</h1>
-      <button onclick="alternarTema()" class="bg-slate-500/20 px-3 py-2 rounded-xl text-xs font-bold">🌓</button>
+      <div>
+        <h1 class="text-2xl font-black text-blue-500">Nova Divergência</h1>
+        <p class="opacity-60 text-xs mt-1">Registe a inconsistência encontrada</p>
+      </div>
+      <button onclick="alternarTema()" class="bg-slate-500/20 p-3 rounded-xl text-xs font-bold hover:bg-slate-500/30">🌓</button>
     </div>
 
     <form id="formCadastro" class="space-y-4">
-      <!-- Campos como antes, labels com texto mais legível -->
       <div>
-        <label class="text-[11px] uppercase font-bold opacity-80">Endereço</label>
-        <input type="text" name="endereco" required class="w-full bg-transparent border border-slate-300 dark:border-slate-700 rounded-xl p-3 text-sm mt-1">
-      </div>
-      
-      <button type="button" onclick="document.getElementById('divObs').classList.toggle('hidden')" class="text-blue-500 text-[10px] font-bold underline">+ Adicionar observação</button>
-      <div id="divObs" class="hidden">
-        <textarea name="observacao" class="w-full bg-transparent border border-slate-300 dark:border-slate-700 rounded-xl p-3 text-sm"></textarea>
+        <label class="text-[11px] uppercase font-bold opacity-70 ml-1">Tipo de Armazenagem</label>
+        <select name="tipo_armazenagem" class="w-full bg-transparent border border-slate-300 dark:border-slate-700 rounded-xl p-3 text-sm mt-1 outline-none">
+          <option>Pulmão AE</option>
+          <option>Picking</option>
+          <option>Outros</option>
+        </select>
       </div>
 
-      <button type="submit" class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl">Registar</button>
-      <a href="lista.html" class="block text-center border border-slate-300 dark:border-slate-700 py-3 rounded-2xl text-xs font-bold">Gestão de Divergências</a>
+      <div>
+        <label class="text-[11px] uppercase font-bold opacity-70 ml-1">Endereço</label>
+        <input type="text" name="endereco" required class="w-full bg-transparent border border-slate-300 dark:border-slate-700 rounded-xl p-3 text-sm mt-1 outline-none">
+      </div>
+
+      <div>
+        <label class="text-[11px] uppercase font-bold opacity-70 ml-1">Código do Produto / SKU</label>
+        <input type="text" name="codigo_produto" required class="w-full bg-transparent border border-slate-300 dark:border-slate-700 rounded-xl p-3 text-sm mt-1 outline-none">
+      </div>
+
+      <div>
+        <label class="text-[11px] uppercase font-bold opacity-70 ml-1">Lote</label>
+        <input type="text" name="lote" required class="w-full bg-transparent border border-slate-300 dark:border-slate-700 rounded-xl p-3 text-sm mt-1 outline-none">
+      </div>
+
+      <div>
+        <label class="text-[11px] uppercase font-bold opacity-70 ml-1">Quantidade</label>
+        <input type="number" name="quantidade" required class="w-full bg-transparent border border-slate-300 dark:border-slate-700 rounded-xl p-3 text-sm mt-1 outline-none">
+      </div>
+
+      <!-- Link para abrir Observação -->
+      <button type="button" onclick="document.getElementById('divObs').classList.toggle('hidden')" class="text-blue-500 text-[10px] font-bold underline hover:text-blue-400 transition-all">
+        + Adicionar observação (opcional)
+      </button>
+
+      <!-- Campo de Observação oculto -->
+      <div id="divObs" class="hidden">
+        <textarea name="observacao" rows="3" class="w-full bg-transparent border border-slate-300 dark:border-slate-700 rounded-xl p-3 text-sm mt-1 outline-none"></textarea>
+      </div>
+
+      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl transition-all mt-4">
+        Registar Divergência
+      </button>
+      
+      <a href="lista.html" class="block text-center border border-slate-300 dark:border-slate-700 hover:border-slate-500 py-3 rounded-2xl text-xs font-bold transition-all mt-3">
+        Gestão de Divergências
+      </a>
     </form>
   </div>
 
-  <script>aplicarTema();</script>
+  <script>
+    aplicarTema();
+    document.getElementById('formCadastro').onsubmit = async (e) => {
+      e.preventDefault();
+      alert("Divergência registada com sucesso!");
+      window.location.href = 'lista.html';
+    };
+  </script>
 </body>
 </html>
