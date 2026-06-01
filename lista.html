@@ -1,111 +1,23 @@
 <!DOCTYPE html>
-<html lang="pt-PT">
+<html lang="pt-PT" class="dark"> <!-- Classe "dark" aqui ativa o modo -->
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestão de Divergências</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @media print {
-      .no-print { display: none !important; }
-      body { background: white; color: black; padding: 20px; }
-      #tabelaImpressao { display: table !important; width: 100%; border-collapse: collapse; }
-      #tabelaImpressao th { background-color: #333; color: white; padding: 10px; border: 1px solid #000; }
-      #tabelaImpressao td { padding: 8px; border: 1px solid #ccc; }
-      #tabelaImpressao tr:nth-child(even) { background-color: #f2f2f2; }
-    }
-    #tabelaImpressao { display: none; }
-  </style>
+  <script>
+    tailwind.config = { darkMode: 'class' }
+  </script>
 </head>
-<body class="bg-[#020617] text-white min-h-screen p-4 font-sans">
+<body class="bg-white dark:bg-[#020617] text-black dark:text-white transition-colors duration-300 min-h-screen p-4">
 
-  <div class="max-w-xl mx-auto no-print">
-    <!-- Cabeçalho -->
-    <div class="flex justify-between items-center mb-6">
-      <div>
-        <h1 class="text-xl font-black text-blue-500">Gestão de Divergências</h1>
-        <p id="infoStatus" class="text-[10px] opacity-60">Carregando...</p>
-      </div>
-      <div class="flex gap-2">
-        <a href="index.html" class="bg-slate-700 px-3 py-1 rounded-lg text-[10px] font-bold">Nova</a>
-        <button onclick="window.print()" class="bg-blue-600 px-3 py-1 rounded-lg text-[10px] font-bold">Imprimir</button>
-      </div>
-    </div>
+  <!-- Botão de Alternar Modo -->
+  <button onclick="document.documentElement.classList.toggle('dark')" class="p-2 bg-gray-200 dark:bg-slate-800 rounded-lg text-xs font-bold">
+    Alternar Modo
+  </button>
 
-    <!-- Filtros e Paginação -->
-    <div class="flex flex-col gap-3 mb-6">
-      <input type="text" id="filtro" oninput="paginaAtual = 1; renderizar()" placeholder="🔍 Buscar SKU, Lote ou Endereço..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-5 py-3 text-xs">
-      <select id="itensPorPagina" onchange="paginaAtual = 1; renderizar()" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-5 py-3 text-xs">
-        <option value="5">5 por pág.</option>
-        <option value="10" selected>10 por pág.</option>
-        <option value="20">20 por pág.</option>
-      </select>
-    </div>
-
-    <!-- Cards -->
-    <div id="gridCards" class="grid grid-cols-1 gap-4"></div>
-
-    <!-- Paginação Visual -->
-    <div id="paginacao" class="flex justify-center gap-2 mt-6"></div>
+  <!-- Exemplo de como usar a classe "dark:" -->
+  <div class="bg-gray-100 dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-5 rounded-3xl">
+    <h2 class="text-emerald-600 dark:text-emerald-400 font-black">Conteúdo</h2>
   </div>
 
-  <!-- Tabela Oculta para Impressão -->
-  <table id="tabelaImpressao">
-    <thead><tr><th>Endereço</th><th>SKU</th><th>Lote</th><th>Qtd</th><th>Status</th></tr></thead>
-    <tbody id="corpoTabelaImpressao"></tbody>
-  </table>
-
-  <script>
-    let todosOsDados = [];
-    let paginaAtual = 1;
-
-    async function carregarDados() {
-      try {
-        const response = await fetch("https://codril.onrender.com/api/salvar-produto.php");
-        const data = await response.json();
-        todosOsDados = data.itens || [];
-        renderizar();
-      } catch (err) { document.getElementById('infoStatus').innerText = "Erro ao carregar."; }
-    }
-
-    function renderizar() {
-      const filtro = document.getElementById('filtro').value.toLowerCase();
-      const limite = parseInt(document.getElementById('itensPorPagina').value);
-      const filtrados = todosOsDados.filter(i => 
-        (i.endereco?.toLowerCase().includes(filtro)) || (i.codigo_produto?.toLowerCase().includes(filtro)) || (i.lote?.toLowerCase().includes(filtro))
-      );
-      
-      const totalPaginas = Math.ceil(filtrados.length / limite);
-      const paginados = filtrados.slice((paginaAtual - 1) * limite, paginaAtual * limite);
-
-      document.getElementById('gridCards').innerHTML = paginados.map(item => `
-        <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl shadow-md">
-          <div class="flex justify-between items-center mb-2">
-            <h2 class="text-lg font-black text-emerald-400">Endereço: ${item.endereco || '-'}</h2>
-            <span class="px-2 py-1 bg-slate-800 rounded-full text-[9px] uppercase">${item.status_estoque || 'Normal'}</span>
-          </div>
-          <div class="grid grid-cols-2 gap-1 text-xs">
-            <p class="opacity-70">SKU: <span class="text-white font-bold">${item.codigo_produto || '-'}</span></p>
-            <p class="opacity-70">Lote: <span class="text-white font-bold">${item.lote || '-'}</span></p>
-            <p class="opacity-70 col-span-2">Quantidade: <span class="text-white font-bold">${item.quantidade || '1'}</span></p>
-          </div>
-        </div>
-      `).join('');
-
-      document.getElementById('corpoTabelaImpressao').innerHTML = filtrados.map(item => `
-        <tr><td>${item.endereco}</td><td>${item.codigo_produto}</td><td>${item.lote}</td><td>${item.quantidade}</td><td>${item.status_estoque}</td></tr>
-      `).join('');
-
-      document.getElementById('infoStatus').innerText = `Total: ${filtrados.length} itens`;
-      
-      let pagHTML = "";
-      for(let i=1; i<=totalPaginas; i++) {
-        pagHTML += `<button onclick="paginaAtual=${i}; renderizar()" class="px-3 py-1 rounded bg-slate-800 text-[10px] ${paginaAtual === i ? 'ring-1 ring-blue-500' : ''}">${i}</button>`;
-      }
-      document.getElementById('paginacao').innerHTML = pagHTML;
-    }
-
-    carregarDados();
-  </script>
 </body>
 </html>
