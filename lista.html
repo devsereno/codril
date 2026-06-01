@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Estoque Ativo</title>
+  <title>Estoque Ativo - Listagem</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-950 text-white min-h-screen p-4 font-sans">
@@ -12,17 +12,16 @@
     <div class="flex justify-between items-center mb-6 border-b border-slate-900 pb-4">
       <div>
         <h1 class="text-2xl font-extrabold text-blue-400">Estoque Ativo</h1>
-        <p id="infoPagina" class="text-slate-400 text-xs">Carregando...</p>
+        <p id="infoPagina" class="text-slate-400 text-xs">Carregando dados...</p>
       </div>
       <div class="flex gap-2">
-        <button onclick="gerarRelatorio()" class="bg-blue-600 hover:bg-blue-500 p-2 px-4 rounded-xl text-xs font-bold">📄 PDF</button>
-        <a href="index.html" class="px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs font-bold">⬅️ Novo</a>
+        <button onclick="gerarRelatorio()" class="bg-blue-600 hover:bg-blue-500 p-2 px-4 rounded-xl text-xs font-bold transition-all">📄 PDF</button>
+        <a href="index.html" class="px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs font-bold transition-all hover:bg-slate-800">⬅️ Novo</a>
       </div>
     </div>
 
-    <!-- Controles -->
-    <div class="flex justify-between items-center mb-6">
-      <select id="itensPorPagina" onchange="mudarItens()" class="bg-slate-900 border border-slate-800 rounded-xl p-2 text-xs">
+    <div class="mb-6">
+      <select id="itensPorPagina" onchange="mudarItens()" class="bg-slate-900 border border-slate-800 rounded-xl p-2 text-xs w-full sm:w-40">
         <option value="10">10 por página</option>
         <option value="15">15 por página</option>
       </select>
@@ -30,10 +29,9 @@
 
     <div id="gridCards" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
 
-    <!-- Navegação -->
     <div class="flex justify-center mt-8 gap-2">
-      <button onclick="mudarPagina(-1)" class="bg-slate-900 px-4 py-2 rounded-xl text-xs">Anterior</button>
-      <button onclick="mudarPagina(1)" class="bg-slate-900 px-4 py-2 rounded-xl text-xs">Próximo</button>
+      <button onclick="mudarPagina(-1)" class="bg-slate-900 hover:bg-slate-800 px-6 py-3 rounded-2xl text-xs font-bold transition-all">Anterior</button>
+      <button onclick="mudarPagina(1)" class="bg-slate-900 hover:bg-slate-800 px-6 py-3 rounded-2xl text-xs font-bold transition-all">Próximo</button>
     </div>
   </div>
 
@@ -49,10 +47,10 @@
       const container = document.getElementById('gridCards');
       
       container.innerHTML = paginaItens.map(item => `
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl hover:border-slate-700 transition-all">
           <div class="flex justify-between items-start mb-4">
             <h2 class="text-xl font-black text-emerald-400 font-mono">${item.endereco}</h2>
-            <span class="px-3 py-1 rounded-full text-[9px] font-bold border ${item.status_estoque === 'Faltando' ? 'text-red-400 border-red-900' : 'text-yellow-400 border-yellow-900'} uppercase">${item.status_estoque}</span>
+            <span class="px-3 py-1 rounded-full text-[9px] font-bold border ${item.status_estoque === 'Faltando' ? 'text-red-400 border-red-900 bg-red-950/30' : 'text-yellow-400 border-yellow-900 bg-yellow-950/30'} uppercase">${item.status_estoque}</span>
           </div>
           <div class="grid grid-cols-2 gap-2 text-xs text-slate-400">
             <div>SKU: <span class="font-bold text-white">${item.codigo_produto}</span></div>
@@ -62,7 +60,7 @@
         </div>
       `).join('');
       
-      document.getElementById('infoPagina').textContent = `Página ${paginaAtual} | Total: ${todosItens.length}`;
+      document.getElementById('infoPagina').textContent = `Página ${paginaAtual} de ${Math.ceil(todosItens.length / itensPorPagina) || 1} | Total: ${todosItens.length}`;
     }
 
     function mudarItens() {
@@ -80,17 +78,25 @@
     function gerarRelatorio() {
       const win = window.open('', '_blank');
       win.document.write(`
-        <html><head><title>Relatório</title>
+        <html><head><title>Relatório de Estoque</title>
         <style>
-          table { width: 100%; border-collapse: collapse; font-family: sans-serif; }
-          th { background-color: #f3f4f6; padding: 10px; border: 1px solid #ddd; }
-          td { padding: 8px; border: 1px solid #ddd; }
-          tr:nth-child(even) { background-color: #f9fafb; }
+          body { font-family: sans-serif; padding: 20px; }
+          h1 { text-align: center; color: #333; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th { background-color: #e5e7eb; padding: 12px; border: 1px solid #ccc; text-align: center; font-weight: bold; }
+          td { padding: 10px; border: 1px solid #ccc; text-align: center; }
+          tr:nth-child(even) { background-color: #f3f4f6; }
         </style></head><body>
         <h1>Relatório de Estoque</h1>
         <table>
           <tr><th>Endereço</th><th>SKU</th><th>Lote</th><th>Qtd</th><th>Status</th></tr>
-          ${todosItens.map(i => `<tr><td>${i.endereco}</td><td>${i.codigo_produto}</td><td>${i.lote}</td><td>${i.quantidade}</td><td>${i.status_estoque}</td></tr>`).join('')}
+          ${todosItens.map(i => `<tr>
+            <td>${i.endereco}</td>
+            <td>${i.codigo_produto}</td>
+            <td>${i.lote}</td>
+            <td>${i.quantidade}</td>
+            <td>${i.status_estoque}</td>
+          </tr>`).join('')}
         </table>
       </body></html>`);
       win.document.close();
