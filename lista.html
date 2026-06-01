@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Listagem de Estoque</title>
+  <title>Gestão de Divergências</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .deletando { animation: shrink 0.4s ease-out forwards; }
@@ -16,8 +16,8 @@
     <!-- Cabeçalho -->
     <div class="flex justify-between items-center mb-6 border-b border-slate-900 pb-4">
       <div>
-        <h1 class="text-2xl font-extrabold text-blue-400">Estoque Ativo</h1>
-        <p id="infoPagina" class="text-slate-400 text-xs">Carregando...</p>
+        <h1 class="text-2xl font-extrabold text-blue-400">Gestão de Divergências</h1>
+        <p id="infoPagina" class="text-slate-400 text-xs">Carregando dados operacionais...</p>
       </div>
       <div class="flex gap-2">
         <button onclick="gerarRelatorio()" class="bg-blue-600 hover:bg-blue-500 p-2 px-4 rounded-xl text-xs font-bold transition-all">📄 PDF</button>
@@ -25,17 +25,18 @@
       </div>
     </div>
 
-    <!-- Controles: Busca e Paginação -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-      <input type="text" id="campoBusca" placeholder="🔍 Buscar SKU, Lote ou Endereço..." 
-             onkeyup="filtrarDados()" class="bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs w-full outline-none focus:border-blue-500">
-      
+    <!-- Controles -->
+    <div class="flex flex-col gap-3 mb-6">
       <select id="itensPorPagina" onchange="mudarItens()" class="bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs w-full outline-none">
-        <option value="10">10 por página</option>
-        <option value="15">15 por página</option>
+        <option value="10">10 itens por página</option>
+        <option value="15">15 itens por página</option>
       </select>
+
+      <input type="text" id="campoBusca" placeholder="🔍 Buscar por SKU, Lote ou Endereço..." 
+             onkeyup="filtrarDados()" class="bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs w-full outline-none focus:border-blue-500">
     </div>
 
+    <!-- Grid de resultados -->
     <div id="gridCards" class="grid grid-cols-1 sm:grid-cols-2 gap-4 min-h-[300px]"></div>
 
     <!-- Navegação -->
@@ -57,7 +58,7 @@
       const paginaItens = itensFiltrados.slice(inicio, inicio + itensPorPagina);
 
       if (itensFiltrados.length === 0) {
-        container.innerHTML = `<p class="text-slate-500 text-center w-full mt-10">Nenhum registo encontrado.</p>`;
+        container.innerHTML = `<p class="text-slate-500 text-center w-full mt-10">Nenhuma divergência encontrada.</p>`;
         return;
       }
 
@@ -108,10 +109,10 @@
       const card = document.getElementById(`card-${id}`);
       card.innerHTML = `
         <div class="flex flex-col items-center justify-center h-full p-4 bg-red-950/20 border border-red-900/50 rounded-3xl animate-in fade-in">
-          <p class="text-sm mb-4 text-center">Excluir este registo?</p>
+          <p class="text-sm mb-4 text-center">Confirmar resolução/exclusão?</p>
           <div class="flex gap-3">
-            <button onclick="renderizar()" class="px-4 py-2 bg-slate-800 rounded-xl text-xs">Não</button>
-            <button onclick="executarDelecao(${id})" class="px-4 py-2 bg-red-600 rounded-xl text-xs font-bold">Sim, excluir</button>
+            <button onclick="renderizar()" class="px-4 py-2 bg-slate-800 rounded-xl text-xs">Cancelar</button>
+            <button onclick="executarDelecao(${id})" class="px-4 py-2 bg-red-600 rounded-xl text-xs font-bold">Resolver</button>
           </div>
         </div>
       `;
@@ -131,7 +132,7 @@
 
     function gerarRelatorio() {
       const win = window.open('', '_blank');
-      win.document.write(`<html><head><title>Relatório</title><style>table{width:100%;border-collapse:collapse;font-family:sans-serif;} th{background:#e5e7eb;padding:12px;border:1px solid #ccc;text-align:center;} td{padding:10px;border:1px solid #ccc;text-align:center;} tr:nth-child(even){background:#f3f4f6;}</style></head><body><h1>Estoque</h1><table><tr><th>Endereço</th><th>SKU</th><th>Lote</th><th>Qtd</th><th>Status</th></tr>${itensFiltrados.map(i => `<tr><td>${i.endereco}</td><td>${i.codigo_produto}</td><td>${i.lote}</td><td>${i.quantidade}</td><td>${i.status_estoque}</td></tr>`).join('')}</table></body></html>`);
+      win.document.write(`<html><head><title>Relatório de Divergências</title><style>body{font-family:sans-serif;} table{width:100%;border-collapse:collapse;margin-top:20px;} th{background:#e5e7eb;padding:10px;border:1px solid #ccc;text-align:center;} td{padding:8px;border:1px solid #ccc;text-align:center;} tr:nth-child(even){background:#f3f4f6;}</style></head><body><h1>Gestão de Divergências</h1><table><tr><th>Endereço</th><th>SKU</th><th>Lote</th><th>Qtd</th><th>Status</th></tr>${itensFiltrados.map(i => `<tr><td>${i.endereco}</td><td>${i.codigo_produto}</td><td>${i.lote}</td><td>${i.quantidade}</td><td>${i.status_estoque}</td></tr>`).join('')}</table></body></html>`);
       win.document.close();
       win.print();
     }
@@ -147,7 +148,7 @@
           itensFiltrados = todosItens;
           renderizar();
         }
-      } catch (err) { console.error("Erro:", err); }
+      } catch (err) { console.error("Erro ao carregar:", err); }
     }
 
     window.onload = carregarDados;
