@@ -6,14 +6,14 @@
   <title>Gestão de Divergências</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-950 text-white min-h-screen p-4 font-sans">
+<body class="bg-[#020617] text-white min-h-screen p-4 font-sans">
 
   <div class="max-w-4xl mx-auto">
-    <!-- Cabeçalho idêntico ao original -->
+    <!-- Cabeçalho -->
     <div class="flex justify-between items-center mb-6">
       <div>
         <h1 class="text-xl font-black text-blue-500">Gestão de Divergências</h1>
-        <p id="infoPaginacao" class="text-[10px] opacity-60">Carregando dados...</p>
+        <p id="infoStatus" class="text-[10px] opacity-60">A carregar...</p>
       </div>
       <div class="flex gap-2">
         <button class="bg-blue-600 px-3 py-1 rounded-xl text-[10px] font-bold">PDF</button>
@@ -21,21 +21,18 @@
       </div>
     </div>
 
-    <!-- Filtros -->
-    <select id="porPagina" onchange="resetarBusca()" class="w-full bg-slate-900 border border-slate-800 p-3 rounded-xl text-xs mb-3">
+    <select id="porPagina" onchange="carregarDados()" class="w-full bg-slate-900 border border-slate-800 p-3 rounded-xl text-xs mb-3">
       <option value="10">10 itens por página</option>
       <option value="20">20 itens por página</option>
       <option value="50">50 itens por página</option>
     </select>
     
-    <input type="text" id="filtro" oninput="resetarBusca()" placeholder="🔍 Buscar por SKU, Lote ou Endereço..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-5 py-4 text-xs mb-4">
+    <input type="text" id="filtro" oninput="carregarDados()" placeholder="🔍 Buscar por SKU, Lote ou Endereço..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-5 py-4 text-xs mb-4">
 
-    <!-- Grid de Cards -->
     <div id="gridCards" class="grid grid-cols-1 gap-4">
-      <!-- Aqui os dados serão injetados -->
+      <!-- Dados -->
     </div>
 
-    <!-- Paginação -->
     <div class="flex justify-between mt-6">
       <button onclick="mudarPagina(-1)" class="bg-slate-800 px-6 py-3 rounded-xl text-xs font-bold">Anterior</button>
       <button onclick="mudarPagina(1)" class="bg-slate-800 px-6 py-3 rounded-xl text-xs font-bold">Próximo</button>
@@ -44,43 +41,43 @@
 
   <script>
     let pagina = 1;
-    const API_URL = "https://codril.onrender.com/api/listar-produtos.php"; // URL da sua API
+    const API_URL = "https://codril.onrender.com/api/listar-produtos.php";
 
     async function carregarDados() {
+      const info = document.getElementById('infoStatus');
       const limite = document.getElementById('porPagina').value;
-      const busca = document.getElementById('filtro').value;
+      const q = document.getElementById('filtro').value;
       
       try {
-        const response = await fetch(`${API_URL}?page=${pagina}&limit=${limite}&q=${busca}`);
+        info.innerText = "A ligar ao servidor...";
+        const response = await fetch(`${API_URL}?page=${pagina}&limit=${limite}&q=${q}`);
         const data = await response.json();
         
+        console.log("Dados recebidos:", data);
+
         const grid = document.getElementById('gridCards');
-        grid.innerHTML = data.items.map(item => `
+        grid.innerHTML = (data.items || []).map(item => `
           <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl">
             <div class="flex justify-between items-center mb-2">
               <h2 class="text-lg font-black text-emerald-500">${item.endereco}</h2>
               <span class="text-[9px] font-bold px-2 py-1 rounded-full bg-slate-800">${item.status}</span>
             </div>
             <div class="flex justify-between text-[11px] opacity-70">
-              <span>SKU: ${item.sku}</span>
+              <span>SKU: ${item.codigo_produto || item.sku}</span>
               <span>Lote: ${item.lote}</span>
             </div>
           </div>
         `).join('');
         
-        document.getElementById('infoPaginacao').innerText = `Página ${pagina} | Total: ${data.totalItems}`;
+        info.innerText = `Página ${pagina} | Total: ${data.totalItems || 0}`;
       } catch (err) {
-        console.error("Erro ao carregar:", err);
+        info.innerText = "Erro ao carregar dados.";
+        console.error("Erro completo:", err);
       }
     }
 
     function mudarPagina(dir) {
       pagina = Math.max(1, pagina + dir);
-      carregarDados();
-    }
-
-    function resetarBusca() {
-      pagina = 1;
       carregarDados();
     }
 
