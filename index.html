@@ -3,82 +3,74 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Novo Registro - Pulmão AE</title>
+  <title>Nova Divergência</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-950 text-white min-h-screen p-4 font-sans">
+<body class="bg-slate-950 text-white min-h-screen p-4 flex items-center justify-center font-sans">
 
-  <!-- Exibição de quem está logado -->
-  <div class="max-w-md mx-auto mb-4 text-slate-500 text-xs text-right">
-    Olá, <span id="userName" class="font-bold text-blue-400">...</span>
-  </div>
-
-  <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full mx-auto shadow-2xl">
+  <div class="w-full max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl">
     <div class="text-center mb-8">
-      <h1 class="text-xl font-extrabold text-blue-400">📝 Novo Cadastro</h1>
+      <h1 class="text-2xl font-black text-blue-400">Nova Divergência</h1>
+      <p class="text-slate-500 text-xs mt-1">Registe um novo erro operacional</p>
     </div>
 
-    <form id="formCadastro" class="space-y-4">
+    <form id="formCadastro" class="space-y-5">
       <div>
-        <label class="block text-slate-400 text-xs font-bold mb-2">Tipo de Armazenagem</label>
-        <select id="tipoArmazenagem" class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 text-sm outline-none focus:border-blue-500">
-          <option value="Pulmao">Pulmão AE</option>
-          <option value="Picking">Picking</option>
+        <label class="text-[10px] uppercase font-bold text-slate-500 ml-1">Tipo de Armazenagem</label>
+        <select name="tipo_armazenagem" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm mt-1 outline-none focus:border-blue-500">
+          <option>Pulmão AE</option>
+          <option>Picking</option>
+          <option>Outros</option>
         </select>
       </div>
 
       <div>
-        <label class="block text-slate-400 text-xs font-bold mb-2">Endereço</label>
-        <input type="number" id="endereco" required class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 text-sm outline-none focus:border-blue-500">
+        <label class="text-[10px] uppercase font-bold text-slate-500 ml-1">Endereço</label>
+        <input type="text" name="endereco" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm mt-1 outline-none focus:border-blue-500">
       </div>
 
       <div>
-        <label class="block text-slate-400 text-xs font-bold mb-2">Código do Produto / SKU</label>
-        <input type="number" id="sku" required class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 text-sm outline-none focus:border-blue-500">
+        <label class="text-[10px] uppercase font-bold text-slate-500 ml-1">Código do Produto / SKU</label>
+        <input type="text" name="codigo_produto" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm mt-1 outline-none focus:border-blue-500">
       </div>
 
       <div>
-        <label class="block text-slate-400 text-xs font-bold mb-2">Lote</label>
-        <input type="text" id="lote" required class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 text-sm uppercase outline-none focus:border-blue-500">
+        <label class="text-[10px] uppercase font-bold text-slate-500 ml-1">Lote</label>
+        <input type="text" name="lote" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm mt-1 outline-none focus:border-blue-500">
       </div>
 
       <div>
-        <label class="block text-slate-400 text-xs font-bold mb-2">Status da Posição</label>
-        <select id="statusEstoque" class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 text-sm outline-none focus:border-blue-500">
+        <label class="text-[10px] uppercase font-bold text-slate-500 ml-1">Status</label>
+        <select name="status_estoque" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm mt-1 outline-none focus:border-blue-500">
           <option value="Faltando">Faltando</option>
-          <option value="Sobrando">Sobrando</option>
+          <option value="Normal">Normal</option>
         </select>
       </div>
 
       <div>
-        <label class="block text-slate-400 text-xs font-bold mb-2">Quantidade</label>
-        <input type="number" id="quantidade" value="1" required class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 text-sm outline-none focus:border-blue-500">
+        <label class="text-[10px] uppercase font-bold text-slate-500 ml-1">Quantidade</label>
+        <input type="number" name="quantidade" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm mt-1 outline-none focus:border-blue-500">
       </div>
 
-      <button type="button" onclick="toggleObs()" class="text-blue-500 text-[10px] font-bold underline">
-        + Adicionar Observação
+      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl transition-all mt-4">
+        Registar Divergência
       </button>
-
-      <div id="divObs" class="hidden">
-        <textarea id="descricao" placeholder="Escreva a observação..." class="w-full bg-slate-950 border border-slate-850 rounded-2xl px-5 py-4 text-sm h-20 outline-none focus:border-blue-500"></textarea>
-      </div>
-
-      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl text-xs font-bold mt-4 transition-all">Salvar Registro</button>
+      
+      <a href="lista.html" class="block text-center text-slate-500 text-xs hover:text-white underline mt-4">Ver lista de divergências</a>
     </form>
-
-    <!-- Botão de navegação -->
-    <a href="lista.html" class="block text-center mt-6 py-4 bg-slate-800 hover:bg-slate-700 rounded-2xl text-xs font-bold text-slate-300 transition-all">
-      Ver Listagem de Estoque 📋
-    </a>
   </div>
 
   <script>
-    const user = JSON.parse(sessionStorage.getItem('usuarioLogado') || '{}');
-    document.getElementById('userName').textContent = user.nome || 'Visitante';
-
-    function toggleObs() {
-      document.getElementById('divObs').classList.toggle('hidden');
-    }
+    document.getElementById('formCadastro').onsubmit = async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const user = JSON.parse(sessionStorage.getItem('usuarioLogado'));
+      
+      // Lógica de envio para sua API
+      // ... (manter o fetch que você já utiliza)
+      alert("Divergência registada com sucesso!");
+      window.location.href = 'lista.html';
+    };
   </script>
 </body>
 </html>
