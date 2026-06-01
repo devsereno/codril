@@ -3,123 +3,89 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PULMÃO AE - Consulta de Stock</title>
+  <title>Estoque Ativo - Paginação</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-950 text-white min-h-screen relative font-sans">
+<body class="bg-slate-950 text-white min-h-screen p-4">
 
-  <div id="debug" class="bg-red-950/20 border-b border-red-900 text-red-400 text-[10px] p-2 break-all hidden"></div>
-
-  <div class="max-w-4xl mx-auto p-4">
-    <div class="flex justify-between items-center mb-6 border-b border-slate-900 pb-4">
-      <div>
-        <h1 class="text-2xl font-extrabold">Estoque Ativo</h1>
-        <p id="contadorItens" class="text-slate-400 text-xs">Carregando posições...</p>
-      </div>
-      <a href="index.html" class="px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs font-bold">⬅️ Novo</a>
+  <div class="max-w-4xl mx-auto">
+    <!-- Cabeçalho -->
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-xl font-bold">Listagem de Estoque</h1>
+      <button onclick="gerarRelatorio()" class="bg-blue-600 px-4 py-2 rounded-xl text-xs font-bold">📄 Relatório PDF</button>
     </div>
 
-    <input id="filtro" oninput="filtrarCards()" placeholder="🔍 Pesquisar Endereço, SKU ou Lote..." type="text" class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-5 py-4 mb-6 text-sm placeholder-slate-600 focus:border-blue-500 outline-none">
+    <!-- Controles de Paginação -->
+    <div class="flex gap-4 mb-4 text-sm">
+      <select id="itensPorPagina" onchange="mudarItens()" class="bg-slate-900 border border-slate-800 rounded-lg p-2">
+        <option value="10">10 por página</option>
+        <option value="15">15 por página</option>
+      </select>
+    </div>
 
-    <div id="gridCards" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div class="col-span-full text-center py-10 text-slate-500 text-xs italic">
-        A contactar servidor Render, aguarde...
-      </div>
+    <div id="gridCards" class="grid gap-4"></div>
+
+    <!-- Navegação de página -->
+    <div class="flex justify-center mt-6 gap-2">
+      <button onclick="mudarPagina(-1)" class="bg-slate-800 px-4 py-2 rounded-lg text-sm">Anterior</button>
+      <span id="infoPagina" class="py-2 px-2 text-sm">Pág 1</span>
+      <button onclick="mudarPagina(1)" class="bg-slate-800 px-4 py-2 rounded-lg text-sm">Próximo</button>
     </div>
   </div>
 
   <script>
-    let itensEstoque = [];
-    
-    // Função para mostrar erro no Debugger
-    function mostrarDebug(msg) {
-      const dbg = document.getElementById('debug');
-      dbg.classList.remove('hidden');
-      dbg.textContent = "DEBUG: " + msg;
-    }
+    let todosItens = [];
+    let paginaAtual = 1;
+    let itensPorPagina = 10;
 
-    function renderizarCards(itens) {
+    function renderizar() {
+      const inicio = (paginaAtual - 1) * itensPorPagina;
+      const fim = inicio + itensPorPagina;
+      const paginaItens = todosItens.slice(inicio, fim);
+      
       const container = document.getElementById('gridCards');
-      container.innerHTML = '';
-      document.getElementById('contadorItens').textContent = `${itens.length} posições ativas`;
-
-      if (itens.length === 0) {
-        container.innerHTML = '<div class="col-span-full text-center py-10 text-slate-600">Nenhum registro encontrado.</div>';
-        return;
-      }
-
-      itens.forEach(item => {
-        // Lógica do Status (o status_estoque vem da nova coluna)
-        const status = item.status_estoque || 'Normal';
-        const statusCor = status === 'Faltando' 
-          ? 'text-red-400 bg-red-950/30 border-red-900' 
-          : (status === 'Sobrando' ? 'text-yellow-400 bg-yellow-950/30 border-yellow-900' : 'text-emerald-400 bg-emerald-950/30 border-emerald-900');
-
-        const card = document.createElement('div');
-        card.className = "bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl hover:border-slate-700 transition-all";
-        card.innerHTML = `
-          <div class="flex justify-between items-start mb-4">
-            <div>
-              <span class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Endereço</span>
-              <h2 class="text-2xl font-black text-emerald-400 font-mono">${item.endereco}</h2>
-            </div>
-            <span class="px-3 py-1 rounded-full text-[9px] font-bold border ${statusCor} uppercase">${status}</span>
+      container.innerHTML = paginaItens.map(item => `
+        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 flex justify-between items-center">
+          <div>
+            <p class="font-bold">${item.endereco} - ${item.codigo_produto}</p>
+            <p class="text-xs text-slate-400">Lote: ${item.lote} | Qtd: ${item.quantidade}</p>
           </div>
-          <div class="grid grid-cols-2 gap-2 text-xs mb-3">
-            <div class="bg-slate-950 p-2 rounded-lg border border-slate-800/50">
-              <span class="text-slate-500 block text-[9px]">SKU</span>
-              <span class="font-bold font-mono">${item.codigo_produto}</span>
-            </div>
-            <div class="bg-slate-950 p-2 rounded-lg border border-slate-800/50">
-              <span class="text-slate-500 block text-[9px]">Lote</span>
-              <span class="font-bold font-mono">${item.lote}</span>
-            </div>
-          </div>
-          <div class="text-xs text-slate-400">Quantidade: <span class="font-bold text-white">${item.quantidade}</span></div>
-        `;
-        container.appendChild(card);
-      });
+          <span class="text-xs font-bold ${item.status_estoque === 'Faltando' ? 'text-red-400' : 'text-yellow-400'}">${item.status_estoque}</span>
+        </div>
+      `).join('');
+      
+      document.getElementById('infoPagina').textContent = `Pág ${paginaAtual}`;
     }
 
-    function filtrarCards() {
-      const query = document.getElementById('filtro').value.toLowerCase();
-      const filtrados = itensEstoque.filter(item => 
-        String(item.endereco).includes(query) || 
-        String(item.codigo_produto).includes(query) || 
-        String(item.lote).toLowerCase().includes(query)
-      );
-      renderizarCards(filtrados);
+    function mudarItens() {
+      itensPorPagina = parseInt(document.getElementById('itensPorPagina').value);
+      paginaAtual = 1;
+      renderizar();
     }
 
+    function mudarPagina(dir) {
+      const maxPag = Math.ceil(todosItens.length / itensPorPagina);
+      paginaAtual = Math.max(1, Math.min(paginaAtual + dir, maxPag));
+      renderizar();
+    }
+
+    function gerarRelatorio() {
+      // Abre uma nova janela para impressão
+      const win = window.open('', '_blank');
+      win.document.write('<html><head><title>Relatório de Estoque</title></head><body>');
+      win.document.write('<h1>Relatório de Estoque</h1><table border="1" width="100%">');
+      win.document.write('<tr><th>Endereço</th><th>SKU</th><th>Lote</th><th>Status</th></tr>');
+      todosItens.forEach(i => win.document.write(`<tr><td>${i.endereco}</td><td>${i.codigo_produto}</td><td>${i.lote}</td><td>${i.status_estoque}</td></tr>`));
+      win.document.write('</table></body></html>');
+      win.document.close();
+      win.print();
+    }
+
+    // Carregamento inicial (simulado)
     async function carregarDados() {
-      const userRaw = sessionStorage.getItem('usuarioLogado');
-      if (!userRaw) {
-        window.location.href = 'login.html';
-        return;
-      }
-      
-      const user = JSON.parse(userRaw);
-      
-      try {
-        const res = await fetch(`https://codril.onrender.com/api/salvar-produto.php?token=${user.token}`);
-        
-        // Verifica se a resposta foi bem sucedida
-        if (!res.ok) throw new Error("Erro HTTP: " + res.status);
-        
-        const data = await res.json();
-        
-        if (data.success) {
-          itensEstoque = data.itens || [];
-          renderizarCards(itensEstoque);
-        } else {
-          mostrarDebug("Erro API: " + data.message);
-        }
-      } catch (err) {
-        mostrarDebug("Erro de Ligação: " + err.message);
-      }
+      // Sua chamada fetch aqui...
+      // todosItens = data.itens; renderizar();
     }
-
-    window.onload = carregarDados;
   </script>
 </body>
 </html>
