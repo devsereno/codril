@@ -1,23 +1,70 @@
 <!DOCTYPE html>
-<html lang="pt-PT" class="dark"> <!-- Classe "dark" aqui ativa o modo -->
+<html lang="pt-PT" class="dark">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Divergências</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = { darkMode: 'class' }
+    tailwind.config = {
+      darkMode: 'class',
+    }
   </script>
 </head>
-<body class="bg-white dark:bg-[#020617] text-black dark:text-white transition-colors duration-300 min-h-screen p-4">
+<body class="bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 transition-colors duration-300 min-h-screen">
 
-  <!-- Botão de Alternar Modo -->
-  <button onclick="document.documentElement.classList.toggle('dark')" class="p-2 bg-gray-200 dark:bg-slate-800 rounded-lg text-xs font-bold">
-    Alternar Modo
-  </button>
+  <div class="max-w-4xl mx-auto p-4 md:p-6">
+    <!-- Header com Título, Botão de Tema e Ações -->
+    <header class="flex justify-between items-center mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-blue-700 dark:text-blue-500">Gestão de Divergências</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Total: 15 itens</p>
+      </div>
+      
+      <div class="flex items-center gap-2">
+        <!-- Botão de Alternância de Tema -->
+        <button onclick="document.documentElement.classList.toggle('dark')" class="p-2 rounded-xl bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
+          <span class="dark:hidden">🌙</span>
+          <span class="hidden dark:inline">☀️</span>
+        </button>
+        <button class="bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 px-4 py-2 rounded-xl font-medium text-sm">Nova</button>
+        <button class="bg-blue-600 text-white px-4 py-2 rounded-xl font-medium text-sm">Imprimir</button>
+      </div>
+    </header>
 
-  <!-- Exemplo de como usar a classe "dark:" -->
-  <div class="bg-gray-100 dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-5 rounded-3xl">
-    <h2 class="text-emerald-600 dark:text-emerald-400 font-black">Conteúdo</h2>
+    <!-- Barra de busca e filtros -->
+    <div class="mb-6 space-y-3">
+      <input type="text" placeholder="Pesquisar por Endereço, SKU ou Lote..." class="w-full p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-blue-500 outline-none">
+      <select class="w-full p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+        <option>10 por pág.</option>
+      </select>
+    </div>
+
+    <!-- Lista de Cards (Exemplo dos itens) -->
+    <div class="space-y-4">
+      <!-- Exemplo de Card -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm">
+        <div class="flex justify-between items-start mb-2">
+          <h2 class="text-2xl font-bold text-green-700 dark:text-green-500">Endereço: 1333333</h2>
+          <span class="text-xs px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">FALTANDO</span>
+        </div>
+        <div class="grid grid-cols-2 gap-4 text-sm mt-4 text-slate-600 dark:text-slate-400">
+          <p>SKU: <span class="font-semibold text-slate-800 dark:text-slate-200">266666</span></p>
+          <p>Lote: <span class="font-semibold text-slate-800 dark:text-slate-200">Hdgd7enzijq</span></p>
+          <p>Quantidade: <span class="font-semibold text-slate-800 dark:text-slate-200">165</span></p>
+        </div>
+      </div>
+      <!-- Repita este bloco para outros itens -->
+    </div>
   </div>
 
+  <script>
+    // Carrega a preferência salva
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  </script>
 </body>
 </html>
