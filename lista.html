@@ -8,405 +8,90 @@
 </head>
 <body class="bg-slate-950 text-white min-h-screen relative font-sans">
 
-  <!-- NOTIFICAÇÃO PERSONALIZADA (TOAST) EM HTML -->
-  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 transform transition-all duration-300 opacity-0 pointer-events-none scale-90">
-    <div id="toastBg" class="flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-sm">
-      <span id="toastIcon" class="text-xl"></span>
-      <span id="toastMessage" class="font-medium text-sm"></span>
-    </div>
-  </div>
-
-  <!-- MODAL DE CONFIRMAÇÃO DE APAGAR (DESIGN PREMIUM) -->
-  <div id="deleteModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 transition-all duration-300 opacity-0 pointer-events-none">
-    <div id="modalBox" class="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 shadow-2xl scale-95 transform transition-all duration-300">
-      <div class="text-center">
-        <span class="text-5xl block mb-3">⚠️</span>
-        <h3 class="text-lg font-bold text-slate-100 mb-2">Eliminar este item?</h3>
-        <p class="text-xs text-slate-400 leading-relaxed mb-6">Esta operação é definitiva e removerá o lote e a posição física do banco de dados.</p>
-      </div>
-      <div class="flex gap-3">
-        <button onclick="fecharModalDelete()" class="flex-1 bg-slate-800 hover:bg-slate-750 py-3 rounded-xl font-bold text-xs transition-all">
-          Cancelar
-        </button>
-        <button id="btnConfirmarExclusao" class="flex-1 bg-red-600 hover:bg-red-500 py-3 rounded-xl font-bold text-xs text-white transition-all shadow-lg shadow-red-600/20">
-          Confirmar
-        </button>
-      </div>
-    </div>
-  </div>
-
   <div class="max-w-4xl mx-auto p-4">
-
-    <!-- CABEÇALHO DA LISTAGEM -->
     <div class="flex justify-between items-center mb-6 border-b border-slate-900 pb-4">
-      <div class="flex items-center gap-3">
-        <span class="text-4xl">📋</span>
-        <div>
-          <h1 class="text-2xl font-extrabold tracking-tight">Estoque Ativo</h1>
-          <p id="contadorItens" class="text-slate-400 text-xs font-semibold">Carregando posições...</p>
-        </div>
+      <div>
+        <h1 class="text-2xl font-extrabold">Estoque Ativo</h1>
+        <p id="contadorItens" class="text-slate-400 text-xs">Carregando posições...</p>
       </div>
-      <a href="index.html" class="px-5 py-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-2xl text-xs font-bold transition-all flex items-center gap-1">
-        ⬅️ Novo Registro
-      </a>
+      <a href="index.html" class="px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs font-bold">⬅️ Novo</a>
     </div>
 
-    <!-- PESQUISA GERAL INTELIGENTE -->
-    <div class="relative mb-4">
-      <input id="filtro" oninput="filtrarCards()" placeholder="🔍 Pesquisar por Endereço, SKU ou Lote..." type="text" class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 text-white text-sm placeholder-slate-500">
-    </div>
+    <input id="filtro" oninput="filtrarCards()" placeholder="🔍 Pesquisar..." type="text" class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-5 py-4 mb-6 text-sm">
 
-    <!-- SELETOR DE ABAS RÁPIDAS (FILTRAGEM DE TIPO) -->
-    <div class="flex gap-2 mb-6 overflow-x-auto pb-1">
-      <button onclick="filtrarTipo('todos')" id="aba-todos" class="px-5 py-2.5 bg-blue-600 text-xs font-bold rounded-full transition-colors whitespace-nowrap text-white">Todos</button>
-      <button onclick="filtrarTipo('pulmao')" id="aba-pulmao" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-xs text-slate-400 hover:text-white font-bold rounded-full transition-colors whitespace-nowrap">Pulmão AE</button>
-      <button onclick="filtrarTipo('picking')" id="aba-picking" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-xs text-slate-400 hover:text-white font-bold rounded-full transition-colors whitespace-nowrap">Picking</button>
-    </div>
-
-    <!-- GRID DE CARDS MODERNOS COM LOADER DINÂMICO -->
     <div id="gridCards" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      
-      <!-- LOADING CONTAINER INTERATIVO E DINÂMICO -->
-      <div id="loadingContainer" class="sm:col-span-2 flex flex-col items-center justify-center py-20 text-center space-y-6">
-        <!-- SVG Spinner que roda suavemente atuando como um GIF -->
-        <div class="relative w-16 h-16">
-          <svg class="animate-spin h-16 w-16 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <!-- Ícone centralizado pulsando -->
-          <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-lg">☁️</span>
-        </div>
-        
-        <div class="space-y-2 max-w-sm px-4">
-          <h3 id="loadingTitle" class="text-sm font-bold text-slate-200">A ligar ao servidor Render...</h3>
-          <p id="loadingDesc" class="text-xs text-slate-500 leading-relaxed font-mono">Iniciando protocolo de requisição de dados de estoque.</p>
-          <p id="timerDisplay" class="text-[10px] text-blue-500/80 font-bold font-mono mt-1">Tempo decorrido: 0s</p>
-        </div>
-
-        <!-- Botão para forçar re-tentativa caso demore muito -->
-        <button id="btnRetry" onclick="forcarRetentativa()" class="hidden px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-xl text-[10px] font-bold text-slate-400 transition-all active:scale-95">
-          Forçar Re-tentativa de Conexão 🔄
-        </button>
       </div>
-
-    </div>
-
   </div>
 
   <script>
     let itensEstoque = [];
-    let tipoAtivo = 'todos';
-    let itemIdParaApagar = null;
-    let userToken = '';
-    let nivelDeAcesso = 'user';
     
-    // Variáveis de controle do cronômetro dinâmico
-    let loadingTimer = null;
-    let tempoDecorrido = 0;
-
-    window.onload = function() {
-      verificarSessao();
-      carregarDadosDoServidor();
-    };
-
-    function verificarSessao() {
-      const userRaw = sessionStorage.getItem('usuarioLogado');
-      if (!userRaw) {
-        location.href = 'login.html';
-        return;
-      }
-      
-      const user = JSON.parse(userRaw);
-      userToken = user.token || '';
-      nivelDeAcesso = (user.role || '').toLowerCase().trim();
-    }
-
-    // INICIA O CRONÔMETRO INTERATIVO DE CARREGAMENTO
-    function iniciarCronometro() {
-      tempoDecorrido = 0;
-      const title = document.getElementById('loadingTitle');
-      const desc = document.getElementById('loadingDesc');
-      const timerDisplay = document.getElementById('timerDisplay');
-      const btnRetry = document.getElementById('btnRetry');
-
-      if (loadingTimer) clearInterval(loadingTimer);
-
-      loadingTimer = setInterval(() => {
-        tempoDecorrido++;
-        if (timerDisplay) {
-          timerDisplay.textContent = `Tempo decorrido: ${tempoDecorrido}s`;
-        }
-
-        // Cenário 1: Passou de 10 segundos (Servidor provavelmente estava dormindo)
-        if (tempoDecorrido >= 10 && tempoDecorrido < 25) {
-          if (title) title.textContent = "⚠️ A acordar o servidor na nuvem...";
-          if (desc) desc.textContent = "O servidor do Render entra em modo de repouso após inatividade. Por favor, aguarde o arranque (pode levar cerca de 30 segundos).";
-        }
-        
-        // Cenário 2: Passou de 25 segundos (Aviso de paciência extra)
-        if (tempoDecorrido >= 25) {
-          if (title) title.textContent = "⏳ Aguarde mais um pouco, o servidor está quase pronto...";
-          if (desc) desc.textContent = "A estabelecer a ligação final de segurança e a obter a lista do estoque ativo.";
-          if (desc) desc.classList.add('animate-pulse', 'text-amber-500/80');
-          if (btnRetry) btnRetry.classList.remove('hidden'); // Exibe o botão de re-tentar
-        }
-      }, 1000);
-    }
-
-    // PARA O CRONÔMETRO AO FINALIZAR
-    function pararCronometro() {
-      if (loadingTimer) {
-        clearInterval(loadingTimer);
-        loadingTimer = null;
-      }
-    }
-
-    // FORÇAR RE-TENTATIVA MANUAL
-    function forcarRetentativa() {
-      mostrarAviso("A reiniciar tentativa de ligação...", "alerta");
-      carregarDadosDoServidor();
-    }
-
-    // BUSCA OS DADOS NA API REAL COM FEEDBACK DINÂMICO
-    async function carregarDadosDoServidor() {
-      iniciarCronometro();
-
-      try {
-        const res = await fetch(`https://codril.onrender.com/api/salvar-produto.php?token=${userToken}`);
-        
-        pararCronometro(); // Para o contador assim que a resposta chega!
-
-        if (!res.ok) throw new Error('Erro na requisição');
-        
-        const data = await res.json();
-        
-        if (data.success) {
-          itensEstoque = data.itens || data.dados || [];
-          filtrarCards();
-        } else {
-          mostrarAviso(data.message || "Sessão expirada. Faça login novamente.", "erro");
-          setTimeout(() => { location.href = 'login.html'; }, 2000);
-        }
-      } catch (err) {
-        pararCronometro();
-        document.getElementById('gridCards').innerHTML = `
-          <div class="sm:col-span-2 bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center space-y-4">
-            <p class="text-red-400 font-bold text-sm">❌ Falha de ligação ao servidor Render</p>
-            <p class="text-xs text-slate-500 max-w-sm mx-auto">A ligação falhou após tentar acordar o servidor na nuvem ou a sua ligação de rede móvel está instável.</p>
-            <button onclick="carregarDadosDoServidor()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all active:scale-95 shadow-lg shadow-blue-600/10">
-              Tentar Novamente 🔄
-            </button>
-          </div>
-        `;
-      }
-    }
-
-    // RENDERIZAÇÃO EM LAYOUT DE CARDS PREMIUM
+    // Função para renderizar os cards com o novo Status
     function renderizarCards(itens) {
       const container = document.getElementById('gridCards');
-      document.getElementById('contadorItens').textContent = `${itens.length} posições de estoque ativas`;
+      container.innerHTML = '';
+      document.getElementById('contadorItens').textContent = `${itens.length} posições ativas`;
 
-      if (itens.length === 0) {
-        container.innerHTML = `
-          <div class="sm:col-span-2 bg-slate-900 border border-slate-800 rounded-3xl p-12 text-center text-slate-500">
-            <span class="text-5xl block mb-2">📦</span>
-            Nenhum registro encontrado correspondente ao filtro.
-          </div>
-        `;
-        return;
-      }
-
-      let html = '';
       itens.forEach(item => {
-        const ehPulmao = (item.tipo || '').toLowerCase() === 'pulmao';
-        const tagTexto = ehPulmao ? '🚨 PULMÃO AE' : '📦 PICKING';
-        const tagClasse = ehPulmao 
-          ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' 
-          : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20';
+        // Lógica do Status
+        const status = item.status_estoque || 'Normal';
+        const statusCor = status === 'Faltando' 
+          ? 'text-red-400 bg-red-950/30 border-red-900' 
+          : (status === 'Sobrando' ? 'text-yellow-400 bg-yellow-950/30 border-yellow-900' : 'text-emerald-400 bg-emerald-950/30 border-emerald-900');
 
-        const qtd = item.quantidade !== undefined && item.quantidade !== null ? item.quantidade : 1;
-        const descricaoText = item.descricao && item.descricao.trim() !== '' 
-          ? `<p class="text-xs text-slate-400 border-t border-slate-800/80 pt-3 mt-3 italic">${item.descricao}</p>` 
-          : '';
-
-        // Exibe o botão de apagar apenas para Master e Super
-        const podeApagar = (nivelDeAcesso === 'master' || nivelDeAcesso === 'super');
-        const botaoApagar = podeApagar 
-          ? `<button onclick="abrirConfirmarDelete(${item.id})" class="w-full bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 py-2.5 rounded-xl text-red-400 font-bold transition-all text-xs">Apagar Registro</button>`
-          : '';
-
-        html += `
-          <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl flex flex-col justify-between hover:border-slate-750 transition-all">
+        const card = document.createElement('div');
+        card.className = "bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl";
+        card.innerHTML = `
+          <div class="flex justify-between items-start mb-4">
             <div>
-              <div class="flex justify-between items-center mb-4">
-                <span class="px-2.5 py-1 ${tagClasse} border rounded-full text-[10px] font-extrabold tracking-wider">${tagTexto}</span>
-                <span class="text-[10px] text-slate-500 font-mono">ID: #${item.id}</span>
-              </div>
-
-              <div class="space-y-1 mb-4">
-                <span class="text-[10px] uppercase font-bold tracking-widest text-slate-500 block">Endereço</span>
-                <span class="text-3xl font-black font-mono text-emerald-400 tracking-wide">${item.endereco}</span>
-              </div>
-
-              <div class="grid grid-cols-2 gap-2 p-3 bg-slate-950/40 border border-slate-800/80 rounded-2xl mb-4 text-xs">
-                <div>
-                  <span class="text-[9px] text-slate-500 font-bold uppercase block mb-0.5">SKU / Código</span>
-                  <span class="font-bold text-blue-400 font-mono">${item.codigo_produto}</span>
-                </div>
-                <div>
-                  <span class="text-[9px] text-slate-500 font-bold uppercase block mb-0.5">Lote</span>
-                  <span class="font-bold text-orange-400 font-mono">${item.lote}</span>
-                </div>
-              </div>
-
-              <!-- QUANTIDADE -->
-              <div class="flex justify-between items-center p-3 bg-slate-950/20 border border-slate-850 rounded-2xl mb-4 text-xs font-semibold">
-                <span class="text-slate-400">Quantidade de Unidades:</span>
-                <span class="text-sm font-black font-mono text-slate-100 bg-slate-800 px-3 py-1 rounded-lg">${qtd}</span>
-              </div>
-
-              ${descricaoText}
+              <span class="text-[10px] text-slate-500 uppercase font-bold">Endereço</span>
+              <h2 class="text-2xl font-black text-emerald-400">${item.endereco}</h2>
             </div>
-
-            <div class="mt-4 pt-1">
-              ${botaoApagar}
+            <span class="px-3 py-1 rounded-full text-[10px] font-bold border ${statusCor}">${status}</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+            <div class="bg-slate-950 p-2 rounded-lg">
+              <span class="text-slate-500 block">SKU</span>
+              <span class="font-bold">${item.codigo_produto}</span>
+            </div>
+            <div class="bg-slate-950 p-2 rounded-lg">
+              <span class="text-slate-500 block">Lote</span>
+              <span class="font-bold">${item.lote}</span>
             </div>
           </div>
+          <div class="text-xs text-slate-400">Qtd: <span class="font-bold text-white">${item.quantidade}</span></div>
         `;
+        container.appendChild(card);
       });
-
-      container.innerHTML = html;
     }
 
+    // Filtro de pesquisa
     function filtrarCards() {
-      const query = document.getElementById('filtro').value.toLowerCase().trim();
-      
-      const filtrados = itensEstoque.filter(item => {
-        const tipo = (item.tipo || '').toLowerCase();
-        const endereco = (item.endereco || '').toLowerCase();
-        const codigo = (item.codigo_produto || '').toLowerCase();
-        const lote = (item.lote || '').toLowerCase();
-
-        const bateAba = (tipoAtivo === 'todos' || tipo === tipoAtivo);
-        const batePesquisa = !query || 
-                             endereco.includes(query) || 
-                             codigo.includes(query) || 
-                             lote.includes(query);
-
-        return bateAba && batePesquisa;
-      });
-
+      const query = document.getElementById('filtro').value.toLowerCase();
+      const filtrados = itensEstoque.filter(item => 
+        item.endereco.includes(query) || 
+        item.codigo_produto.includes(query) || 
+        item.lote.toLowerCase().includes(query)
+      );
       renderizarCards(filtrados);
     }
 
-    function filtrarTipo(tipo) {
-      tipoAtivo = tipo;
-
-      ['todos', 'pulmao', 'picking'].forEach(t => {
-        const btn = document.getElementById(`aba-${t}`);
-        if (t === tipo) {
-          btn.className = "px-5 py-2.5 bg-blue-600 text-xs font-bold rounded-full transition-colors whitespace-nowrap text-white";
-        } else {
-          btn.className = "px-5 py-2.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-xs text-slate-400 hover:text-white font-bold rounded-full transition-colors whitespace-nowrap";
-        }
-      });
-
-      filtrarCards();
-    }
-
-    function abrirConfirmarDelete(id) {
-      itemIdParaApagar = id;
-      const modal = document.getElementById('deleteModal');
-      const box = document.getElementById('modalBox');
-
-      modal.classList.remove('hidden');
-      setTimeout(() => {
-        modal.classList.remove('opacity-0', 'pointer-events-none');
-        box.classList.remove('scale-95');
-        box.classList.add('scale-100');
-      }, 50);
-
-      document.getElementById('btnConfirmarExclusao').onclick = executarExclusao;
-    }
-
-    function fecharModalDelete() {
-      const modal = document.getElementById('deleteModal');
-      const box = document.getElementById('modalBox');
-
-      modal.classList.add('opacity-0', 'pointer-events-none');
-      box.classList.remove('scale-100');
-      box.classList.add('scale-95');
-
-      setTimeout(() => {
-        modal.classList.add('hidden');
-        itemIdParaApagar = null;
-      }, 300);
-    }
-
-    // Exclusão protegida de estoque
-    async function executarExclusao() {
-      if (!itemIdParaApagar) return;
-
-      const btn = document.getElementById('btnConfirmarExclusao');
-      
+    // Carregar dados
+    async function carregarDados() {
+      const user = JSON.parse(sessionStorage.getItem('usuarioLogado'));
       try {
-        btn.disabled = true;
-        btn.textContent = "Apagando...";
-
-        const res = await fetch('https://codril.onrender.com/api/apagar-produto.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            id: itemIdParaApagar,
-            token: userToken
-          })
-        });
-
+        const res = await fetch(`https://codril.onrender.com/api/salvar-produto.php?token=${user.token}`);
         const data = await res.json();
         if (data.success) {
-          mostrarAviso("Registro apagado com sucesso!", "sucesso");
-          fecharModalDelete();
-          carregarDadosDoServidor();
-        } else {
-          mostrarAviso(data.message || "Erro ao apagar registro.", "erro");
-          btn.disabled = false;
-          btn.textContent = "Confirmar";
+          itensEstoque = data.itens;
+          renderizarCards(itensEstoque);
         }
       } catch (err) {
-        mostrarAviso("Erro de conexão ao remover registro.", "erro");
-        btn.disabled = false;
-        btn.textContent = "Confirmar";
+        console.error("Erro ao carregar");
       }
     }
 
-    // Toast de Alerta Personalizado
-    function mostrarAviso(mensagem, tipo = 'sucesso') {
-      const toast = document.getElementById('toast');
-      const toastBg = document.getElementById('toastBg');
-      const toastIcon = document.getElementById('toastIcon');
-      const toastMessage = document.getElementById('toastMessage');
-
-      if (tipo === 'sucesso') {
-        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-emerald-500/90 border-emerald-400 text-white backdrop-blur-sm";
-        toastIcon.textContent = "✅";
-      } else if (tipo === 'erro') {
-        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-red-500/90 border-red-400 text-white backdrop-blur-sm";
-        toastIcon.textContent = "❌";
-      } else {
-        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-amber-500/90 border-amber-400 text-white backdrop-blur-sm";
-        toastIcon.textContent = "⚠️";
-      }
-
-      toastMessage.textContent = mensagem;
-      toast.classList.remove('opacity-0', 'pointer-events-none', 'scale-90', 'top-5');
-      toast.classList.add('opacity-100', 'scale-100', 'top-8');
-
-      setTimeout(() => {
-        toast.classList.remove('opacity-100', 'scale-100', 'top-8');
-        toast.classList.add('opacity-0', 'pointer-events-none', 'scale-90', 'top-5');
-      }, 3000);
-    }
+    window.onload = carregarDados;
   </script>
 </body>
 </html>
