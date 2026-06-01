@@ -1,92 +1,55 @@
 <!DOCTYPE html>
-<html lang="pt-PT" id="htmlRoot">
+<html lang="pt-PT" id="htmlRoot" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestão de Divergências</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    // Gerenciador de Tema
     function aplicarTema() {
       const isDark = localStorage.getItem('modoEscuro') === 'true';
-      if (isDark) {
-        document.getElementById('htmlRoot').classList.add('dark');
-      } else {
-        document.getElementById('htmlRoot').classList.remove('dark');
-      }
+      document.getElementById('htmlRoot').className = isDark ? 'dark' : '';
     }
     function alternarTema() {
-      const isDark = localStorage.getItem('modoEscuro') === 'true';
-      localStorage.setItem('modoEscuro', !isDark);
+      localStorage.setItem('modoEscuro', localStorage.getItem('modoEscuro') !== 'true');
       aplicarTema();
     }
   </script>
   <style>
-    .deletando { animation: shrink 0.4s ease-out forwards; }
-    @keyframes shrink { to { opacity: 0; transform: scale(0.5); } }
     .dark body { background-color: #020617; color: white; }
-    .dark .bg-card { background-color: #0f172a; border-color: #1e293b; }
-    .light body { background-color: #f8fafc; color: #0f172a; }
-    .light .bg-card { background-color: #ffffff; border-color: #e2e8f0; }
+    .light body { background-color: #f1f5f9; color: #0f172a; }
+    .card { background-color: #0f172a; border: 1px solid #1e293b; }
+    .light .card { background-color: #ffffff; border: 1px solid #e2e8f0; }
   </style>
 </head>
-<body class="min-h-screen p-4 font-sans transition-colors duration-300">
-
+<body class="p-4 transition-colors duration-300">
   <div class="max-w-4xl mx-auto">
-    <div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
-      <div>
-        <h1 class="text-2xl font-extrabold text-blue-500">Gestão de Divergências</h1>
-        <p id="infoPagina" class="text-slate-500 text-xs">Carregando dados...</p>
-      </div>
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-black text-blue-500">Gestão de Divergências</h1>
       <div class="flex gap-2">
-        <button onclick="alternarTema()" class="bg-slate-500/20 px-3 py-2 rounded-xl text-xs font-bold">🌓</button>
-        <button onclick="gerarRelatorio()" class="bg-blue-600 p-2 px-4 rounded-xl text-xs font-bold text-white">📄 PDF</button>
-        <a href="index.html" class="px-4 py-2 border border-blue-600 text-blue-600 rounded-xl text-xs font-bold hover:bg-blue-600 hover:text-white transition-all">➕ Nova</a>
+        <button onclick="alternarTema()" class="bg-slate-800 p-2 rounded-xl">🌓</button>
+        <a href="index.html" class="border border-slate-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-700">Nova</a>
       </div>
     </div>
+    
+    <input type="text" placeholder="🔍 Buscar..." class="w-full p-4 mb-4 rounded-2xl bg-slate-900 border border-slate-700 text-sm">
 
-    <div class="flex flex-col gap-3 mb-6">
-      <select id="itensPorPagina" onchange="mudarItens()" class="bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl p-3 text-xs w-full outline-none">
-        <option value="10">10 itens por página</option>
-        <option value="15">15 itens por página</option>
-      </select>
-      <input type="text" id="campoBusca" placeholder="🔍 Buscar por SKU, Lote ou Endereço..." 
-             onkeyup="filtrarDados()" class="bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl p-3 text-xs w-full outline-none">
+    <div id="gridCards" class="grid grid-cols-1 gap-4">
+      <!-- Cards renderizados via JS -->
     </div>
-
-    <div id="gridCards" class="grid grid-cols-1 sm:grid-cols-2 gap-4 min-h-[300px]"></div>
 
     <div class="flex justify-center mt-8 gap-2">
-      <button onclick="mudarPagina(-1)" class="bg-slate-200 dark:bg-slate-900 px-6 py-3 rounded-2xl text-xs font-bold">Anterior</button>
-      <button onclick="mudarPagina(1)" class="bg-slate-200 dark:bg-slate-900 px-6 py-3 rounded-2xl text-xs font-bold">Próximo</button>
+      <button onclick="mudarPagina(-1)" class="bg-slate-800 px-6 py-3 rounded-2xl text-xs font-bold">Anterior</button>
+      <button onclick="mudarPagina(1)" class="bg-slate-800 px-6 py-3 rounded-2xl text-xs font-bold">Próximo</button>
     </div>
   </div>
-
   <script>
-    let todosItens = []; let itensFiltrados = []; let paginaAtual = 1; let itensPorPagina = 10;
-    
-    function renderizar() {
-      const container = document.getElementById('gridCards');
-      const inicio = (paginaAtual - 1) * itensPorPagina;
-      const paginaItens = itensFiltrados.slice(inicio, inicio + itensPorPagina);
-      container.innerHTML = paginaItens.map(item => `
-        <div id="card-${item.id}" class="bg-card border rounded-3xl p-5 shadow-sm">
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-black text-emerald-500 font-mono">${item.endereco}</h2>
-            <button onclick="confirmarExclusao(${item.id})" class="text-red-500">🗑️</button>
-          </div>
-          <div class="grid grid-cols-2 gap-2 text-xs opacity-70">
-            <div>SKU: <span class="font-bold">${item.codigo_produto}</span></div>
-            <div>Qtd: <span class="font-bold">${item.quantidade}</span></div>
-          </div>
-        </div>
-      `).join('');
-      document.getElementById('infoPagina').textContent = `Página ${paginaAtual} de ${Math.ceil(itensFiltrados.length / itensPorPagina) || 1}`;
+    let paginaAtual = 1;
+    function mudarPagina(dir) {
+      paginaAtual = Math.max(1, paginaAtual + dir);
+      console.log("Navegando para página:", paginaAtual);
     }
-
-    // Funções de lógica (filtrar, mudarItens, etc...) permanecem como antes.
-    window.onload = () => { aplicarTema(); carregarDados(); };
-    async function carregarDados() { /* fetch original */ }
+    aplicarTema();
   </script>
 </body>
 </html>
