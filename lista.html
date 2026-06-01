@@ -3,11 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Estoque Ativo</title>
+  <title>Listagem de Estoque</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    /* Animação para a exclusão do card */
     .deletando { animation: shrink 0.4s ease-out forwards; }
-    @keyframes shrink { to { opacity: 0; transform: scale(0.5); } }
+    @keyframes shrink { 
+      to { opacity: 0; transform: scale(0.5); } 
+    }
   </style>
 </head>
 <body class="bg-slate-950 text-white min-h-screen p-4 font-sans">
@@ -17,29 +20,50 @@
     <div class="flex justify-between items-center mb-6 border-b border-slate-900 pb-4">
       <div>
         <h1 class="text-2xl font-extrabold text-blue-400">Estoque Ativo</h1>
-        <p id="infoPagina" class="text-slate-400 text-xs">A carregar...</p>
+        <p id="infoPagina" class="text-slate-400 text-xs">Carregando...</p>
       </div>
       <div class="flex gap-2">
-        <button onclick="gerarRelatorio()" class="bg-blue-600 p-2 px-4 rounded-xl text-xs font-bold">📄 PDF</button>
-        <a href="index.html" class="px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs font-bold">⬅️ Novo</a>
+        <button onclick="gerarRelatorio()" class="bg-blue-600 hover:bg-blue-500 p-2 px-4 rounded-xl text-xs font-bold transition-all">📄 PDF</button>
+        <a href="index.html" class="px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs font-bold transition-all hover:bg-slate-800">⬅️ Novo</a>
       </div>
     </div>
 
-    <!-- Grid de Cards -->
-    <div id="gridCards" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+    <!-- Controle de Paginação -->
+    <div class="mb-6">
+      <select id="itensPorPagina" onchange="mudarItens()" class="bg-slate-900 border border-slate-800 rounded-xl p-2 text-xs w-full sm:w-40 outline-none">
+        <option value="10">10 por página</option>
+        <option value="15">15 por página</option>
+      </select>
+    </div>
+
+    <!-- Grid onde os cards serão injetados -->
+    <div id="gridCards" class="grid grid-cols-1 sm:grid-cols-2 gap-4 min-h-[300px]"></div>
+
+    <!-- Navegação -->
+    <div class="flex justify-center mt-8 gap-2">
+      <button onclick="mudarPagina(-1)" class="bg-slate-900 hover:bg-slate-800 px-6 py-3 rounded-2xl text-xs font-bold transition-all">Anterior</button>
+      <button onclick="mudarPagina(1)" class="bg-slate-900 hover:bg-slate-800 px-6 py-3 rounded-2xl text-xs font-bold transition-all">Próximo</button>
+    </div>
   </div>
 
   <script>
+    // Variáveis de estado
     let todosItens = [];
+    let paginaAtual = 1;
+    let itensPorPagina = 10;
 
+    // Função principal de renderização
     function renderizar() {
       const container = document.getElementById('gridCards');
+      const inicio = (paginaAtual - 1) * itensPorPagina;
+      const paginaItens = todosItens.slice(inicio, inicio + itensPorPagina);
+
       if (todosItens.length === 0) {
-        container.innerHTML = `<p class="text-slate-500 text-center col-span-full mt-10">Nenhum item encontrado.</p>`;
+        container.innerHTML = `<p class="text-slate-500 text-center w-full mt-10">Nenhum registo encontrado.</p>`;
         return;
       }
-      
-      container.innerHTML = todosItens.map(item => `
+
+      container.innerHTML = paginaItens.map(item => `
         <div id="card-${item.id}" class="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl transition-all">
           <div class="flex justify-between items-center mb-4">
             <div class="flex items-center gap-3">
@@ -55,8 +79,24 @@
           </div>
         </div>
       `).join('');
+
+      document.getElementById('infoPagina').textContent = `Página ${paginaAtual} de ${Math.ceil(todosItens.length / itensPorPagina) || 1} | Total: ${todosItens.length}`;
     }
 
+    // Lógica de Paginação
+    function mudarItens() {
+      itensPorPagina = parseInt(document.getElementById('itensPorPagina').value);
+      paginaAtual = 1;
+      renderizar();
+    }
+
+    function mudarPagina(dir) {
+      const maxPag = Math.ceil(todosItens.length / itensPorPagina);
+      paginaAtual = Math.max(1, Math.min(paginaAtual + dir, maxPag));
+      renderizar();
+    }
+
+    // Lógica de exclusão com confirmação interna
     function confirmarExclusao(id) {
       const card = document.getElementById(`card-${id}`);
       card.innerHTML = `
@@ -64,7 +104,7 @@
           <p class="text-sm mb-4 text-center">Excluir este registo?</p>
           <div class="flex gap-3">
             <button onclick="renderizar()" class="px-4 py-2 bg-slate-800 rounded-xl text-xs">Não</button>
-            <button onclick="executarDelecao(${id})" class="px-4 py-2 bg-red-600 rounded-xl text-xs font-bold">Sim</button>
+            <button onclick="executarDelecao(${id})" class="px-4 py-2 bg-red-600 rounded-xl text-xs font-bold">Sim, excluir</button>
           </div>
         </div>
       `;
@@ -74,43 +114,58 @@
       const el = document.getElementById(`card-${id}`);
       el.classList.add('deletando');
       const user = JSON.parse(sessionStorage.getItem('usuarioLogado'));
+      
       try {
         await fetch(`https://codril.onrender.com/api/deletar-produto.php?id=${id}&token=${user.token}`);
         todosItens = todosItens.filter(i => i.id !== id);
         setTimeout(renderizar, 400);
-      } catch (err) { el.classList.remove('deletando'); }
+      } catch (err) { 
+        el.classList.remove('deletando');
+        alert("Erro ao excluir.");
+      }
     }
 
+    // Gerador de Relatório PDF/Impressão
+    function gerarRelatorio() {
+      const win = window.open('', '_blank');
+      win.document.write(`
+        <html><head><title>Relatório de Estoque</title>
+        <style>
+          body { font-family: sans-serif; padding: 20px; }
+          h1 { text-align: center; color: #333; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th { background-color: #e5e7eb; padding: 12px; border: 1px solid #ccc; text-align: center; font-weight: bold; }
+          td { padding: 10px; border: 1px solid #ccc; text-align: center; }
+          tr:nth-child(even) { background-color: #f3f4f6; }
+        </style></head><body>
+        <h1>Relatório de Estoque</h1>
+        <table>
+          <tr><th>Endereço</th><th>SKU</th><th>Lote</th><th>Qtd</th><th>Status</th></tr>
+          ${todosItens.map(i => `<tr><td>${i.endereco}</td><td>${i.codigo_produto}</td><td>${i.lote}</td><td>${i.quantidade}</td><td>${i.status_estoque}</td></tr>`).join('')}
+        </table>
+      </body></html>`);
+      win.document.close();
+      win.print();
+    }
+
+    // Carregamento inicial
     async function carregarDados() {
-      const info = document.getElementById('infoPagina');
       const user = JSON.parse(sessionStorage.getItem('usuarioLogado'));
       if(!user) { window.location.href = 'login.html'; return; }
       try {
         const res = await fetch(`https://codril.onrender.com/api/salvar-produto.php?token=${user.token}`);
-        const text = await res.text(); // Lê como texto primeiro
-        try {
-          const data = JSON.parse(text);
-          if (data.success) {
-            todosItens = data.itens || [];
-            renderizar();
-            info.textContent = `Total: ${todosItens.length} itens`;
-          }
-        } catch (e) {
-          info.innerHTML = `<span class="text-red-500">Erro de API: Resposta inválida do servidor.</span>`;
+        const data = await res.json();
+        if (data.success) {
+          todosItens = data.itens || [];
+          renderizar();
         }
-      } catch (err) {
-        info.innerHTML = `<span class="text-red-500">Erro de conexão com o servidor.</span>`;
+      } catch (err) { 
+        console.error("Erro ao carregar dados:", err);
       }
-    }
-
-    function gerarRelatorio() {
-      const win = window.open('', '_blank');
-      win.document.write(`<html><head><title>Relatório</title><style>table{width:100%;border-collapse:collapse;font-family:sans-serif;} th{background:#e5e7eb;padding:10px;border:1px solid #ccc;text-align:center;} td{padding:8px;border:1px solid #ccc;text-align:center;} tr:nth-child(even){background:#f3f4f6;}</style></head><body><h1>Estoque</h1><table><tr><th>Endereço</th><th>SKU</th><th>Lote</th><th>Qtd</th><th>Status</th></tr>${todosItens.map(i => `<tr><td>${i.endereco}</td><td>${i.codigo_produto}</td><td>${i.lote}</td><td>${i.quantidade}</td><td>${i.status_estoque}</td></tr>`).join('')}</table></body></html>`);
-      win.document.close();
-      win.print();
     }
 
     window.onload = carregarDados;
   </script>
 </body>
 </html>
+
