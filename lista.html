@@ -23,21 +23,33 @@
   </nav>
 
   <div class="max-w-2xl mx-auto p-4 no-print">
-    <!-- ... seu header e filtros ... -->
+    <header class="flex justify-between items-center mb-6">
+      <div>
+        <h1 class="text-xl font-black text-blue-600 dark:text-blue-500">Divergências</h1>
+        <p id="infoStatus" class="text-xs opacity-60">Carregando...</p>
+      </div>
+    </header>
+
+    <div class="space-y-4 mb-6">
+      <input type="text" id="filtro" oninput="paginaAtual=1; renderizar()" placeholder="🔍 Buscar..." class="w-full p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm">
+      <select id="itensPorPagina" onchange="paginaAtual=1; renderizar()" class="w-full p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm">
+        <option value="5">5 por pág.</option>
+        <option value="10" selected>10 por pág.</option>
+        <option value="20">20 por pág.</option>
+      </select>
+    </div>
 
     <div id="gridCards" class="grid grid-cols-1 gap-4"></div>
     <div id="paginacao" class="flex justify-center gap-2 mt-6"></div>
   </div>
 
-  <!-- Modal de Confirmação -->
-  <div id="modalConfirmacao" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl w-full max-w-sm text-center shadow-2xl">
+  <!-- Modal -->
+  <div id="modalConfirmacao" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl w-full max-w-sm text-center">
       <h3 class="text-lg font-black mb-4">Deseja realmente deletar esse produto?</h3>
       <div class="flex gap-4 justify-center">
-        <button onclick="confirmarDeletarBackend()" id="btnConfirmarDelete" 
-                class="bg-red-600 text-white px-8 py-2 rounded-xl font-bold">SIM, DELETAR</button>
-        <button onclick="document.getElementById('modalConfirmacao').classList.add('hidden')" 
-                class="bg-slate-200 dark:bg-slate-800 px-8 py-2 rounded-xl font-bold">CANCELAR</button>
+        <button onclick="confirmarDeletarBackend()" id="btnDeletar" class="bg-red-600 text-white px-8 py-2 rounded-xl font-bold">SIM, DELETAR</button>
+        <button onclick="document.getElementById('modalConfirmacao').classList.add('hidden')" class="bg-slate-200 dark:bg-slate-800 px-8 py-2 rounded-xl font-bold">CANCELAR</button>
       </div>
     </div>
   </div>
@@ -48,24 +60,52 @@
     let idParaRemover = null;
 
     function verificarLogin() {
-      if (!localStorage.getItem('currentUser')) window.location.href = 'login.html';
+      if (!localStorage.getItem('currentUser')) {
+        window.location.href = 'login.html';
+      }
     }
 
     async function carregarDados() {
+      const statusEl = document.getElementById('infoStatus');
+      statusEl.textContent = "Carregando dados...";
+
       try {
         const res = await fetch("https://codril.onrender.com/api/salvar-produto.php");
         const data = await res.json();
+        
         todosOsDados = data.itens || [];
+        statusEl.textContent = `Total: ${todosOsDados.length} registros`;
         renderizar();
       } catch (err) {
-        document.getElementById('infoStatus').innerText = "Erro ao carregar.";
+        console.error(err);
+        statusEl.textContent = "❌ Erro ao carregar dados";
       }
     }
 
     function renderizar() {
-      // ... seu código de renderizar cards (mantido) ...
-      // Apenas certifique-se de ter o onclick correto:
-      // onclick="confirmarDelete(${item.id})"
+      const filtro = document.getElementById('filtro').value.toLowerCase().trim();
+      const limite = parseInt(document.getElementById('itensPorPagina').value);
+
+      const filtrados = todosOsDados.filter(item => 
+        (item.endereco || '').toLowerCase().includes(filtro) ||
+        (item.codigo_produto || '').toLowerCase().includes(filtro) ||
+        (item.lote || '').toLowerCase().includes(filtro)
+      );
+
+      let html = '';
+      filtrados.forEach(item => {
+        html += `
+          <div class="bg-white dark:bg-slate-900 p-5 rounded-3xl border shadow-sm" id="card-${item.id}">
+            <div class="flex justify-between">
+              <h2 class="font-bold">Endereço: ${item.endereco}</h2>
+              <button onclick="confirmarDelete(${item.id})" class="text-red-500 text-xl">🗑️</button>
+            </div>
+            <p class="mt-1">SKU: <strong>\( {item.codigo_produto}</strong> • Lote: <strong> \){item.lote}</strong></p>
+            \( {item.descricao ? `<p class="text-sm text-slate-500 mt-2"> \){item.descricao}</p>` : ''}
+          </div>`;
+      });
+
+      document.getElementById('gridCards').innerHTML = html || '<p class="text-center py-12 text-slate-500">Nenhum item encontrado.</p>';
     }
 
     function confirmarDelete(id) {
@@ -74,11 +114,10 @@
     }
 
     async function confirmarDeletarBackend() {
-      const btn = document.getElementById('btnConfirmarDelete');
-      const textoOriginal = btn.textContent;
-
+      const btn = document.getElementById('btnDeletar');
+      const originalText = btn.textContent;
       btn.disabled = true;
-      btn.innerHTML = `<span class="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></span> Deletando...`;
+      btn.innerHTML = '⏳ Deletando...';
 
       try {
         const res = await fetch('https://codril.onrender.com/api/deletar-produto.php', {
@@ -94,13 +133,13 @@
           todosOsDados = todosOsDados.filter(i => i.id != idParaRemover);
           renderizar();
         } else {
-          alert("❌ " + (data.message || "Não foi possível deletar"));
+          alert("❌ " + (data.message || "Erro ao deletar"));
         }
       } catch (e) {
         alert("❌ Erro de conexão com o servidor.");
       } finally {
         btn.disabled = false;
-        btn.innerHTML = textoOriginal;
+        btn.innerHTML = originalText;
         document.getElementById('modalConfirmacao').classList.add('hidden');
       }
     }
