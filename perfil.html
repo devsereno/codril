@@ -87,7 +87,6 @@
 
       if (senha.length === 0) {
         barra.style.width = '0%';
-        barra.className = 'h-1.5 mt-2 rounded-full bg-slate-700';
         texto.textContent = '';
         return;
       }
@@ -118,13 +117,8 @@
       const novaSenha = document.getElementById('novaSenha').value.trim();
       const confirmar = document.getElementById('confirmarSenha').value.trim();
 
-      if (!senhaAtual || !novaSenha || !confirmar) {
-        alert("Preencha todos os campos.");
-        return;
-      }
-
-      if (novaSenha !== confirmar) {
-        alert("As novas senhas não coincidem.");
+      if (!senhaAtual || !novaSenha || novaSenha !== confirmar) {
+        alert("Verifique todas as senhas digitadas.");
         return;
       }
 
@@ -149,14 +143,14 @@
 
         if (data.success) {
           alert("✅ Senha alterada com sucesso!");
-          // Limpa os campos
           document.getElementById('senhaAtual').value = '';
           document.getElementById('novaSenha').value = '';
           document.getElementById('confirmarSenha').value = '';
         } else {
-          alert("❌ " + (data.message || "Não foi possível alterar a senha."));
+          alert("❌ " + (data.message || "Erro ao alterar senha"));
         }
       } catch (e) {
+        console.error(e);
         alert("❌ Erro de conexão com o servidor.");
       }
     }
