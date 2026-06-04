@@ -21,31 +21,151 @@
       <div id="avatarPerfil" class="w-28 h-28 mx-auto bg-blue-600 rounded-full flex items-center justify-center text-5xl font-bold mb-6 shadow-2xl"></div>
       <h2 id="nomePerfil" class="text-2xl font-bold"></h2>
       <p id="emailPerfil" class="text-slate-400"></p>
+      <p id="rolePerfil" class="text-xs inline-block mt-2 px-4 py-1 bg-slate-800 rounded-full"></p>
     </div>
 
-    <div class="bg-slate-900 rounded-3xl p-6 space-y-6">
-      <div class="flex justify-between py-3 border-b border-slate-800">
-        <span class="text-slate-400">Nível de Acesso</span>
-        <span id="rolePerfil" class="font-bold uppercase"></span>
+    <!-- Seção Alterar Senha -->
+    <div class="bg-slate-900 rounded-3xl p-6 mb-6">
+      <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+        🔐 Alterar Senha
+      </h3>
+      
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Senha Atual</label>
+          <input type="password" id="senhaAtual" placeholder="Digite sua senha atual" 
+                 class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-4 py-3 focus:outline-none focus:border-blue-500">
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Nova Senha</label>
+          <input type="password" id="novaSenha" placeholder="Mínimo 6 caracteres" 
+                 onkeyup="verificarForcaSenha()" 
+                 class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-4 py-3 focus:outline-none focus:border-blue-500">
+          <div id="forcaSenha" class="h-1.5 mt-2 rounded-full bg-slate-700 transition-all"></div>
+          <p id="textoForca" class="text-xs mt-1 text-slate-400"></p>
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Confirmar Nova Senha</label>
+          <input type="password" id="confirmarSenha" placeholder="Repita a nova senha" 
+                 class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-4 py-3 focus:outline-none focus:border-blue-500">
+        </div>
+
+        <button onclick="alterarSenha()" 
+                class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold transition-all">
+          Alterar Senha
+        </button>
       </div>
-      <button onclick="logout()" class="w-full bg-red-600 hover:bg-red-500 py-4 rounded-2xl font-bold">
-        Sair da Conta
-      </button>
     </div>
+
+    <button onclick="logout()" class="w-full bg-red-600 hover:bg-red-500 py-4 rounded-2xl font-bold">
+      Sair da Conta
+    </button>
   </div>
 
   <script>
+    let userAtual = null;
+
     function carregarPerfil() {
-      const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-      if (!user.nome) {
+      const userRaw = localStorage.getItem('currentUser');
+      if (!userRaw) {
         window.location.href = 'login.html';
         return;
       }
 
-      document.getElementById('avatarPerfil').textContent = user.nome.charAt(0).toUpperCase();
-      document.getElementById('nomePerfil').textContent = user.nome;
-      document.getElementById('emailPerfil').textContent = user.email;
-      document.getElementById('rolePerfil').textContent = (user.role || 'user').toUpperCase();
+      userAtual = JSON.parse(userRaw);
+
+      document.getElementById('avatarPerfil').textContent = userAtual.nome ? userAtual.nome[0].toUpperCase() : 'U';
+      document.getElementById('nomePerfil').textContent = userAtual.nome || 'Usuário';
+      document.getElementById('emailPerfil').textContent = userAtual.email || '';
+      document.getElementById('rolePerfil').textContent = (userAtual.role || 'user').toUpperCase();
+    }
+
+    function verificarForcaSenha() {
+      const senha = document.getElementById('novaSenha').value;
+      const barra = document.getElementById('forcaSenha');
+      const texto = document.getElementById('textoForca');
+
+      if (senha.length === 0) {
+        barra.style.width = '0%';
+        barra.className = 'h-1.5 mt-2 rounded-full bg-slate-700';
+        texto.textContent = '';
+        return;
+      }
+
+      let forca = 0;
+      if (senha.length >= 6) forca++;
+      if (senha.length >= 8) forca++;
+      if (/[A-Z]/.test(senha)) forca++;
+      if (/[0-9]/.test(senha)) forca++;
+      if (/[^A-Za-z0-9]/.test(senha)) forca++;
+
+      if (forca <= 2) {
+        barra.style.width = '33%';
+        barra.className = 'h-1.5 mt-2 rounded-full bg-red-500';
+        texto.textContent = 'Fraca';
+        texto.className = 'text-xs mt-1 text-red-400';
+      } else if (forca <= 3) {
+        barra.style.width = '66%';
+        barra.className = 'h-1.5 mt-2 rounded-full bg-yellow-500';
+        texto.textContent = 'Média';
+        texto.className = 'text-xs mt-1 text-yellow-400';
+      } else {
+        barra.style.width = '100%';
+        barra.className = 'h-1.5 mt-2 rounded-full bg-emerald-500';
+        texto.textContent = 'Forte';
+        texto.className = 'text-xs mt-1 text-emerald-400';
+      }
+    }
+
+    async function alterarSenha() {
+      if (!userAtual) return;
+
+      const senhaAtual = document.getElementById('senhaAtual').value;
+      const novaSenha = document.getElementById('novaSenha').value;
+      const confirmar = document.getElementById('confirmarSenha').value;
+
+      if (!senhaAtual || !novaSenha || !confirmar) {
+        alert("Preencha todos os campos de senha.");
+        return;
+      }
+
+      if (novaSenha !== confirmar) {
+        alert("As novas senhas não coincidem.");
+        return;
+      }
+
+      if (novaSenha.length < 6) {
+        alert("A nova senha deve ter pelo menos 6 caracteres.");
+        return;
+      }
+
+      try {
+        const res = await fetch('https://codril.onrender.com/api/usuarios.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'CHANGE_PASSWORD',
+            email: userAtual.email,
+            senha_atual: senhaAtual,
+            nova_senha: novaSenha
+          })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          alert("✅ Senha alterada com sucesso!");
+          document.getElementById('senhaAtual').value = '';
+          document.getElementById('novaSenha').value = '';
+          document.getElementById('confirmarSenha').value = '';
+        } else {
+          alert("❌ " + (data.message || "Erro ao alterar senha"));
+        }
+      } catch (e) {
+        alert("❌ Erro de conexão com o servidor.");
+      }
     }
 
     function logout() {
