@@ -23,7 +23,10 @@
         <div id="avatarUser" onclick="irParaPerfil()" class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold cursor-pointer">U</div>
         <span id="nomeExibicao" onclick="irParaPerfil()" class="text-xs font-semibold cursor-pointer hover:text-blue-500">Carregando...</span>
       </div>
-      <button onclick="logout()" class="text-red-500 font-bold text-xs hover:underline">Sair</button>
+      <div class="flex items-center gap-3">
+        <button onclick="document.documentElement.classList.toggle('dark')" class="p-2 bg-slate-200 dark:bg-slate-800 rounded-lg">🌓</button>
+        <button onclick="logout()" class="text-red-500 font-bold text-xs hover:underline">Sair</button>
+      </div>
     </div>
   </nav>
 
@@ -34,7 +37,6 @@
         <p id="infoStatus" class="text-xs opacity-60">Carregando...</p>
       </div>
       <div class="flex gap-2">
-        <button onclick="document.documentElement.classList.toggle('dark')" class="p-2 bg-slate-200 dark:bg-slate-800 rounded-lg">🌓</button>
         <a href="index.html" class="bg-slate-800 dark:bg-slate-200 text-white dark:text-black px-4 py-2 rounded-lg font-bold text-xs">Nova</a>
         <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-xs">Imprimir</button>
       </div>
@@ -64,18 +66,13 @@
     </div>
   </div>
 
-  <table id="tabelaImpressao" class="hidden">
-    <thead><tr class="bg-gray-200"><th>Endereço</th><th>SKU</th><th>Lote</th><th>Qtd</th><th>Status</th></tr></thead>
-    <tbody id="corpoTabelaImpressao"></tbody>
-  </table>
-
   <script>
     // Proteção de login
     if (!localStorage.getItem('currentUser')) {
       window.location.href = 'login.html';
     }
 
-    // Barra superior
+    // Carrega nome do usuário
     const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
     document.getElementById('nomeExibicao').innerText = user.nome || 'Usuário';
     document.getElementById('avatarUser').innerText = (user.nome || 'U').charAt(0).toUpperCase();
@@ -89,7 +86,6 @@
       window.location.href = 'login.html';
     }
 
-    // === SEU CÓDIGO ORIGINAL (mantido) ===
     let todosOsDados = [];
     let paginaAtual = 1;
     let idParaRemover = null;
@@ -119,8 +115,7 @@
         const status = (item.status_estoque || '').toUpperCase();
         const isFaltando = status.includes('FALTANDO');
         const colorClass = isFaltando ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-500';
-
-        return `
+return `
           <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl shadow-sm transition-all" id="card-${item.id}">
             <div class="flex justify-between items-start mb-4">
               <h2 class="text-lg font-black dark:text-white">Endereço: ${item.endereco}</h2>
@@ -138,14 +133,7 @@
         `;
       }).join('');
 
-      document.getElementById('corpoTabelaImpressao').innerHTML = filtrados.map(item => `
-        <tr><td>\( {item.endereco}</td><td> \){item.codigo_produto}</td><td>\( {item.lote}</td><td> \){item.quantidade}</td><td>${item.status_estoque}</td></tr>
-      `).join('');
-
       document.getElementById('infoStatus').innerText = `Total: ${filtrados.length} itens`;
-      document.getElementById('paginacao').innerHTML = Array.from({length: totalPaginas}, (_, i) => i + 1).map(p => `
-        <button onclick="paginaAtual=${p}; renderizar()" class="px-4 py-2 rounded-xl text-xs font-bold \( {paginaAtual === p ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-800'}"> \){p}</button>
-      `).join('');
     }
 
     document.getElementById('btnSim').onclick = () => {
@@ -162,3 +150,4 @@
   </script>
 </body>
 </html>
+      
