@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meu Perfil - Pulmão AE</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-white min-h-screen">
+  
+  <nav class="w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-4">
+    <div class="max-w-md mx-auto flex justify-between items-center">
+      <a href="index.html" class="text-blue-400">← Voltar</a>
+      <h1 class="font-bold">Meu Perfil</h1>
+      <button onclick="logout()" class="text-red-400 text-sm font-bold">Sair</button>
+    </div>
+  </nav>
+
+  <div class="max-w-md mx-auto p-4 pt-8">
+    <div class="text-center mb-10">
+      <div id="avatarPerfil" class="w-28 h-28 mx-auto bg-blue-600 rounded-full flex items-center justify-center text-5xl font-bold mb-6 shadow-2xl"></div>
+      <h2 id="nomePerfil" class="text-2xl font-bold"></h2>
+      <p id="emailPerfil" class="text-slate-400"></p>
+    </div>
+
+    <div class="bg-slate-900 rounded-3xl p-6 space-y-6">
+      <div class="flex justify-between py-3 border-b border-slate-800">
+        <span class="text-slate-400">Nível de Acesso</span>
+        <span id="rolePerfil" class="font-bold uppercase"></span>
+      </div>
+      <button onclick="logout()" class="w-full bg-red-600 hover:bg-red-500 py-4 rounded-2xl font-bold">
+        Sair da Conta
+      </button>
+    </div>
+  </div>
+
+  <script>
+    function carregarPerfil() {
+      const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      if (!user.nome) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      document.getElementById('avatarPerfil').textContent = user.nome.charAt(0).toUpperCase();
+      document.getElementById('nomePerfil').textContent = user.nome;
+      document.getElementById('emailPerfil').textContent = user.email;
+      document.getElementById('rolePerfil').textContent = (user.role || 'user').toUpperCase();
+    }
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = 'login.html';
+    }
+
+    window.onload = carregarPerfil;
+  </script>
+</body>
+</html>
