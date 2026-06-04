@@ -27,7 +27,6 @@
     </div>
   </nav>
 
-  <!-- Seu conteúdo original continua aqui -->
   <div class="max-w-2xl mx-auto p-4 no-print">
     <header class="flex justify-between items-center mb-6">
       <div>
@@ -54,7 +53,7 @@
     <div id="paginacao" class="flex justify-center gap-2 mt-6"></div>
   </div>
 
-  <!-- Modal e Tabela de Impressão (mantidos) -->
+  <!-- Modal -->
   <div id="modalConfirmacao" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
     <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl w-full max-w-sm text-center shadow-2xl">
       <h3 class="text-lg font-black mb-4">Deseja realmente deletar esse produto?</h3>
@@ -90,7 +89,7 @@
       window.location.href = 'login.html';
     }
 
-    // === SEU CÓDIGO ORIGINAL CONTINUA AQUI ===
+    // === SEU CÓDIGO ORIGINAL (mantido) ===
     let todosOsDados = [];
     let paginaAtual = 1;
     let idParaRemover = null;
@@ -106,9 +105,60 @@
       }
     }
 
-    // ... (o resto do seu código de renderizar, modal, etc. continua igual) ...
+    function renderizar() {
+      const filtro = document.getElementById('filtro').value.toLowerCase();
+      const limite = parseInt(document.getElementById('itensPorPagina').value);
+      const filtrados = todosOsDados.filter(i => 
+        (i.endereco?.toLowerCase().includes(filtro)) || (i.codigo_produto?.toLowerCase().includes(filtro)) || (i.lote?.toLowerCase().includes(filtro))
+      );
+      
+      const totalPaginas = Math.ceil(filtrados.length / limite);
+      const paginados = filtrados.slice((paginaAtual - 1) * limite, paginaAtual * limite);
 
-    window.onload = carregarDados;
+      document.getElementById('gridCards').innerHTML = paginados.map(item => {
+        const status = (item.status_estoque || '').toUpperCase();
+        const isFaltando = status.includes('FALTANDO');
+        const colorClass = isFaltando ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-500';
+
+        return `
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-3xl shadow-sm transition-all" id="card-${item.id}">
+            <div class="flex justify-between items-start mb-4">
+              <h2 class="text-lg font-black dark:text-white">Endereço: ${item.endereco}</h2>
+              <button onclick="idParaRemover='${item.id}'; document.getElementById('modalConfirmacao').classList.remove('hidden')" class="text-slate-400 hover:text-red-500 text-xl">🗑️</button>
+            </div>
+            <div class="flex justify-between items-center mb-2">
+              <p class="text-xs opacity-70">SKU: <span class="font-bold text-slate-900 dark:text-white">${item.codigo_produto}</span></p>
+              <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full \( {colorClass}"> \){status || 'NORMAL'}</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs opacity-80 mt-2">
+              <p>Lote: <span class="font-bold text-slate-900 dark:text-white">${item.lote}</span></p>
+              <p>Qtd: <span class="font-bold text-slate-900 dark:text-white">${item.quantidade}</span></p>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('corpoTabelaImpressao').innerHTML = filtrados.map(item => `
+        <tr><td>\( {item.endereco}</td><td> \){item.codigo_produto}</td><td>\( {item.lote}</td><td> \){item.quantidade}</td><td>${item.status_estoque}</td></tr>
+      `).join('');
+
+      document.getElementById('infoStatus').innerText = `Total: ${filtrados.length} itens`;
+      document.getElementById('paginacao').innerHTML = Array.from({length: totalPaginas}, (_, i) => i + 1).map(p => `
+        <button onclick="paginaAtual=${p}; renderizar()" class="px-4 py-2 rounded-xl text-xs font-bold \( {paginaAtual === p ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-800'}"> \){p}</button>
+      `).join('');
+    }
+
+    document.getElementById('btnSim').onclick = () => {
+      const card = document.getElementById(`card-${idParaRemover}`);
+      card.classList.add('opacity-0', 'scale-90', 'transition-all', 'duration-500');
+      setTimeout(() => {
+        todosOsDados = todosOsDados.filter(i => i.id !== idParaRemover);
+        renderizar();
+        document.getElementById('modalConfirmacao').classList.add('hidden');
+      }, 500);
+    };
+
+    carregarDados();
   </script>
 </body>
-          </html>
+</html>
