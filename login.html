@@ -6,113 +6,26 @@
   <title>Login - Pulmão AE</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4 font-sans">
-
-  <!-- TOAST NOTIFICATION -->
-  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 transform transition-all duration-300 opacity-0 pointer-events-none scale-90">
-    <div id="toastBg" class="flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-sm">
-      <span id="toastIcon" class="text-xl"></span>
-      <span id="toastMessage" class="font-medium text-sm"></span>
-    </div>
-  </div>
-
-  <!-- MODAL OBRIGATÓRIO PARA ALTERAR SENHA TEMPORÁRIA -->
-  <div id="modalTrocaSenha" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-md hidden">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl">
-      <div class="text-center mb-6">
-        <span class="text-4xl">🔐</span>
-        <h3 class="text-xl font-extrabold text-slate-100 mt-3">Alteração de Senha Obrigatória</h3>
-        <p class="text-xs text-slate-400 mt-2">Está a utilizar uma senha padrão ou temporária. Defina uma nova palavra-passe de segurança para prosseguir.</p>
-      </div>
-
-      <form id="formTrocarSenha" onsubmit="processarTrocaDeSenha(event)" class="space-y-4">
-        <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Nova Senha Definitiva</label>
-          <input type="password" id="novaSenha1" required minlength="4" placeholder="Mínimo de 4 dígitos" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 font-mono text-center">
-        </div>
-        
-        <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Confirme a Nova Senha</label>
-          <input type="password" id="novaSenha2" required minlength="4" placeholder="Digite exatamente igual" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 font-mono text-center">
-        </div>
-
-        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 py-3.5 rounded-xl text-xs font-bold transition-all active:scale-95 text-white">
-          Gravar Nova Senha & Entrar
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <!-- CAIXA DE LOGIN PRINCIPAL -->
+<body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4">
   <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl">
     <div class="text-center mb-8">
-      <div class="text-4xl mb-3">📦</div>
       <h1 class="text-2xl font-extrabold text-blue-400">Pulmão AE</h1>
-      <p class="text-xs text-slate-400 mt-1">Insira as credenciais para aceder ao estoque</p>
     </div>
-
     <form id="formLogin" onsubmit="processarLogin(event)" class="space-y-4">
-      <div>
-        <label class="block text-xs font-medium text-slate-400 mb-1">E-mail</label>
-        <input type="email" id="loginEmail" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500">
-      </div>
-
-      <div>
-        <label class="block text-xs font-medium text-slate-400 mb-1">Senha</label>
-        <input type="password" id="loginSenha" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 font-mono">
-      </div>
-
-      <button id="btnLogin" type="submit" class="w-full bg-blue-600 hover:bg-blue-500 py-3.5 rounded-xl text-xs font-bold transition-all active:scale-95 text-white">
-        Entrar no Painel
-      </button>
+      <input type="email" id="loginEmail" required placeholder="E-mail" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm">
+      <input type="password" id="loginSenha" required placeholder="Senha" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm">
+      <button id="btnLogin" type="submit" class="w-full bg-blue-600 py-3.5 rounded-xl text-xs font-bold text-white">Entrar</button>
     </form>
   </div>
 
   <script>
-    const API_LOGIN = 'https://codril.onrender.com/api/login.php';
-    const API_USUARIOS = 'https://codril.onrender.com/api/usuarios.php';
-    let emailSendoAlterado = '';
-
-    function mostrarAviso(mensagem, tipo = 'sucesso') {
-      const toast = document.getElementById('toast');
-      const toastBg = document.getElementById('toastBg');
-      const toastIcon = document.getElementById('toastIcon');
-      const toastMessage = document.getElementById('toastMessage');
-
-      if (tipo === 'sucesso') {
-        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-emerald-500/90 border-emerald-400 text-white backdrop-blur-sm";
-        toastIcon.textContent = "✅";
-      } else if (tipo === 'erro') {
-        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-red-500/90 border-red-400 text-white backdrop-blur-sm";
-        toastIcon.textContent = "❌";
-      } else {
-        toastBg.className = "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-amber-500/90 border-amber-400 text-white backdrop-blur-sm";
-        toastIcon.textContent = "⚠️";
-      }
-
-      toastMessage.textContent = mensagem;
-      toast.classList.remove('opacity-0', 'pointer-events-none', 'scale-90', 'top-5');
-      toast.classList.add('opacity-100', 'scale-100', 'top-8');
-
-      setTimeout(() => {
-        toast.classList.remove('opacity-100', 'scale-100', 'top-8');
-        toast.classList.add('opacity-0', 'pointer-events-none', 'scale-90', 'top-5');
-      }, 3000);
-    }
-
-    // Processa login com recuperação de Token de Sessão Criptográfico
     async function processarLogin(e) {
       e.preventDefault();
-
-      const btn = document.getElementById('btnLogin');
       const email = document.getElementById('loginEmail').value.trim();
       const senha = document.getElementById('loginSenha').value;
 
       try {
-        btn.disabled = true;
-        btn.textContent = "Conectando...";
-
-        const res = await fetch(API_LOGIN, {
+        const res = await fetch('https://codril.onrender.com/api/login.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, senha })
@@ -120,71 +33,16 @@
         const data = await res.json();
 
         if (data.success) {
-          // Salva de forma unificada as informações na sessão
-          const userData = {
+          // SALVA O OBJETO DO USUÁRIO NO LOCALSTORAGE
+          localStorage.setItem('currentUser', JSON.stringify({
             nome: data.user.nome,
-            email: data.user.email,
-            role: data.user.role,
-            token: data.token // O TOKEN gerado criptografado pelo banco
-          };
-
-          if (data.user.requerer_troca) {
-            emailSendoAlterado = email;
-            document.getElementById('modalTrocaSenha').classList.remove('hidden');
-            mostrarAviso("Requerimento de alteração de senha temporária!", "alerta");
-          } else {
-            // Guarda com segurança e despacha para o Dashboard
-            sessionStorage.setItem('usuarioLogado', JSON.stringify(userData));
-            mostrarAviso("Acesso concedido. Bem-vindo!");
-            
-            setTimeout(() => {
-              window.location.href = 'index.html';
-            }, 1000);
-          }
+            email: data.user.email
+          }));
+          window.location.href = 'index.html';
         } else {
-          mostrarAviso(data.message || "Credenciais incorretas.", "erro");
+          alert(data.message || "Credenciais incorretas.");
         }
-      } catch (err) {
-        mostrarAviso("Erro ao conectar com o servidor.", "erro");
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "Entrar no Painel";
-      }
-    }
-
-    // Altera a senha mandatória de primeiro acesso
-    async function processarTrocaDeSenha(e) {
-      e.preventDefault();
-
-      const n1 = document.getElementById('novaSenha1').value;
-      const n2 = document.getElementById('novaSenha2').value;
-
-      if (n1 !== n2) {
-        return mostrarAviso("As senhas não coincidem!", "erro");
-      }
-
-      try {
-        const res = await fetch(API_USUARIOS, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'CHANGE_PASSWORD',
-            email: emailSendoAlterado,
-            nova_senha: n1
-          })
-        });
-        const data = await res.json();
-
-        if (data.success) {
-          mostrarAviso("Senha atualizada com sucesso! Insira suas novas credenciais.");
-          document.getElementById('modalTrocaSenha').classList.add('hidden');
-          document.getElementById('loginSenha').value = '';
-        } else {
-          mostrarAviso(data.message, "erro");
-        }
-      } catch (err) {
-        mostrarAviso("Erro de conexão ao redefinir palavra-passe.", "erro");
-      }
+      } catch (err) { alert("Erro de conexão."); }
     }
   </script>
 </body>
