@@ -24,13 +24,11 @@
       <p id="rolePerfil" class="text-xs inline-block mt-2 px-4 py-1 bg-slate-800 rounded-full"></p>
     </div>
 
-    <!-- Seção Alterar Senha -->
-    <div class="bg-slate-900 rounded-3xl p-6 mb-6">
-      <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
-        🔐 Alterar Senha
-      </h3>
+    <!-- ALTERAR SENHA -->
+    <div class="bg-slate-900 rounded-3xl p-6 mb-8">
+      <h3 class="text-lg font-bold mb-5 flex items-center gap-2">🔐 Alterar Senha</h3>
       
-      <div class="space-y-4">
+      <div class="space-y-5">
         <div>
           <label class="block text-xs text-slate-400 mb-1">Senha Atual</label>
           <input type="password" id="senhaAtual" placeholder="Digite sua senha atual" 
@@ -43,7 +41,7 @@
                  onkeyup="verificarForcaSenha()" 
                  class="w-full bg-slate-950 border border-slate-700 rounded-2xl px-4 py-3 focus:outline-none focus:border-blue-500">
           <div id="forcaSenha" class="h-1.5 mt-2 rounded-full bg-slate-700 transition-all"></div>
-          <p id="textoForca" class="text-xs mt-1 text-slate-400"></p>
+          <p id="textoForca" class="text-xs mt-1"></p>
         </div>
 
         <div>
@@ -102,32 +100,26 @@
       if (/[^A-Za-z0-9]/.test(senha)) forca++;
 
       if (forca <= 2) {
-        barra.style.width = '33%';
-        barra.className = 'h-1.5 mt-2 rounded-full bg-red-500';
-        texto.textContent = 'Fraca';
-        texto.className = 'text-xs mt-1 text-red-400';
+        barra.style.width = '33%'; barra.className = 'h-1.5 mt-2 rounded-full bg-red-500';
+        texto.textContent = 'Fraca'; texto.className = 'text-xs mt-1 text-red-400';
       } else if (forca <= 3) {
-        barra.style.width = '66%';
-        barra.className = 'h-1.5 mt-2 rounded-full bg-yellow-500';
-        texto.textContent = 'Média';
-        texto.className = 'text-xs mt-1 text-yellow-400';
+        barra.style.width = '66%'; barra.className = 'h-1.5 mt-2 rounded-full bg-yellow-500';
+        texto.textContent = 'Média'; texto.className = 'text-xs mt-1 text-yellow-400';
       } else {
-        barra.style.width = '100%';
-        barra.className = 'h-1.5 mt-2 rounded-full bg-emerald-500';
-        texto.textContent = 'Forte';
-        texto.className = 'text-xs mt-1 text-emerald-400';
+        barra.style.width = '100%'; barra.className = 'h-1.5 mt-2 rounded-full bg-emerald-500';
+        texto.textContent = 'Forte'; texto.className = 'text-xs mt-1 text-emerald-400';
       }
     }
 
     async function alterarSenha() {
       if (!userAtual) return;
 
-      const senhaAtual = document.getElementById('senhaAtual').value;
-      const novaSenha = document.getElementById('novaSenha').value;
-      const confirmar = document.getElementById('confirmarSenha').value;
+      const senhaAtual = document.getElementById('senhaAtual').value.trim();
+      const novaSenha = document.getElementById('novaSenha').value.trim();
+      const confirmar = document.getElementById('confirmarSenha').value.trim();
 
       if (!senhaAtual || !novaSenha || !confirmar) {
-        alert("Preencha todos os campos de senha.");
+        alert("Preencha todos os campos.");
         return;
       }
 
@@ -137,7 +129,7 @@
       }
 
       if (novaSenha.length < 6) {
-        alert("A nova senha deve ter pelo menos 6 caracteres.");
+        alert("A nova senha deve ter no mínimo 6 caracteres.");
         return;
       }
 
@@ -157,11 +149,12 @@
 
         if (data.success) {
           alert("✅ Senha alterada com sucesso!");
+          // Limpa os campos
           document.getElementById('senhaAtual').value = '';
           document.getElementById('novaSenha').value = '';
           document.getElementById('confirmarSenha').value = '';
         } else {
-          alert("❌ " + (data.message || "Erro ao alterar senha"));
+          alert("❌ " + (data.message || "Não foi possível alterar a senha."));
         }
       } catch (e) {
         alert("❌ Erro de conexão com o servidor.");
