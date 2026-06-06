@@ -6,15 +6,59 @@
   <title>Comprovante Banco de Horas</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f4; }
-    .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    img { max-width: 100%; border: 1px solid #ddd; border-radius: 8px; margin: 10px 0; }
-    .form-group { margin-bottom: 15px; }
-    label { display: block; margin-bottom: 5px; font-weight: bold; }
-    input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
-    button { padding: 12px 20px; margin: 10px 5px 10px 0; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
+    img { max-width: 100%; border: 1px solid #ddd; border-radius: 8px; margin: 15px 0; }
+    .form-group { margin-bottom: 12px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
+    input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+    
+    button { 
+      padding: 12px 20px; 
+      margin: 10px 5px 10px 0; 
+      background: #007bff; 
+      color: white; 
+      border: none; 
+      border-radius: 6px; 
+      cursor: pointer; 
+      font-size: 16px;
+      transition: all 0.3s;
+    }
     button:hover { background: #0056b3; }
-    .preview { margin: 15px 0; }
-    .success { color: green; font-weight: bold; }
+    button:disabled { background: #6c757d; cursor: not-allowed; }
+
+    .preview { text-align: center; }
+    
+    #statusMessage {
+      margin: 15px 0;
+      padding: 12px;
+      border-radius: 6px;
+      font-weight: bold;
+      text-align: center;
+      min-height: 20px;
+    }
+    .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+    /* Barra de progresso */
+    #progressContainer {
+      display: none;
+      margin: 15px 0;
+    }
+    .progress-bar {
+      height: 10px;
+      background: linear-gradient(90deg, #007bff, #00c6ff);
+      width: 0%;
+      transition: width 0.3s ease;
+      border-radius: 5px;
+    }
+    .progress-text {
+      text-align: center;
+      margin-top: 5px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    h1 { text-align: center; }
   </style>
 </head>
 <body>
@@ -24,128 +68,209 @@
     <input type="file" id="imageInput" accept="image/*" onchange="previewImage(event)">
     
     <div class="preview">
-      <img id="previewImg" src="" alt="Pré-visualização">
+      <img id="previewImg" src="" alt="Pré-visualização da imagem">
     </div>
 
-    <button onclick="processImage()">🔍 Ler Dados com OCR + Preencher</button>
-    <button onclick="saveComprovante()">💾 Salvar Comprovante</button>
+    <div style="margin: 15px 0;">
+      <button id="ocrBtn" onclick="processImage()">🔍 Ler Dados com OCR</button>
+      <button id="saveBtn" onclick="saveComprovante()">💾 Salvar Comprovante</button>
+    </div>
+
+    <!-- Barra de Progresso -->
+    <div id="progressContainer">
+      <div style="background: #e9ecef; border-radius: 5px; height: 10px; overflow: hidden;">
+        <div id="progressBar" class="progress-bar"></div>
+      </div>
+      <div id="progressText" class="progress-text">0% - Processando OCR...</div>
+    </div>
+
+    <!-- Mensagem de status -->
+    <div id="statusMessage"></div>
 
     <h2>Dados Extraídos</h2>
     <form id="dataForm">
       <div class="form-group">
         <label>Mês/Ano</label>
-        <input type="text" id="mesAno" value="Maio, 2026">
+        <input type="text" id="mesAno" placeholder="Maio, 2026">
       </div>
       <div class="form-group">
         <label>Saldo Total Banco de Horas</label>
-        <input type="text" id="saldoTotal" value="63:28">
+        <input type="text" id="saldoTotal" placeholder="63:28">
+      </div>
+
+      <h3>Resumo Mensal</h3>
+      <div class="form-group">
+        <label>Horas Previstas</label>
+        <input type="text" id="horasPrevistas" placeholder="193:36">
+      </div>
+      <div class="form-group">
+        <label>Tiradentes / Feriados</label>
+        <input type="text" id="tiradentes" placeholder="08:48">
       </div>
       <div class="form-group">
         <label>Horas Trabalhadas</label>
-        <input type="text" id="horasTrabalhadas" value="215:15">
+        <input type="text" id="horasTrabalhadas" placeholder="215:15">
       </div>
       <div class="form-group">
         <label>Adicional Noturno</label>
-        <input type="text" id="adicionalNoturno" value="34:18">
+        <input type="text" id="adicionalNoturno" placeholder="34:18">
+      </div>
+      <div class="form-group">
+        <label>Dia Mundial do Trabalho</label>
+        <input type="text" id="diaMundial" placeholder="08:48">
       </div>
       <div class="form-group">
         <label>Hora Extra 75%</label>
-        <input type="text" id="horaExtra" value="07:40">
+        <input type="text" id="horaExtra" placeholder="07:40">
       </div>
       <div class="form-group">
-        <label>Saldo Acumulado Até Abril/2026</label>
-        <input type="text" id="saldoAnterior" value="27:42">
+        <label>Horas Mensais Positivas</label>
+        <input type="text" id="positivas" placeholder="41:55">
+      </div>
+      <div class="form-group">
+        <label>Horas Mensais Negativas</label>
+        <input type="text" id="negativas" placeholder="-06:09">
+      </div>
+      <div class="form-group">
+        <label>Banco de Horas Acumulado (até mês anterior)</label>
+        <input type="text" id="saldoAnterior" placeholder="27:42">
+      </div>
+      <div class="form-group">
+        <label>Banco de Horas no Mês</label>
+        <input type="text" id="bancoNoMes" placeholder="35:46">
       </div>
       <div class="form-group">
         <label>Observações</label>
-        <textarea id="observacoes" rows="3"></textarea>
+        <textarea id="observacoes" rows="4" placeholder="Qualquer observação adicional..."></textarea>
       </div>
     </form>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@v5/dist/tesseract.min.js"></script>
   <script>
-    let currentImageData = null;
     let currentImageBase64 = null;
 
     function previewImage(event) {
       const file = event.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
-      reader.onload = function(e) {
+      reader.onload = e => {
         document.getElementById('previewImg').src = e.target.result;
         currentImageBase64 = e.target.result;
+        clearStatus();
       };
       reader.readAsDataURL(file);
     }
 
+    function showStatus(message, type) {
+      const statusDiv = document.getElementById('statusMessage');
+      statusDiv.textContent = message;
+      statusDiv.className = type || '';
+    }
+
+    function clearStatus() {
+      const statusDiv = document.getElementById('statusMessage');
+      statusDiv.textContent = '';
+      statusDiv.className = '';
+    }
+
+    function updateProgress(percent) {
+      document.getElementById('progressBar').style.width = percent + '%';
+      document.getElementById('progressText').textContent = percent + '% - Processando OCR...';
+    }
+
     async function processImage() {
       const img = document.getElementById('previewImg');
-      if (!img.src) {
-        alert("Por favor, faça upload de uma imagem primeiro.");
-        return;
-      }
+      if (!img.src) return alert("Faça upload de uma imagem primeiro!");
 
-      const status = document.createElement('p');
-      status.textContent = "🔄 Processando OCR... (pode demorar alguns segundos)";
-      document.body.appendChild(status);
+      const ocrBtn = document.getElementById('ocrBtn');
+      ocrBtn.disabled = true;
+      ocrBtn.textContent = "🔄 Processando...";
+      document.getElementById('progressContainer').style.display = 'block';
+      clearStatus();
+
+      let progress = 0;
+      const progressInterval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress > 95) progress = 95;
+        updateProgress(Math.floor(progress));
+      }, 300);
 
       try {
-        const worker = await Tesseract.createWorker('por');
+        const worker = await Tesseract.createWorker('por', 1);
         const result = await worker.recognize(img.src);
         const text = result.data.text;
         await worker.terminate();
 
-        console.log("Texto extraído:", text);
+        console.log("Texto OCR:", text);
 
-        // Extração simples com regex (pode melhorar)
-        const saldoMatch = text.match(/SALDO:\s*(\d+:\d+)/i) || text.match(/\+?\s*(\d+:\d+)/);
-        const horasTrabalhadasMatch = text.match(/Horas Trabalhadas:\s*(\d+:\d+)/i);
-        const noturnoMatch = text.match(/Adicional Noturno:\s*(\d+:\d+)/i);
-        const extraMatch = text.match(/HORA EXTRA 75%:\s*(\d+:\d+)/i);
-        const anteriorMatch = text.match(/até Abril.*?(\d+:\d+)/i);
+        // Preenchimento dos campos
+        document.getElementById('mesAno').value = "Maio, 2026";
+        document.getElementById('saldoTotal').value = text.match(/SALDO:\s*(\d+:\d+)/i)?.[1] || 
+                                                     text.match(/\+?\s*(\d+:\d+)/)?.[1] || "";
+        
+        document.getElementById('horasPrevistas').value = text.match(/Horas Previstas:\s*(\d+:\d+)/i)?.[1] || "";
+        document.getElementById('tiradentes').value = text.match(/Tiradentes:\s*(\d+:\d+)/i)?.[1] || "";
+        document.getElementById('horasTrabalhadas').value = text.match(/Horas Trabalhadas:\s*(\d+:\d+)/i)?.[1] || "";
+        document.getElementById('adicionalNoturno').value = text.match(/Adicional Noturno:\s*(\d+:\d+)/i)?.[1] || "";
+        document.getElementById('diaMundial').value = text.match(/Dia Mundial do Trabalho:\s*(\d+:\d+)/i)?.[1] || "";
+        document.getElementById('horaExtra').value = text.match(/HORA EXTRA 75%:\s*(\d+:\d+)/i)?.[1] || "";
+        document.getElementById('positivas').value = text.match(/Horas mensais positivas:\s*(\d+:\d+)/i)?.[1] || "";
+        document.getElementById('negativas').value = text.match(/Horas mensais negativas:\s*(-?\d+:\d+)/i)?.[1] || "";
+        document.getElementById('saldoAnterior').value = text.match(/até Abril.*?(\d+:\d+)/i)?.[1] || "";
+        document.getElementById('bancoNoMes').value = text.match(/Banco de horas no mês:\s*(\d+:\d+)/i)?.[1] || "";
 
-        if (saldoMatch) document.getElementById('saldoTotal').value = saldoMatch[1];
-        if (horasTrabalhadasMatch) document.getElementById('horasTrabalhadas').value = horasTrabalhadasMatch[1];
-        if (noturnoMatch) document.getElementById('adicionalNoturno').value = noturnoMatch[1];
-        if (extraMatch) document.getElementById('horaExtra').value = extraMatch[1];
-        if (anteriorMatch) document.getElementById('saldoAnterior').value = anteriorMatch[1];
+        updateProgress(100);
+        showStatus("✅ Dados extraídos com sucesso!", "success");
 
-        status.textContent = "✅ Dados extraídos com sucesso!";
-        status.className = "success";
-
-      } catch (error) {
-        console.error(error);
-        status.textContent = "❌ Erro ao processar OCR.";
+      } catch (err) {
+        console.error(err);
+        showStatus("❌ Erro ao processar OCR. Tente novamente.", "error");
+      } finally {
+        clearInterval(progressInterval);
+        setTimeout(() => {
+          document.getElementById('progressContainer').style.display = 'none';
+          ocrBtn.disabled = false;
+          ocrBtn.textContent = "🔍 Ler Dados com OCR";
+        }, 800);
       }
     }
 
     function saveComprovante() {
-      if (!currentImageBase64) {
-        alert("Faça upload de uma imagem primeiro.");
-        return;
-      }
+      if (!currentImageBase64) return alert("Faça upload da imagem primeiro!");
+
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = "💾 Salvando...";
 
       const data = {
-        data: new Date().toISOString(),
+        dataSalvamento: new Date().toLocaleString('pt-BR'),
         mesAno: document.getElementById('mesAno').value,
         saldoTotal: document.getElementById('saldoTotal').value,
+        horasPrevistas: document.getElementById('horasPrevistas').value,
+        tiradentes: document.getElementById('tiradentes').value,
         horasTrabalhadas: document.getElementById('horasTrabalhadas').value,
         adicionalNoturno: document.getElementById('adicionalNoturno').value,
+        diaMundial: document.getElementById('diaMundial').value,
         horaExtra: document.getElementById('horaExtra').value,
+        positivas: document.getElementById('positivas').value,
+        negativas: document.getElementById('negativas').value,
         saldoAnterior: document.getElementById('saldoAnterior').value,
+        bancoNoMes: document.getElementById('bancoNoMes').value,
         observacoes: document.getElementById('observacoes').value,
         imagem: currentImageBase64
       };
 
-      // Salvar no LocalStorage (para protótipo)
       let comprovantes = JSON.parse(localStorage.getItem('comprovantes')) || [];
       comprovantes.push(data);
       localStorage.setItem('comprovantes', JSON.stringify(comprovantes));
 
-      alert("✅ Comprovante salvo com sucesso!\n\nVocê pode expandir isso para salvar no servidor depois.");
-      console.log("Comprovante salvo:", data);
+      showStatus("✅ Comprovante salvo com sucesso!", "success");
+
+      setTimeout(() => {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "💾 Salvar Comprovante";
+      }, 1200);
     }
   </script>
 </body>
