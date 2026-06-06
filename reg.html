@@ -6,15 +6,17 @@
   <title>Comprovante Banco de Horas</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f4; }
-    .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    img { max-width: 100%; border: 1px solid #ddd; border-radius: 8px; margin: 10px 0; }
-    .form-group { margin-bottom: 15px; }
-    label { display: block; margin-bottom: 5px; font-weight: bold; }
-    input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
-    button { padding: 12px 20px; margin: 10px 5px 10px 0; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
+    img { max-width: 100%; border: 1px solid #ddd; border-radius: 8px; margin: 15px 0; }
+    .form-group { margin-bottom: 12px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
+    input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+    button { padding: 12px 20px; margin: 10px 5px 10px 0; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; }
     button:hover { background: #0056b3; }
-    .preview { margin: 15px 0; }
+    .preview { text-align: center; }
     .success { color: green; font-weight: bold; }
+    .error { color: red; font-weight: bold; }
+    h1 { text-align: center; }
   </style>
 </head>
 <body>
@@ -24,129 +26,22 @@
     <input type="file" id="imageInput" accept="image/*" onchange="previewImage(event)">
     
     <div class="preview">
-      <img id="previewImg" src="" alt="Pré-visualização">
+      <img id="previewImg" src="" alt="Pré-visualização da imagem">
     </div>
 
-    <button onclick="processImage()">🔍 Ler Dados com OCR + Preencher</button>
+    <button onclick="processImage()">🔍 Ler Dados com OCR</button>
     <button onclick="saveComprovante()">💾 Salvar Comprovante</button>
 
     <h2>Dados Extraídos</h2>
     <form id="dataForm">
       <div class="form-group">
         <label>Mês/Ano</label>
-        <input type="text" id="mesAno" value="Maio, 2026">
+        <input type="text" id="mesAno" placeholder="Maio, 2026">
+      </div>
+      <div class="form-group">
+        <label>Banco de Horas (Topo)</label>
+        <input type="text" id="bancoTopo" placeholder="02:18">
       </div>
       <div class="form-group">
         <label>Saldo Total Banco de Horas</label>
-        <input type="text" id="saldoTotal" value="63:28">
-      </div>
-      <div class="form-group">
-        <label>Horas Trabalhadas</label>
-        <input type="text" id="horasTrabalhadas" value="215:15">
-      </div>
-      <div class="form-group">
-        <label>Adicional Noturno</label>
-        <input type="text" id="adicionalNoturno" value="34:18">
-      </div>
-      <div class="form-group">
-        <label>Hora Extra 75%</label>
-        <input type="text" id="horaExtra" value="07:40">
-      </div>
-      <div class="form-group">
-        <label>Saldo Acumulado Até Abril/2026</label>
-        <input type="text" id="saldoAnterior" value="27:42">
-      </div>
-      <div class="form-group">
-        <label>Observações</label>
-        <textarea id="observacoes" rows="3"></textarea>
-      </div>
-    </form>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@v5/dist/tesseract.min.js"></script>
-  <script>
-    let currentImageData = null;
-    let currentImageBase64 = null;
-
-    function previewImage(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        document.getElementById('previewImg').src = e.target.result;
-        currentImageBase64 = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-
-    async function processImage() {
-      const img = document.getElementById('previewImg');
-      if (!img.src) {
-        alert("Por favor, faça upload de uma imagem primeiro.");
-        return;
-      }
-
-      const status = document.createElement('p');
-      status.textContent = "🔄 Processando OCR... (pode demorar alguns segundos)";
-      document.body.appendChild(status);
-
-      try {
-        const worker = await Tesseract.createWorker('por');
-        const result = await worker.recognize(img.src);
-        const text = result.data.text;
-        await worker.terminate();
-
-        console.log("Texto extraído:", text);
-
-        // Extração simples com regex (pode melhorar)
-        const saldoMatch = text.match(/SALDO:\s*(\d+:\d+)/i) || text.match(/\+?\s*(\d+:\d+)/);
-        const horasTrabalhadasMatch = text.match(/Horas Trabalhadas:\s*(\d+:\d+)/i);
-        const noturnoMatch = text.match(/Adicional Noturno:\s*(\d+:\d+)/i);
-        const extraMatch = text.match(/HORA EXTRA 75%:\s*(\d+:\d+)/i);
-        const anteriorMatch = text.match(/até Abril.*?(\d+:\d+)/i);
-
-        if (saldoMatch) document.getElementById('saldoTotal').value = saldoMatch[1];
-        if (horasTrabalhadasMatch) document.getElementById('horasTrabalhadas').value = horasTrabalhadasMatch[1];
-        if (noturnoMatch) document.getElementById('adicionalNoturno').value = noturnoMatch[1];
-        if (extraMatch) document.getElementById('horaExtra').value = extraMatch[1];
-        if (anteriorMatch) document.getElementById('saldoAnterior').value = anteriorMatch[1];
-
-        status.textContent = "✅ Dados extraídos com sucesso!";
-        status.className = "success";
-
-      } catch (error) {
-        console.error(error);
-        status.textContent = "❌ Erro ao processar OCR.";
-      }
-    }
-
-    function saveComprovante() {
-      if (!currentImageBase64) {
-        alert("Faça upload de uma imagem primeiro.");
-        return;
-      }
-
-      const data = {
-        data: new Date().toISOString(),
-        mesAno: document.getElementById('mesAno').value,
-        saldoTotal: document.getElementById('saldoTotal').value,
-        horasTrabalhadas: document.getElementById('horasTrabalhadas').value,
-        adicionalNoturno: document.getElementById('adicionalNoturno').value,
-        horaExtra: document.getElementById('horaExtra').value,
-        saldoAnterior: document.getElementById('saldoAnterior').value,
-        observacoes: document.getElementById('observacoes').value,
-        imagem: currentImageBase64
-      };
-
-      // Salvar no LocalStorage (para protótipo)
-      let comprovantes = JSON.parse(localStorage.getItem('comprovantes')) || [];
-      comprovantes.push(data);
-      localStorage.setItem('comprovantes', JSON.stringify(comprovantes));
-
-      alert("✅ Comprovante salvo com sucesso!\n\nVocê pode expandir isso para salvar no servidor depois.");
-      console.log("Comprovante salvo:", data);
-    }
-  </script>
-</body>
-</html>
+        <
