@@ -39,7 +39,6 @@
     .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
     .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
 
-    /* Barra de progresso */
     #progressContainer {
       display: none;
       margin: 15px 0;
@@ -58,7 +57,6 @@
       color: #555;
     }
 
-    /* Mensagem de validação do arquivo */
     #fileWarning {
       color: #d9534f;
       font-weight: bold;
@@ -94,7 +92,6 @@
       <div id="progressText" class="progress-text">0% - Processando OCR...</div>
     </div>
 
-    <!-- Mensagem de status -->
     <div id="statusMessage"></div>
 
     <h2>Dados Extraídos</h2>
@@ -166,10 +163,20 @@
 
       const reader = new FileReader();
       reader.onload = e => {
-        document.getElementById('previewImg').src = e.target.result;
+        const previewImg = document.getElementById('previewImg');
+        previewImg.src = e.target.result;
         currentImageBase64 = e.target.result;
         document.getElementById('fileWarning').style.display = 'none';
         clearStatus();
+
+        // Rolagem automática após carregar a imagem
+        setTimeout(() => {
+          const buttons = document.querySelector('button#ocrBtn');
+          buttons.scrollIntoView({ 
+            behavior: "smooth", 
+            block: "center" 
+          });
+        }, 300);
       };
       reader.readAsDataURL(file);
     }
@@ -195,14 +202,12 @@
       const fileInput = document.getElementById('imageInput');
       const warning = document.getElementById('fileWarning');
 
-      // Validação: verificar se tem imagem
       if (!fileInput.files || fileInput.files.length === 0 || !currentImageBase64) {
         warning.style.display = 'block';
         warning.textContent = "⚠️ Primeiro preciso que você envie a imagem para poder ler os dados.";
         return;
       }
 
-      // Esconde o aviso se passou na validação
       warning.style.display = 'none';
 
       const ocrBtn = document.getElementById('ocrBtn');
@@ -224,9 +229,7 @@
         const text = result.data.text;
         await worker.terminate();
 
-        console.log("Texto OCR:", text);
-
-        // Preenchimento dos campos
+        // Preenchimento dos campos (mesmo de antes)
         document.getElementById('mesAno').value = "Maio, 2026";
         document.getElementById('saldoTotal').value = text.match(/SALDO:\s*(\d+:\d+)/i)?.[1] || text.match(/\+?\s*(\d+:\d+)/)?.[1] || "";
         document.getElementById('horasPrevistas').value = text.match(/Horas Previstas:\s*(\d+:\d+)/i)?.[1] || "";
@@ -267,7 +270,23 @@
       saveBtn.disabled = true;
       saveBtn.textContent = "💾 Salvando...";
 
-      const data = { /* ... mesmos dados de antes ... */ };
+      const data = {
+        dataSalvamento: new Date().toLocaleString('pt-BR'),
+        mesAno: document.getElementById('mesAno').value,
+        saldoTotal: document.getElementById('saldoTotal').value,
+        horasPrevistas: document.getElementById('horasPrevistas').value,
+        tiradentes: document.getElementById('tiradentes').value,
+        horasTrabalhadas: document.getElementById('horasTrabalhadas').value,
+        adicionalNoturno: document.getElementById('adicionalNoturno').value,
+        diaMundial: document.getElementById('diaMundial').value,
+        horaExtra: document.getElementById('horaExtra').value,
+        positivas: document.getElementById('positivas').value,
+        negativas: document.getElementById('negativas').value,
+        saldoAnterior: document.getElementById('saldoAnterior').value,
+        bancoNoMes: document.getElementById('bancoNoMes').value,
+        observacoes: document.getElementById('observacoes').value,
+        imagem: currentImageBase64
+      };
 
       let comprovantes = JSON.parse(localStorage.getItem('comprovantes')) || [];
       comprovantes.push(data);
